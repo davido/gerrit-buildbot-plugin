@@ -1,0 +1,4 @@
+[gerrit]
+host=idaia.de
+port=29418
+project=gerrit-buildbot

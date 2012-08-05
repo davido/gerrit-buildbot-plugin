@@ -1,0 +1,17 @@
+Buildbot Gerrit Integration Plugin
+
+INSTALL:
+=======
+
+Prerequisites:
+==============
+Currently you must compile and install the main gerrit repo manually.
+cd <gerrit-main-repo-home> && mvn install
+
+Compilation:
+============
+mvn package
+
+Installation:
+=============
+cp target/buildbot-version.jar <gerit_site>/plugins
