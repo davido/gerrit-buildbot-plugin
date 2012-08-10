@@ -9,3 +9,4 @@ user section
 
 project section
 ---------------
+project.name = foo
