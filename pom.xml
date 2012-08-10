@@ -91,10 +91,17 @@ limitations under the License.
       <version>4.8.1</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
     	<groupId>commons-collections</groupId>
     	<artifactId>commons-collections</artifactId>
     	<version>3.2.1</version>
+    </dependency>
+
+    <dependency>
+    	<groupId>gwtjsonrpc</groupId>
+    	<artifactId>gwtjsonrpc</artifactId>
+    	<version>1.3</version>
     </dependency>
   </dependencies>
 
@@ -102,6 +109,10 @@ limitations under the License.
     <repository>
       <id>gerrit-api-repository</id>
       <url>https://gerrit-api.commondatastorage.googleapis.com/snapshot/</url>
+    </repository>
+    <repository>
+      <id>google gerrit repo</id>
+      <url>http://gerrit-maven-repository.googlecode.com/svn/</url>
     </repository>
   </repositories>
 </project>
