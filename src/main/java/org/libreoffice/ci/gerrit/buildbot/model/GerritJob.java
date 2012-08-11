@@ -57,7 +57,7 @@ public class GerritJob implements Runnable {
 		}
 		return done;
 	}
-	
+
 	@Override
 	public void run() {
 
@@ -81,15 +81,15 @@ public class GerritJob implements Runnable {
 		//control.notifyGerritJobFinished(this);
 		control.finishGerritJob(this);
 	}
-	
+
 	public void createTBResultList() {
 		tbResultList = new ArrayList<TbJobResult>();
 		// GET AND REGISTER RESULTS
 		for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
 			tbResultList.add(tbJob.getResult());
-		}		
+		}
 	}
-	
+
 	public void poulateTBPlatformQueueMap(
 			Map<Platform, TBBlockingQueue> tbQueueMap) {
 		for (int i = 0; i < Platform.values().length; i++) {
@@ -122,7 +122,11 @@ public class GerritJob implements Runnable {
 	public TbJobResult setResultPossible(String ticket, String log, boolean status) {
 		BuildbotPlatformJob job = getTbJob(ticket);
 		if (job != null) {
-			TbJobResult jobResult = job.createResult(log, status);
+			if (job.getResult() != null) {
+                // result already set: ignore
+                return null;
+            }
+            TbJobResult jobResult = job.createResult(log, status);
 			return jobResult;
 		}
 		return null;
@@ -135,7 +139,7 @@ public class GerritJob implements Runnable {
 	public List<BuildbotPlatformJob> getBuildbotList() {
 		return tinderBoxThreadList;
 	}
-	
+
 	public String getGerritRef() {
 		return gerritRef;
 	}

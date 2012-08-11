@@ -18,7 +18,15 @@ Presents a table of the pending activity the Builbot Plugin
 is currently performing, or will perform in the near future.
 Gerrit Buildbot Plugin contains an internal scheduler, that it
 uses to queue Buildbot task for different platforms. Buildbots
-schedule the tasks for execution and reports the result back. 
+schedule the tasks for execution and reports the result back.
+
+ACCESS
+------
+Caller must be a member of the privileged 'Administrators' group,
+or have been granted [the 'View Queue' global capability][1].
+
+[1]: ../../../Documentation/access-control.html#capability_viewQueue
+
 
 OPTIONS
 -------
@@ -43,7 +51,7 @@ This command is intended to be used in scripts.
 EXAMPLES
 --------
 
-The following queue contains 4 tasks: one change and 3 jobs scheduled to execution 
+The following queue contains 4 tasks: one change and 3 jobs scheduled to execution
 
 >
 >    $ ssh -p 29418 review.example.com buildbot show-queue --project=test

@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.common.data.ApprovalType;
 import com.google.gerrit.common.data.ApprovalTypes;
+import com.google.gerrit.common.data.GlobalCapability;
+import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.ApprovalCategory;
 import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.PatchSet;
@@ -36,6 +38,7 @@ import com.google.gerrit.sshd.SshCommand;
 import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
 
+@RequiresCapability(GlobalCapability.VIEW_QUEUE)
 public final class GetTaskCommand extends SshCommand {
 	static final Logger log = LoggerFactory.getLogger(GetTaskCommand.class);
 
@@ -77,7 +80,7 @@ public final class GetTaskCommand extends SshCommand {
 		TbJobDescriptor jobDescriptor = control.launchTbJob(platform);
 		if (jobDescriptor == null) {
 			if (format != null && format == FormatType.BASH) {
-				stdout.print(String.format("export GERRIT_TASK_TICKET=;export GERRIT_TASK_BRANCH=;GERRIT_TASK_REF=\n"));
+				stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
 			} else {
 				stdout.print("empty");
 			}
@@ -85,7 +88,7 @@ public final class GetTaskCommand extends SshCommand {
 			notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
 			String output;
 			if (format != null && format == FormatType.BASH) {
-				output = String.format("export GERRIT_TASK_TICKET=%s;export GERRIT_TASK_BRANCH=%s;GERRIT_TASK_REF=%s\n",
+				output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
 						jobDescriptor.getTicket(), 
 						jobDescriptor.getBranch(),
 						jobDescriptor.getRef());

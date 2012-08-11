@@ -21,11 +21,14 @@ import org.libreoffice.ci.gerrit.buildbot.model.Ticket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gerrit.common.data.GlobalCapability;
+import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.server.util.IdGenerator;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.inject.Inject;
 
+@RequiresCapability(GlobalCapability.VIEW_QUEUE)
 public final class ShowQueueCommand extends SshCommand {
 	static final Logger log = LoggerFactory.getLogger(ShowQueueCommand.class);
 

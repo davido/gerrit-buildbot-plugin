@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.common.data.ApprovalType;
 import com.google.gerrit.common.data.ApprovalTypes;
+import com.google.gerrit.common.data.GlobalCapability;
+import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.ApprovalCategory;
 import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.PatchSet;
@@ -43,6 +45,7 @@ import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+@RequiresCapability(GlobalCapability.VIEW_QUEUE)
 public final class ReportCommand extends SshCommand implements
 		GerritNotifyListener {
 	static final Logger log = LoggerFactory.getLogger(ReportCommand.class);
@@ -91,7 +94,7 @@ public final class ReportCommand extends SshCommand implements
 		}
 		TbJobResult result = control.setResultPossible(ticket, succeed, urllog);
 		notifyGerritBuildbotPlatformJobFinished(result);
-		
+
 		synchronized (control) {
 			if (result.getTbPlatformJob().getParent().allJobsReady()) {
 				notifyGerritJobFinished(result.getTbPlatformJob().getParent());
@@ -127,8 +130,7 @@ public final class ReportCommand extends SshCommand implements
 		ApprovalCategory verified = null;
 		for (ApprovalType type : approvalTypes.getApprovalTypes()) {
 			final ApprovalCategory category = type.getCategory();
-			// VRIF
-			if ("CRVW".equals(category.getId().get())) {
+			if ("VRIF".equals(category.getId().get())) {
 				verified = category;
 				break;
 			}
@@ -147,11 +149,11 @@ public final class ReportCommand extends SshCommand implements
 				if (!tbResult.isStatus()) {
 					combinedStatus = -1;
 				}
-				builder.append(String.format("Build %s on %s complete, status %b log: %s\n\n", 
+				builder.append(String.format("Build %s on %s completed %s</li> : %s\n\n",
 						tbResult.getDecoratedId(),
-						tbResult.getPlatform().name(), 
-						tbResult.isStatus(),
-						tbResult.getLog()));
+						tbResult.getPlatform().name(),
+						tbResult.getLog(),
+						tbResult.isStatus() ? "SUCCESS" : "FAILURE"));
 			}
 			aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));
 			publishCommentsFactory.create(patchset.getId(),
@@ -161,7 +163,7 @@ public final class ReportCommand extends SshCommand implements
 			die(e);
 		}
 	}
-	
+
 	void notifyGerritBuildbotPlatformJobFinished(TbJobResult tbJobResult) {
 		ApprovalCategory verified = null;
 		for (ApprovalType type : approvalTypes.getApprovalTypes()) {
@@ -182,13 +184,12 @@ public final class ReportCommand extends SshCommand implements
 			StringBuilder builder = new StringBuilder(256);
 			// we don't know what other guys say...
 			short status = 0;
-			builder.append(String.format("Build %s on %s complete at %s, status %b log: %s\n\n",
+			builder.append(String.format("Build %s on %s complete at %s %s : %s",
 					tbJobResult.getDecoratedId(),
 					tbJobResult.getPlatform().name(),
 					time(tbJobResult.getEndTime(), 0),
-					tbJobResult.isStatus(),
-					tbJobResult.getLog()
-					));
+					tbJobResult.getLog(),
+					tbJobResult.isStatus() ? "SUCCESS" : "FAILURE"));
 			aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
 			publishCommentsFactory.create(patchset.getId(),
 					builder.toString(), aps, true).call();
@@ -197,7 +198,7 @@ public final class ReportCommand extends SshCommand implements
 			die(e);
 		}
 	}
-	
+
 	private static String time(final long now, final long delay) {
 		final Date when = new Date(now + delay);
 		if (delay < 24 * 60 * 60 * 1000L) {
@@ -205,5 +206,4 @@ public final class ReportCommand extends SshCommand implements
 		}
 		return new SimpleDateFormat("MMM-dd HH:mm").format(when);
 	}
-	
 }
