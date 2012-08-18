@@ -15,3 +15,7 @@ mvn package
 Installation:
 =============
 cp target/buildbot-version.jar <gerit_site>/plugins
+
+Version:
+========
+Developed and tested against gerrit-2.5-SHAPSHOT
