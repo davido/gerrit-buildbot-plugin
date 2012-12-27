@@ -1,21 +1,75 @@
-Gerrit Tinderbox Integration Plugin
+Buildbot Gerrit Plugin
+======================
 
-INSTALL:
-=======
+Buildbot Gerrit Plugin (BGP) is a queue manager for gerrit patch verification.
+It coordinates the decental located tinderboxes without having a continued
+network connection to them by maintaining platform specific blocking queue of
+n platform tasks for each gerrit patch. The patch set considered as verified
+(+1) then and only then when all tinderbox tasks are reported success back.
+In this case gerrit verify status is reported back to gerrit.
+In addition log publication is provided by log servlet.
 
-Prerequisites:
-==============
-Currently you must compile and install the main gerrit repo manually.
-cd <gerrit-main-repo-home> && mvn install
+Workflow description
+============================================
+0. During BGP activation the configuration file buildbot.config is read and
+   gerrit-stream event listener is installed.
+1. User submit a gerrit patch, PatchSetCreatedEvent is triggered by gerrit and
+   consumed by BGP. In the new BGP version this event is discarded
+   (alternatively different BGP build trigger strategies can be configured per project base)
+2. The patch get aproved with gerrit `review` ssh command (or through web UI).
+3. BGP consumes gerrit's CommentAddedEvent, checks if for the project, that event
+   is triggered for, BGP is activated and check Norbert's rule:
+   a proposed patch get build if and only if: it is not merged, it has no review < 0, it
+   has no verify < 0 and has at least 1 review > 0 from a user that belong
+   to the `Reviewer` Group. If those conditions are met, the follow actions is taken:
+a) creates a Gerrit Job instance
+b) populates platform task map with verify task per platform.
+   Platforms are currently hard coded: WINDOWS, LINUX and MAC.
+3. tinderbox that configured gerrit verification
+   (see tinbuild2 script in LO repo) periodically call BGP `get-task` ssh command
+   and get gerrit patch for veification. Note that because of blocking queue
+   only one tinderbox per platform and per gerrit job get engaged.
+   When a tinderbox get assign a test build, repport that in a review message. 
+4. tinderbox build the recieved gerrit task and report the outcome and the
+   the log file with BGP `report` ssh command. When a tinderbox outcome is known 
+   repport that in a review message (success, failure, time-out)
+   Note: these review message do not impact Verity status... they just
+   provide progress information.
+5. Once all tasks for a job are ready, the combined verify result is reported back
+   to gerrit through BGP.
+6. Problems/Timeouts/Recovering:
+a) If a task not get pulled by any tinderbox after some time out time, we call
+   it idle timeout, then the job is reported to gerrit with unknown (neutral)
+   state (even if some tinderbox tasks reported a result)
+b) If a task was pulled by some tinderbox, but no result is reported in some
+   reasonable amount of time (say 4 hours), then the task should be
+   rescheduled once time again. If after rescheduling the original task reports
+   status it should be discarded.
+c) persist the job and task list in the data base. 
+d) the plug-in need to be restartable. That is when the
+   plug in is brought back up after being down, it should resume where it
+   left off... for example, a tinderbox should be able to ask for a task
+   before a gerrit shutdown and then report the result after gerrit
+   restart. This will make maintenance-driven restart less intrusive/costly.
 
-Compilation:
-============
-mvn package
+TODOs:
+1. Pipe line visualisation: with gerrit jobs and tasks per platform are get
+  currently building and pending.
+2. management cockpit/dashboard with previously build taskes with statistics.
+3. Enhance gerrit's core patch view with table containing tinderbox
+  verification status on per platform base.
+4. Consider patch specific requirements in tinderbox configuration per patch
+  base (i. e. with-java) and propagate these requirement to the tinderboxes.
+  To implement this, tinderbox must be identified by his current configuration
+  set in addition to its platform.
+5. add priority to scheduler, that can be influenced through web UI or ssh command.
+6. If a patch is 'submitted' while the verification tinbuild are pending then
+a) we let already running tindebox finish, and still report the result
+in t 'review' comment as usual, but leave the verify flags untouched
+(I don't think you can modify it after merge anyway)
+b) any platform that is not started yet is 'discarded' for that patch.
+iow the task taht are not started yet are de-queued by 'Submit'.
 
-Installation:
+Contribution:
 =============
-cp target/buildbot-version.jar <gerit_site>/plugins
-
-Version:
-========
-Developed and tested against gerrit-2.5-SHAPSHOT
+Please upload patched for review to this gerrit instance https://review.idaia.de
