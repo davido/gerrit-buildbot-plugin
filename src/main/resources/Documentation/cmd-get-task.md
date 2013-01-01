@@ -8,8 +8,9 @@ get-task - Get a task from platform specific queue.
 SYNOPSIS
 --------
 >     ssh -p <port> <host> buildbot get-task
->      [--project <NAME> | -p <NAME>]
->      --platform <NAME> | -a <NAME>]
+>      --format TEXT | BASH | -f TEXT | BASH
+>      --project <NAME> | -p <NAME>
+>      --platform <NAME> | -a <NAME>
 
 DESCRIPTION
 -----------

@@ -25,6 +25,7 @@ import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 
+import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 import com.google.gerrit.server.util.IdGenerator;
 import com.google.inject.Inject;
@@ -83,6 +84,15 @@ public class LogicControlImpl implements LogicControl {
 		}
 	}
 
+	public void startGerritJob(CommentAddedEvent event) {
+		synchronized (gerritJobList) {
+			GerritJob job = new GerritJob(this, event.change.branch, event.patchSet.ref, event.patchSet.revision, generator.next());
+			job.poulateTBPlatformQueueMap(tbQueueMap);
+			gerritJobList.add(job);
+			job.start();
+		}
+	}
+	
 	public TbJobResult setResultPossible(String ticket, boolean status, String log) {
 		synchronized (gerritJobList) {
 			for (GerritJob job : gerritJobList) {
@@ -133,5 +143,17 @@ public class LogicControlImpl implements LogicControl {
 	
 	public List<GerritJob> getGerritJobs() {
 		return gerritJobList;
+	}
+	
+	@Override
+	public GerritJob findJobByRevision(String revision) {
+		synchronized (gerritJobList) {
+			for (GerritJob job : gerritJobList) {	
+				if (job.getGerritRevision().equals(revision)) {
+					return job;
+				}
+			}
+		}
+		return null;
 	}
 }

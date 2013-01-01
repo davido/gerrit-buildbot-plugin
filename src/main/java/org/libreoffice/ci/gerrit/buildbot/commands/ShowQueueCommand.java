@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
+import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.server.util.IdGenerator;
 import com.google.gerrit.sshd.SshCommand;
@@ -30,96 +31,99 @@ import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
 public final class ShowQueueCommand extends SshCommand {
-	static final Logger log = LoggerFactory.getLogger(ShowQueueCommand.class);
+    static final Logger log = LoggerFactory.getLogger(ShowQueueCommand.class);
 
-	@Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the queue should be shown")
-	private ProjectControl projectControl;
+    @Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the queue should be shown")
+    private ProjectControl projectControl;
 
-	@Option(name = "--type", aliases = { "-t" }, required = false, metaVar = "TYPE", usage = "which type of tasks to display")
-	private TaskType type;
+    @Option(name = "--type", aliases = { "-t" }, required = false, metaVar = "TYPE", usage = "which type of tasks to display")
+    private TaskType type;
 
-	@Inject
-	LogicControl control;
+    @Inject
+    LogicControl control;
 
-	@Inject
-	IdGenerator gen;
+    @Inject
+    IdGenerator gen;
 
-	
-	@Override
-	public void run() throws UnloggedFailure, Failure, Exception {
-		log.debug("project: {}", projectControl.getProject().getName());
+    public ShowQueueCommand() {
+        log.debug("in ctr");
+    }
 
-		if (!control.isProjectSupported(projectControl.getProject().getName())) {
-			String message = String.format(
-					"project <%s> is not enabled for building!", projectControl
-							.getProject().getName());
-			stderr.print(message);
-			stderr.write("\n");
-			return;
-		}
+    @Override
+    public void run() throws UnloggedFailure, Failure, Exception {
+        log.debug("project: {}", projectControl.getProject().getName());
 
-		stdout.print("----------------------------------------------"
-				+ "--------------------------------\n");
+        if (!control.isProjectSupported(projectControl.getProject().getName())) {
+            String message = String.format(
+                    "project <%s> is not enabled for building!", projectControl
+                            .getProject().getName());
+            stderr.print(message);
+            stderr.write("\n");
+            return;
+        }
 
-		stdout.print(String.format("%-16s %-12s %-12s %-22s %s\n", //
-				"Task-Id", "Start/End", "Type/State", "Ref", "Branch"));
-		int numberOfPendingTasks = 0;
+        stdout.print("----------------------------------------------"
+                + "--------------------------------\n");
 
-		List<GerritJob> changes = control.getGerritJobs();
-		synchronized (changes) {
-			for (GerritJob change : changes) {
-				if (type == null || type.equals(TaskType.CHANGE)) {
-					numberOfPendingTasks++;
-					stdout.print(String.format(
-							"%-16s %-12s %-12s %-22s %s\n", //
-							id(change.getId()), time(change.getStartTime(), 0),
-							"Change", change.getGerritRef(),
-							change.getGerritBranch()));
-				}
-				if (type == null || type.equals(TaskType.JOB)) {
-					List<BuildbotPlatformJob> list = change.getBuildbotList();
-					synchronized (list) {
-						for (BuildbotPlatformJob job : list) {
-							String jobId = id(job.getParent().getId()) + "_"
-									+ job.getPlatformString();
-							String time = "-";
-							Ticket t = job.getTicket();
-							String status = "Job: ";
-							if (!job.isStarted()) {
-								status += "INIT";
-							} else if (job.isReady()) {
-								status += job.getResult().isStatus() ? "SUCCEED"
-										: "FAILED";
-								time = time(job.getResult().getEndTime(), 0);
-							} else {
-								status += "STARTED";
-								time = time(t.getStartTime(), 0);
-							}
-							stdout.print(String.format(
-									"%-16s %-12s %-12s %-22s %s\n", //
-									jobId, time, status, job.getParent()
-											.getGerritRef(), job.getParent()
-											.getGerritBranch()));
-							numberOfPendingTasks++;
-						}
-					}
-				}
-			}
-		}
-		stdout.print("----------------------------------------------"
-				+ "--------------------------------\n");
-		stdout.print("  " + numberOfPendingTasks + " task(s)\n");
-	}
-	
-	private static String id(final int id) {
-		return IdGenerator.format(id);
-	}
+        stdout.print(String.format("%-16s %-12s %-12s %-22s %s\n", //
+                "Task-Id", "Start/End", "Type/State", "Ref", "Branch"));
+        int numberOfPendingTasks = 0;
 
-	private static String time(final long now, final long delay) {
-		final Date when = new Date(now + delay);
-		if (delay < 24 * 60 * 60 * 1000L) {
-			return new SimpleDateFormat("HH:mm:ss.SSS").format(when);
-		}
-		return new SimpleDateFormat("MMM-dd HH:mm").format(when);
-	}
+        List<GerritJob> changes = control.getGerritJobs();
+        synchronized (changes) {
+            for (GerritJob change : changes) {
+                if (type == null || type.equals(TaskType.CHANGE)) {
+                    numberOfPendingTasks++;
+                    stdout.print(String.format(
+                            "%-16s %-12s %-12s %-22s %s\n", //
+                            id(change.getId()), time(change.getStartTime(), 0),
+                            "Change", change.getGerritRef(),
+                            change.getGerritBranch()));
+                }
+                if (type == null || type.equals(TaskType.JOB)) {
+                    List<BuildbotPlatformJob> list = change.getBuildbotList();
+                    synchronized (list) {
+                        for (BuildbotPlatformJob job : list) {
+                            String jobId = id(job.getParent().getId()) + "_"
+                                    + job.getPlatformString();
+                            String time = "-";
+                            Ticket t = job.getTicket();
+                            String status = "Job: ";
+                            if (!job.isStarted()) {
+                                status += "INIT";
+                            } else if (job.isReady()) {
+                                status += job.getResult().isStatus() ? "SUCCEED"
+                                        : "FAILED";
+                                time = time(job.getResult().getEndTime(), 0);
+                            } else {
+                                status += "STARTED";
+                                time = time(t.getStartTime(), 0);
+                            }
+                            stdout.print(String.format(
+                                    "%-16s %-12s %-12s %-22s %s\n", //
+                                    jobId, time, status, job.getParent()
+                                            .getGerritRef(), job.getParent()
+                                            .getGerritBranch()));
+                            numberOfPendingTasks++;
+                        }
+                    }
+                }
+            }
+        }
+        stdout.print("----------------------------------------------"
+                + "--------------------------------\n");
+        stdout.print("  " + numberOfPendingTasks + " task(s)\n");
+    }
+
+    private static String id(final int id) {
+        return IdGenerator.format(id);
+    }
+
+    private static String time(final long now, final long delay) {
+        final Date when = new Date(now + delay);
+        if (delay < 24 * 60 * 60 * 1000L) {
+            return new SimpleDateFormat("HH:mm:ss.SSS").format(when);
+        }
+        return new SimpleDateFormat("MMM-dd HH:mm").format(when);
+    }
 }

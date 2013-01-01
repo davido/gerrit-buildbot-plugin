@@ -10,5 +10,5 @@
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
 public enum FormatType {
-	TEXT, BASH
+    TEXT, BASH
 }

@@ -16,12 +16,15 @@ import org.libreoffice.ci.gerrit.buildbot.model.Platform;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 
+import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
 public interface LogicControl {
 	boolean isProjectSupported(String project);
 	void startGerritJob(PatchSetCreatedEvent event);
+	void startGerritJob(CommentAddedEvent event);
 	List<GerritJob> getGerritJobs();
+	GerritJob findJobByRevision(String revision);
 	TbJobDescriptor launchTbJob(Platform platform);
 	TbJobResult setResultPossible(String ticket, boolean status, String log);
 }

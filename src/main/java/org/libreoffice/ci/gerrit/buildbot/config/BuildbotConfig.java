@@ -13,6 +13,8 @@ public class BuildbotConfig {
 
 	private String email;
 	private String project;
+	private TriggerStrategie triggerStrategie;
+	private String reviewerGroupName;
 	private String logDir;
 
 	public String getEmail() {
@@ -37,5 +39,21 @@ public class BuildbotConfig {
 
 	public void setLogDir(String logDir) {
 		this.logDir = logDir;
+	}
+
+	public void setTriggerStrategie(TriggerStrategie triggerStrategie) {
+		this.triggerStrategie = triggerStrategie;		
+	}
+	
+	public TriggerStrategie getTriggerStrategie() {
+		return this.triggerStrategie;
+	}
+
+	public String getReviewerGroupName() {
+		return reviewerGroupName;
+	}
+
+	public void setReviewerGroupName(String reviewerGroupName) {
+		this.reviewerGroupName = reviewerGroupName;
 	}
 }

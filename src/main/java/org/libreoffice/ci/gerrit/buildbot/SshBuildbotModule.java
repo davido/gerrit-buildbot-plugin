@@ -13,10 +13,12 @@ import org.libreoffice.ci.gerrit.buildbot.commands.GetTaskCommand;
 import org.libreoffice.ci.gerrit.buildbot.commands.ReportCommand;
 import org.libreoffice.ci.gerrit.buildbot.commands.ShowQueueCommand;
 
+import com.google.gerrit.reviewdb.server.ReviewDb;
 import com.google.gerrit.sshd.PluginCommandModule;
+import com.google.inject.Inject;
 
 public class SshBuildbotModule extends PluginCommandModule {
-
+	
 	@Override
 	protected void configureCommands() {
 		command("show-queue").to(ShowQueueCommand.class);
