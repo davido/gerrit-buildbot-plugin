@@ -1,0 +1,50 @@
+1. Create new non-interactive gerrit acount.
+   This account is the author of all comments in gerrit on behalf
+   of buildbot-plugin and user under user section in buildbot.config.
+   Example: buildbot-master
+
+2. Create new Group in gerrit and add all buildbot accounts to this
+   Group.
+   Example: 'BuildBots'
+
+3. Grant Global Capability 'View Queue' to the group created in 2.
+   This is due to restrict the access to buildbot-plugin's ssh commands:
+   Projects=>List=>All-Projects=>Access Edit, add Permission 'View Queue'
+   under Global Capabilities section and add the Group from 2. Save changes.
+
+4. If 'positive_review' trigger strategie is used, add a new gerrit
+   group. Members of this group trigger build job, if they approve patch sets.
+   This group is used in buildbot.config under 'reviewerGroupName'.
+   Example: 'Reviewers'
+
+5. Create '$gerrit_site/data/buildbot' directory and put there buildbot.config
+   file.
+
+6. Create '$gerrit_site/data/log' for log files.
+
+7. Download the last version of buildbot-x.jar from
+   https://ci.idaia.de/job/gerrit-buildbot/ and put it under
+   '$gerrit_site/plugins/buildbot.jar.
+
+8. Restart gerrit or use gerrit's ssh plugin command.
+
+9. Test buildbot's ssh command:
+
+$ ssh gerrit buildbot --help
+buildbot COMMAND [ARG ...] [--] [--help (-h)]
+
+  --          : end of options
+  --help (-h) : display this help text
+
+  Available commands of buildbot are:
+
+     get-task
+     report
+     show-queue
+
+$ ssh gerrit buildbot show-queue --project core
+------------------------------------------------------------------------------
+Task-Id          Start/End    Type/State   Ref                    Branch
+------------------------------------------------------------------------------
+  0 task(s)
+
