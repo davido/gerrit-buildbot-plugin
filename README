@@ -37,7 +37,7 @@ a) creates a Gerrit Job instance
 b) populates platform task map with verify task per platform.
    Platforms are currently hard coded: WINDOWS, LINUX and MAC.
 3. tinderbox that configured gerrit verification
-   (see tinbuild2 script in LO repo) periodically call BGP `get-task` ssh
+   (see tinbuild2 script in LO repo) periodically calls BGP `get-task` ssh
    command and get gerrit patch for veification. Note that because of blocking
    queue only one tinderbox per platform and per gerrit job get engaged.
    When a tinderbox get assign a test build, repport that in a review message.
