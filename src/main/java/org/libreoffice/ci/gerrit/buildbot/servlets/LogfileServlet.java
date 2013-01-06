@@ -87,7 +87,7 @@ public class LogfileServlet extends HttpServlet {
 			randomAccessFile.seek(size - skipSize);
 			randomAccessFile.readLine();
 			out.write("... skipped " + randomAccessFile.getFilePointer() / 1024
-					+ " KB <a href=\"/plugins/buildbot-1.0/log?file="
+					+ " KB <a href=\"/plugins/buildbot/log?file="
 					+ fileName + "&full=true\">Full log</a></br>");
 		}
 		int sizeToRead = (int) (size - skipSize - 1);
