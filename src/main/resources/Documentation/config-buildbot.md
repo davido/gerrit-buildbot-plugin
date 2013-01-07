@@ -15,7 +15,7 @@ project.name = foo
 File `buildbot.config`
 ------------------------
 
-The mandatory file `'$site_path'/data/<plugin-name>/buildbot.config` 
+The mandatory file `'$site_path'/etc/buildbot.config` 
 is a Git-style config file that controls specific settings for Buildbot
 Plugin.
 
@@ -25,15 +25,16 @@ If you modify any properties in this file, Plugin needs to be restarted
 before it will use the new values.
 
 Sample `buildbot.config`:
-----
-[user]
-  mail = buildbot@example.com
+------------------------
+> [user]
+>  mail = buildbot@example.com
+>
+>[project]
+>  name = foo
+>  trigger = patchset_created|positive_review
+>  reviewerGroupName = Reviewer
+>
+>[log]
+>  directory = /var/data/gerrit_buildlog_directory
 
-[project]
-  name = foo
-  trigger = default|norbert
-  reviewerGroupName = Reviewer
 
-[log]
-  directory = /var/data/gerrit2_buildlog_directory
-----

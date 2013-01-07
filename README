@@ -33,8 +33,8 @@ Depending on trigger strategie for specific project, build is triggered, if
    is triggered for, BGP is activated and check Norbert's rule:
 
 When build is triggered, the follow actions are taken:
-a) creates a Gerrit Job instance
-b) populates platform task map with verify task per platform.
+a) create a Gerrit Job instance
+b) populate platform task map with verify task per platform.
    Platforms are currently hard coded: WINDOWS, LINUX and MAC.
 3. tinderbox that configured gerrit verification
    (see tinbuild2 script in LO repo) periodically calls BGP `get-task` ssh
@@ -43,53 +43,15 @@ b) populates platform task map with verify task per platform.
    When a tinderbox get assign a test build, repport that in a review message.
 4. tinderbox build the recieved gerrit task and report the outcome and the
    the log file with BGP `report` ssh command. When a tinderbox outcome is known
-   repport that in a review message (success, failure, time-out)
-   Note: these review message do not impact Verity status... they just
+   repport that in a review message (success, failure, canceled)
+   Note: these review message do not impact verify status. They just
    provide progress information.
+   If --state=canceled is reported, then the task is rescheduled again in the 
+   build queue.
 5. Once all tasks for a job are ready, the combined verify result is reported
    back to gerrit through BGP.
-
-6. Problems
-a) Dependend patch sets, that can not be built isolated
-b) If a task not get pulled by any tinderbox after some time out time (we call
-   it idle timeout) then the job is reported to gerrit with unknown (neutral)
-   state (even if some tinderbox tasks reported a result)
-b) If a task was pulled by some tinderbox, but no result is reported in some
-   reasonable amount of time (we call it engaged timeout), then the task should
-   be rescheduled once time again. If after rescheduling the original task
-   reports status it should be discarded.
-
-TODOs:
-1. persist the job and task list in the data base.
-2. the plug-in need to be restartable. That is when the
-   plug in is brought back up after being down, it should resume where it
-   left off. For example, a tinderbox should be able to ask for a task
-   before a gerrit shutdown and then report the result after gerrit
-   restart. This will make maintenance-driven restart less intrusive/costly.
-3. Pipe line visualisation: with gerrit jobs and tasks per platform are get
-  currently building and pending.
-4. management cockpit/dashboard with previously build taskes with statistics.
-5. Enhance gerrit's core patch view with table containing tinderbox
-  verification status on per platform base.
-6. Replace log file publication with jenkins. For that a new jenkins plugin:
-  `alien-build` should be written. Instead of visualize log in gerrit instance,
-  the log and build details shoud be fo forwarded to jenkins instance and
-  the url link to this build instance should be added to comment.
-6. Consider patch specific requirements in tinderbox configuration per patch
-  base (i. e. with-java) and propagate these requirement to the tinderboxes.
-  To implement this, tinderbox must be identified by his current configuration
-  set in addition to its platform.
-7. add priority to scheduler, that can be influenced through web UI or ssh
-  command.
-8. If a patch is 'submitted' while the verification tinbuild are pending then
-a) we let already running tindebox finish, and still report the result
-in t 'review' comment as usual, but leave the verify flags untouched
-(I don't think you can modify it after merge anyway)
-b) any platform that is not started yet is 'discarded' for that patch.
-iow the task taht are not started yet are de-queued by 'Submit'.
 
 Contribution:
 =============
 This is gerrit plugin. Please upload patches for review to this gerrit 
 instance: https://review.idaia.de.
-

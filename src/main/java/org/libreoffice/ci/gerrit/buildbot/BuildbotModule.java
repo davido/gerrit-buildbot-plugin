@@ -50,6 +50,7 @@ import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.account.AccountByEmailCache;
 import com.google.gerrit.server.account.GroupCache;
 import com.google.gerrit.server.account.GroupMembership;
+import com.google.gerrit.server.config.SitePaths;
 import com.google.gerrit.server.events.AccountAttribute;
 import com.google.gerrit.server.events.ChangeEvent;
 import com.google.gerrit.server.events.CommentAddedEvent;
@@ -63,7 +64,6 @@ import com.google.inject.Injector;
 
 class BuildbotModule extends AbstractModule {
     static final Logger log = LoggerFactory.getLogger(BuildbotModule.class);
-    private final static String BUILDBOT_CONFIG_RESOURCE = "buildbot.config";
 
     @Inject
     private ChangeHooks hooks;
@@ -89,6 +89,9 @@ class BuildbotModule extends AbstractModule {
     @Inject
     @PluginData
     private java.io.File pluginDataDir;
+
+    @Inject
+    private SitePaths site;
 
     @Inject
     private Injector creatingInjector;
@@ -289,7 +292,7 @@ class BuildbotModule extends AbstractModule {
         File configFile = null;
         String configContent = null;
         try {
-            configFile = new File(pluginDataDir, BUILDBOT_CONFIG_RESOURCE);
+            configFile = new File(site.etc_dir, "buildbot.config");
             configContent = read(configFile);
         } catch (IOException ex) {
             log.error(ex.getMessage());

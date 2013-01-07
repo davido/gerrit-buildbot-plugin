@@ -1,0 +1,41 @@
+Problems
+========
+a) Dependend patch sets, that can not be built isolated
+b) If a task not get pulled by any tinderbox after some time out time (we call
+   it idle timeout) then the job is reported to gerrit with unknown (neutral)
+   state (even if some tinderbox tasks reported a result)
+b) If a task was pulled by some tinderbox, but no result is reported in some
+   reasonable amount of time (we call it engaged timeout), then the task should
+   be rescheduled once time again. If after rescheduling the original task
+   reports status it should be discarded.
+
+TODOs:
+======
+* change argument --success|--failed to option --state=sucess/failed/canceled
+* persist the job and task list in the data base.
+* the plug-in need to be restartable. That is when the
+   plug in is brought back up after being down, it should resume where it
+   left off. For example, a tinderbox should be able to ask for a task
+   before a gerrit shutdown and then report the result after gerrit
+   restart. This will make maintenance-driven restart less intrusive/costly.
+* Pipe line visualisation: with gerrit jobs and tasks per platform are get
+  currently building and pending.
+* management cockpit/dashboard with previously build taskes with statistics.
+* Enhance gerrit's core patch view with table containing tinderbox
+  verification status on per platform base.
+* Replace log file publication with jenkins. For that a new jenkins plugin:
+  `alien-build` should be written. Instead of visualize log in gerrit instance,
+  the log and build details shoud be fo forwarded to jenkins instance and
+  the url link to this build instance should be added to comment.
+* Consider patch specific requirements in tinderbox configuration per patch
+  base (i. e. with-java) and propagate these requirement to the tinderboxes.
+  To implement this, tinderbox must be identified by his current configuration
+  set in addition to its platform.
+* add priority to scheduler, that can be influenced through web UI or ssh
+  command.
+* If a patch is 'submitted' while the verification tinbuild are pending then
+** we let already running tindebox finish, and still report the result
+ in t 'review' comment as usual, but leave the verify flags untouched
+ (I don't think you can modify it after merge anyway)
+** any platform that is not started yet is 'discarded' for that patch.
+ iow the task taht are not started yet are de-queued by 'Submit'.
