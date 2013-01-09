@@ -15,6 +15,7 @@ public class BuildbotConfig {
 	private String project;
 	private TriggerStrategie triggerStrategie;
 	private String reviewerGroupName;
+	private String branch;
 	private String logDir;
 
 	public String getEmail() {
@@ -55,5 +56,13 @@ public class BuildbotConfig {
 
 	public void setReviewerGroupName(String reviewerGroupName) {
 		this.reviewerGroupName = reviewerGroupName;
+	}
+
+	public String getBranch() {
+		return branch;
+	}
+
+	public void setBranch(String branch) {
+		this.branch = branch;
 	}
 }

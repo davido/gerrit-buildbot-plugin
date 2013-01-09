@@ -1,28 +1,25 @@
-get-task - Get a task from platform specific queue
-===================
+get - Get a task from platform specific queue
+=============================================
 
 NAME
 ----
-get-task - Get a task from platform specific queue.
+get - Get a task from platform specific queue.
 
 SYNOPSIS
 --------
->     ssh -p <port> <host> buildbot get-task
+>     ssh -p <port> <host> buildbot get
 >      --format TEXT | BASH | -f TEXT | BASH
 >      --project <NAME> | -p <NAME>
 >      --platform <NAME> | -a <NAME>
+>      --id <TB-ID> | -i <TB-ID>
 
 DESCRIPTION
 -----------
 To get a task for building builbot connect to buildbot plugin and
 poll a task from a platform specific. Once the task i spolled, it
 is removed from the blocking queue and a new thread is started.
-This thread wait until the task is reported as success, fail or cancel
-with report ssh command. If result is not reported and timeoutdefined
-in buildbot.config is expied the task status is timedout.
-
-Once the task is executed, buildbot returns it status and log with
-report command.
+This thread wait until the task is reported as success, failed or 
+canceled with `put` ssh command.
 
 Note: Platform can be one from {windows | linux | mac}.
 
@@ -36,7 +33,7 @@ or have been granted [the 'View Queue' global capability][1].
 SEE ALSO
 --------
 
-* [report](cmd-report.html)
+* [put](cmd-put.html)
 
 Buildbot
 --------

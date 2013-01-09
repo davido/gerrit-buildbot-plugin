@@ -1,25 +1,25 @@
-report - Report task result
-====================
+put - Report task result
+========================
 
 NAME
 ----
-receipt-job - Acknowledge executed task and report the result.
+put - Acknowledge executed task and report the result.
 
 SYNOPSIS
 --------
->     ssh -p <port> <host> buildbot report
+>     ssh -p <port> <host> buildbot put
 >      --ticket <ID> | -t <ID>
 >      --log <url> | -l <url>
->      [--succeed] | [-s]
->      [--failed] | [-f]
+>      --status <SUCCESS|FAILED|CANCELED> | [-s]
+>      --id <TB-ID> | -i <TB-ID>
 
 DESCRIPTION
 -----------
 Once the task is executed, buildbot returns it status and log with
-report command. When all platform specific tasks for Gerrit change are
-executed, Gerrit change is vrefified with git review command.
+`put` command. When all platform specific tasks for Gerrit change are
+executed, Gerrit change is verified.
 
-If tasks for all platforms have status succeed then verifiy +1
+If tasks for all platforms have status succees then verifiy +1
 is provided, otherwise verifiy -1.
 
 ACCESS
@@ -32,7 +32,7 @@ or have been granted [the 'View Queue' global capability][1].
 SEE ALSO
 --------
 
-* [get-task](cmd-get-task.html)
+* [get](cmd-get.html)
 
 Buildbot
 --------

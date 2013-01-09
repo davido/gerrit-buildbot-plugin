@@ -190,6 +190,14 @@ class BuildbotModule extends AbstractModule {
             return false;
         }
 
+        // check branch
+        if (config.getBranch() != null) {
+        	if (!config.getBranch().equals(commentAddedEvent.change.branch)) {
+        		log.debug("ignore this comment: branch not match {}", commentAddedEvent.change.branch);
+        		return false;
+        	}
+        }
+        
         List<PatchSetApproval> list = new ArrayList<PatchSetApproval>();
         PatchSet.Id id = null;
         try {
@@ -311,6 +319,7 @@ class BuildbotModule extends AbstractModule {
         }
         String email = cfg.getString("user", null, "mail");
         String project = cfg.getString("project", null, "name");
+        String branch = cfg.getString("project", null, "branch");
         String strStrategie = cfg.getString("project", null, "trigger");
 
         Preconditions.checkNotNull(strStrategie, "strategie must not be null");
@@ -319,6 +328,7 @@ class BuildbotModule extends AbstractModule {
         config = new BuildbotConfig();
         config.setEmail(email);
         config.setProject(project);
+        config.setBranch(branch);
 
         TriggerStrategie triggerStrategie = TriggerStrategie.valueOf(strStrategie.toUpperCase());
         Preconditions.checkNotNull(triggerStrategie, String.format("unknown strategie %s", strStrategie));
@@ -353,7 +363,15 @@ class BuildbotModule extends AbstractModule {
                 reviewed = category;
             }
         }
-        try {
+        
+        if (config.getReviewerGroupName() != null) {        	
+        	initReviewerGroup();
+        }
+    }
+
+	private void initReviewerGroup() {
+		Preconditions.checkNotNull(config.getReviewerGroupName(), "ReviewerGroup can not be null");
+		try {
             final AccountGroup reviewerGroup = findGroup(config.getReviewerGroupName());
             reviewerGroupId = reviewerGroup.getGroupUUID();
         } catch (OrmException e) {
@@ -361,25 +379,7 @@ class BuildbotModule extends AbstractModule {
         } catch (NoSuchGroupException e) {
             throw new IllegalStateException(String.format("Group doesn't exist: %s", config.getReviewerGroupName()));
         }
-
-        /*
-        ResultSet<PatchSetApproval> approvals = null;
-        PatchSet.Id id1 = PatchSet.Id.parse("1,1");
-        try {
-            final ReviewDb db = schema.open();
-            try {
-                approvals = db.patchSetApprovals().byPatchSet(id1);
-                for (PatchSetApproval attr : approvals) {
-                    System.out.println(attr);
-                }
-            } finally {
-              db.close();
-            }
-          } catch (OrmException e) {
-            log.error("Cannot load patch set data for " + id.toString(), e);
-          }
-          */
-    }
+	}
 
     private String read(final File configFile) throws IOException {
         final Reader r = new InputStreamReader(new FileInputStream(configFile),

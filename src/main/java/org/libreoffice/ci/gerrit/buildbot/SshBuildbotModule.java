@@ -9,21 +9,21 @@
 
 package org.libreoffice.ci.gerrit.buildbot;
 
-import org.libreoffice.ci.gerrit.buildbot.commands.GetTaskCommand;
-import org.libreoffice.ci.gerrit.buildbot.commands.ReportCommand;
-import org.libreoffice.ci.gerrit.buildbot.commands.ShowQueueCommand;
+import org.libreoffice.ci.gerrit.buildbot.commands.GetCommand;
+import org.libreoffice.ci.gerrit.buildbot.commands.PutCommand;
+import org.libreoffice.ci.gerrit.buildbot.commands.ScheduleCommand;
+import org.libreoffice.ci.gerrit.buildbot.commands.ShowCommand;
 
-import com.google.gerrit.reviewdb.server.ReviewDb;
 import com.google.gerrit.sshd.PluginCommandModule;
-import com.google.inject.Inject;
 
 public class SshBuildbotModule extends PluginCommandModule {
 	
 	@Override
 	protected void configureCommands() {
-		command("show-queue").to(ShowQueueCommand.class);
-		command("get-task").to(GetTaskCommand.class);
-		command("report").to(ReportCommand.class);
+		command("show").to(ShowCommand.class);
+		command("get").to(GetCommand.class);
+		command("put").to(PutCommand.class);
+		command("schedule").to(ScheduleCommand.class);
 	}
 
 }

@@ -9,15 +9,18 @@
 
 package org.libreoffice.ci.gerrit.buildbot.model;
 
+import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
+
 public class TbJobResult {
 	BuildbotPlatformJob tbPlatformJob;
 	String decoratedId;
 	Platform platform;
-	boolean status;
+	TaskStatus status;
 	String log;
 	long endTime;
 
-	public TbJobResult(BuildbotPlatformJob tbPlatformJob, String decoratedId, Platform platform, boolean status, String log) {
+	public TbJobResult(BuildbotPlatformJob tbPlatformJob, String decoratedId, 
+			Platform platform, TaskStatus status, String log) {
 		this.tbPlatformJob = tbPlatformJob;
 		this.decoratedId = decoratedId;
 		this.platform = platform;
@@ -38,7 +41,7 @@ public class TbJobResult {
 		return platform;
 	}
 
-	public boolean isStatus() {
+	public TaskStatus getStatus() {
 		return status;
 	}
 	
@@ -48,5 +51,12 @@ public class TbJobResult {
 	
 	public BuildbotPlatformJob getTbPlatformJob() {
 		return tbPlatformJob;
+	}
+
+	public boolean ignoreJobStatus() {
+		if (getStatus() == TaskStatus.CANCELED) {
+			return true;
+		}
+		return false;
 	}	
 }

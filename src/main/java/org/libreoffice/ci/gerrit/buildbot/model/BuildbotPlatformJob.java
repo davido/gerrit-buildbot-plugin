@@ -11,6 +11,8 @@ package org.libreoffice.ci.gerrit.buildbot.model;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.StringUtils;
+import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.logic.impl.LogicControlImpl;
 
 public class BuildbotPlatformJob implements Runnable {
@@ -23,6 +25,8 @@ public class BuildbotPlatformJob implements Runnable {
 	Platform platform;
 	TbJobResult result;
 	long startTime;
+	// TB id
+	private String box;
 
 	public BuildbotPlatformJob(GerritJob parent, Platform platform) {
 		this.platform = platform;
@@ -65,14 +69,15 @@ public class BuildbotPlatformJob implements Runnable {
 
 	}
 
-	public String createAndSetTicket(Platform tbPlatform) {
+	public String createAndSetTicket(Platform tbPlatform, String box) {
 		ticket = new Ticket(parent.getId(), tbPlatform);
+		this.box = box;
 		started.set(true);
 		startTime = System.currentTimeMillis();
 		return ticket.toString();
 	}
 
-	public TbJobResult createResult(String log, boolean status) {
+	public TbJobResult createResult(String log, TaskStatus status) {
 		result = new TbJobResult(this, ticket.getDecoratedId(), platform, status, log);
 		ready.set(true);
 
@@ -84,6 +89,20 @@ public class BuildbotPlatformJob implements Runnable {
 		return result;
 	}
 
+	public TbJobResult discard() {
+		assert (started.get() == false);
+		assert (ready.get() == false);
+		result = new TbJobResult(this, StringUtils.EMPTY, platform, TaskStatus.DISCARDED, null);
+		abort = true;
+
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
 	public void setAbort(boolean abort) {
 		this.abort = abort;
 	}
@@ -120,6 +139,10 @@ public class BuildbotPlatformJob implements Runnable {
 		thread.start();
 	}
 
+	public boolean isDiscardable() {
+		return !isStarted() && result == null;
+	}
+	
 	public boolean isStarted() {
 		return started.get();
 	}
@@ -134,5 +157,13 @@ public class BuildbotPlatformJob implements Runnable {
 	
 	public long getStartTime() {
 		return startTime;
-	}	
+	}
+	
+	public Platform getPlatform() {
+		return platform;
+	}
+
+	public String getTinderboxId() {
+		return box;
+	}
 }

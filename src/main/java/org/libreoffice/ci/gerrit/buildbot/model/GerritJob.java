@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.logic.impl.LogicControlImpl;
 
 public class GerritJob implements Runnable {
@@ -94,11 +95,16 @@ public class GerritJob implements Runnable {
 			Map<Platform, TBBlockingQueue> tbQueueMap) {
 		for (int i = 0; i < Platform.values().length; i++) {
 			Platform platform = Platform.values()[i];
-			BuildbotPlatformJob tbJob = new BuildbotPlatformJob(this, platform);
-			tinderBoxThreadList.add(tbJob);
-			tbQueueMap.get(platform).add(tbJob);
-			tbJob.start();
+			initPlatformJob(tbQueueMap, platform);
 		}
+	}
+
+	private void initPlatformJob(Map<Platform, TBBlockingQueue> tbQueueMap,
+			Platform platform) {
+		BuildbotPlatformJob tbJob = new BuildbotPlatformJob(this, platform);
+		tinderBoxThreadList.add(tbJob);
+		tbQueueMap.get(platform).add(tbJob);
+		tbJob.start();
 	}
 
 	public int getId() {
@@ -119,14 +125,38 @@ public class GerritJob implements Runnable {
 		return null;
 	}
 
-	public TbJobResult setResultPossible(String ticket, String log, boolean status) {
+	public TbJobResult setResultPossible(String ticket, String log, TaskStatus status) {
 		BuildbotPlatformJob job = getTbJob(ticket);
 		if (job != null) {
 			if (job.getResult() != null) {
                 // result already set: ignore
                 return null;
             }
+			
+			// Before we report a status back, check different strategies/optimisations
+			// 1. if status is failed, then discard all pending tasks.
+			if (status.isFailed()) {
+				for (BuildbotPlatformJob job2 : tinderBoxThreadList) {
+					if (job2.getTicketString() != null
+						&& job2.getTicketString().equals(ticket)) {
+						// skip the same task
+						continue;
+					}
+					// discard pending tasks
+					if (job2.isDiscardable()) {
+						job2.discard();
+					}
+				}
+			}
+			
             TbJobResult jobResult = job.createResult(log, status);
+         
+         	// 2. if status is canceled, the reschedule a new task for the same platform
+            // reuse the same id and drop the old task from the list (replace it)
+         	if (status.isCanceled()) {
+         		tinderBoxThreadList.remove(job);
+         		initPlatformJob(control.getTbQueueMap(), job.platform);
+         	}
 			return jobResult;
 		}
 		return null;

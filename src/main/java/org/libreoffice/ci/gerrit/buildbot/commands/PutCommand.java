@@ -20,6 +20,7 @@ import java.util.zip.GZIPInputStream;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
@@ -29,6 +30,7 @@ import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.google.gerrit.common.data.ApprovalType;
 import com.google.gerrit.common.data.ApprovalTypes;
 import com.google.gerrit.common.data.GlobalCapability;
@@ -46,20 +48,20 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class ReportCommand extends SshCommand implements
+public final class PutCommand extends SshCommand implements
         GerritNotifyListener {
-    static final Logger log = LoggerFactory.getLogger(ReportCommand.class);
+    static final Logger log = LoggerFactory.getLogger(PutCommand.class);
 
-    @Option(name = "--ticket", aliases = { "-t" }, metaVar = "TICKET", required = true, usage = "ticket of the job")
+    @Option(metaVar = "TICKET", name = "--ticket", aliases = { "-t" }, required = true, usage = "ticket of the job")
     private String ticket;
 
-    @Option(name = "--succeed", aliases = { "-s" }, required = false, usage = "specify this option if job was successfull")
-    private boolean succeed;
+    @Option(name = "--id", aliases={"-i"}, required = true, metaVar = "TB", usage = "id of the tinderbox")
+    private String box;
+    
+    @Option(metaVar = "STATUS", name = "--status", aliases = { "-s" }, required = true, usage = "success|failed|canceled")
+    private TaskStatus status; 
 
-    @Option(name = "--failed", aliases = { "-f" }, required = false, usage = "specify this option if job failed")
-    private boolean failed;
-
-    @Option(name = "--log", aliases = "-l", metaVar = "-|LOG", required = false, usage = "url of the job log page or - for standard input")
+    @Option(metaVar = "-|LOG", name = "--log", aliases = "-l", required = false, usage = "url of the job log page or - for standard input")
     private String urllog;
 
     @Inject
@@ -92,9 +94,35 @@ public final class ReportCommand extends SshCommand implements
         if ("-".equals(urllog)) {
             writeLogFile();
         }
-        TbJobResult result = control.setResultPossible(ticket, succeed, urllog);
+        
+        if (Strings.isNullOrEmpty(ticket)) {
+        	String tmp = "No ticket is provided";
+        	stderr.print(tmp);
+        	stderr.write("\n");
+        	log.warn(tmp);
+        	return;
+        }
+        
+        if (status.isSuccess() || status.isFailed()) {
+        	if (Strings.isNullOrEmpty(urllog)) {
+        		String tmp = String.format("No log is provided for status %s", status.name());
+        		stderr.print(tmp);
+            	stderr.write("\n");
+            	log.warn(tmp);
+            	return;
+        	}
+        }
+        
+        TbJobResult result = control.setResultPossible(ticket, status, urllog);
+        if (result == null) {
+        	String tmp = String.format("Can not find task for ticket %s", ticket);
+        	stderr.print(tmp);
+        	stderr.write("\n");
+        	log.warn(tmp);
+        	return;
+        }
         notifyGerritBuildbotPlatformJobFinished(result);
- 
+                
         // Synchronize?
         Thread.sleep(1000);
 
@@ -103,8 +131,6 @@ public final class ReportCommand extends SshCommand implements
                 notifyGerritJobFinished(result.getTbPlatformJob().getParent());
             }
         }
-        stdout.print(Boolean.toString(result != null));
-        stdout.print("\n");
     }
 
     private void writeLogFile() throws IOException {
@@ -149,14 +175,18 @@ public final class ReportCommand extends SshCommand implements
             StringBuilder builder = new StringBuilder(256);
             short combinedStatus = 1;
             for (TbJobResult tbResult : job.getTbResultList()) {
-                if (!tbResult.isStatus()) {
+            	// ignore canceled tasks
+            	if (tbResult.ignoreJobStatus()) {
+            		continue;
+            	}
+                if (!tbResult.getStatus().isSuccess()) {
                     combinedStatus = -1;
                 }
                 builder.append(String.format("* Build %s on %s completed %s : %s\n",
                         tbResult.getDecoratedId(),
                         tbResult.getPlatform().name(),
-                        tbResult.getLog(),
-                        tbResult.isStatus() ? "SUCCESS" : "FAILURE"));
+                        tbResult.getLog() == null ? StringUtils.EMPTY : tbResult.getLog(),
+                        tbResult.getStatus().name()));
             }
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));
             publishCommentsFactory.create(patchset.getId(),
@@ -191,8 +221,8 @@ public final class ReportCommand extends SshCommand implements
                     tbJobResult.getDecoratedId(),
                     tbJobResult.getPlatform().name(),
                     time(tbJobResult.getEndTime(), 0),
-                    tbJobResult.getLog(),
-                    tbJobResult.isStatus() ? "SUCCESS" : "FAILURE"));
+                    tbJobResult.getLog() == null ? StringUtils.EMPTY : tbJobResult.getLog(),
+                    tbJobResult.getStatus().name()));
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
             publishCommentsFactory.create(patchset.getId(),
                     builder.toString(), aps, true).call();
@@ -204,9 +234,6 @@ public final class ReportCommand extends SshCommand implements
 
     private static String time(final long now, final long delay) {
         final Date when = new Date(now + delay);
-        if (delay < 24 * 60 * 60 * 1000L) {
-            return new SimpleDateFormat("HH:mm:ss.SSS").format(when);
-        }
         return new SimpleDateFormat("MMM-dd HH:mm").format(when);
     }
 }

@@ -11,11 +11,14 @@ package org.libreoffice.ci.gerrit.buildbot.logic;
 
 import java.util.List;
 
+import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 
+import com.google.gerrit.reviewdb.client.Change;
+import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
@@ -23,8 +26,9 @@ public interface LogicControl {
 	boolean isProjectSupported(String project);
 	void startGerritJob(PatchSetCreatedEvent event);
 	void startGerritJob(CommentAddedEvent event);
+	void startGerritJob(Change change, PatchSet patchSet);
 	List<GerritJob> getGerritJobs();
 	GerritJob findJobByRevision(String revision);
-	TbJobDescriptor launchTbJob(Platform platform);
-	TbJobResult setResultPossible(String ticket, boolean status, String log);
+	TbJobDescriptor launchTbJob(Platform platform, String box);
+	TbJobResult setResultPossible(String ticket, TaskStatus status, String log);
 }

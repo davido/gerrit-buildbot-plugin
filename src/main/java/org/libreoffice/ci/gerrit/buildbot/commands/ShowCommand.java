@@ -23,15 +23,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
-import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.server.util.IdGenerator;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class ShowQueueCommand extends SshCommand {
-    static final Logger log = LoggerFactory.getLogger(ShowQueueCommand.class);
+public final class ShowCommand extends SshCommand {
+    static final Logger log = LoggerFactory.getLogger(ShowCommand.class);
 
     @Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the queue should be shown")
     private ProjectControl projectControl;
@@ -42,10 +41,7 @@ public final class ShowQueueCommand extends SshCommand {
     @Inject
     LogicControl control;
 
-    @Inject
-    IdGenerator gen;
-
-    public ShowQueueCommand() {
+    public ShowCommand() {
         log.debug("in ctr");
     }
 
@@ -89,11 +85,12 @@ public final class ShowQueueCommand extends SshCommand {
                             String time = "-";
                             Ticket t = job.getTicket();
                             String status = "Job: ";
-                            if (!job.isStarted()) {
+                            if (job.getResult() != null && job.getResult().getStatus().isDiscarded()) {
+                            	status += "DISCARDED";
+                            } else if (!job.isStarted()) {
                                 status += "INIT";
                             } else if (job.isReady()) {
-                                status += job.getResult().isStatus() ? "SUCCEED"
-                                        : "FAILED";
+                                status += job.getResult().getStatus().name();
                                 time = time(job.getResult().getEndTime(), 0);
                             } else {
                                 status += "STARTED";

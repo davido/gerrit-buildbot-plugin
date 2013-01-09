@@ -39,14 +39,17 @@ import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class GetTaskCommand extends SshCommand {
-    static final Logger log = LoggerFactory.getLogger(GetTaskCommand.class);
+public final class GetCommand extends SshCommand {
+    static final Logger log = LoggerFactory.getLogger(GetCommand.class);
 
     @Option(name = "--project", aliases={"-p"}, required = true, metaVar = "PROJECT", usage = "name of the project for which the job should be polled")
     private ProjectControl projectControl;
 
     @Option(name = "--platform", aliases={"-a"}, required = true, metaVar = "PLATFORM", usage = "name of the platform")
     private Platform platform;
+    
+    @Option(name = "--id", aliases={"-i"}, required = true, metaVar = "TB", usage = "id of the tinderbox")
+    private String box;
 
     @Option(name = "--format", aliases={"-f"}, required = false, metaVar = "FORMAT", usage = "output display format")
     private FormatType format = FormatType.TEXT;
@@ -77,7 +80,7 @@ public final class GetTaskCommand extends SshCommand {
             stderr.write("\n");
             return;
         }
-        TbJobDescriptor jobDescriptor = control.launchTbJob(platform);
+        TbJobDescriptor jobDescriptor = control.launchTbJob(platform, box);
         if (jobDescriptor == null) {
             if (format != null && format == FormatType.BASH) {
                 stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
@@ -137,9 +140,6 @@ public final class GetTaskCommand extends SshCommand {
 
     private static String time(final long now, final long delay) {
         final Date when = new Date(now + delay);
-        if (delay < 24 * 60 * 60 * 1000L) {
-            return new SimpleDateFormat("HH:mm:ss.SSS").format(when);
-        }
         return new SimpleDateFormat("MMM-dd HH:mm").format(when);
     }
 }
