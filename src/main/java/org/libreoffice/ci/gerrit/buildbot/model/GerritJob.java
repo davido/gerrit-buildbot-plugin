@@ -22,7 +22,7 @@ public class GerritJob implements Runnable {
 	String gerritRef;
 	String gerritRevision;
 	Thread thread;
-	int id;
+	String id;
 	long startTime;
 
 	final List<BuildbotPlatformJob> tinderBoxThreadList = Collections
@@ -31,15 +31,21 @@ public class GerritJob implements Runnable {
 	LogicControlImpl control;
 
 	public GerritJob(LogicControlImpl control, String gerritBranch,
-			String gerritRef, String gerritRevision, int id) {
+			String gerritRef, String gerritRevision) {
 		this.control = control;
 		this.gerritBranch = gerritBranch;
 		this.gerritRef = gerritRef;
 		this.gerritRevision = gerritRevision;
-		this.id = id;
+		this.id = abbreviate(gerritRevision);
 		this.startTime = System.currentTimeMillis();
 	}
 
+    /** Obtain a shorter version of this key string, using a leading prefix. */
+    public String abbreviate(String s) {
+      return s.substring(0, Math.min(s.length(), 9));
+    }
+
+	
 	public void start() {
 		thread = new Thread(this, "name");
 		thread.start();
@@ -79,7 +85,6 @@ public class GerritJob implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		//control.notifyGerritJobFinished(this);
 		control.finishGerritJob(this);
 	}
 
@@ -107,7 +112,7 @@ public class GerritJob implements Runnable {
 		tbJob.start();
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
@@ -154,8 +159,9 @@ public class GerritJob implements Runnable {
          	// 2. if status is canceled, the reschedule a new task for the same platform
             // reuse the same id and drop the old task from the list (replace it)
          	if (status.isCanceled()) {
-         		tinderBoxThreadList.remove(job);
+         		// important! remove it first and add a new instance
          		initPlatformJob(control.getTbQueueMap(), job.platform);
+         		tinderBoxThreadList.remove(job);
          	}
 			return jobResult;
 		}

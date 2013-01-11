@@ -78,7 +78,7 @@ public class BuildbotPlatformJob implements Runnable {
 	}
 
 	public TbJobResult createResult(String log, TaskStatus status) {
-		result = new TbJobResult(this, ticket.getDecoratedId(), platform, status, log);
+		result = new TbJobResult(this, ticket.getId(), platform, status, log);
 		ready.set(true);
 
 		try {

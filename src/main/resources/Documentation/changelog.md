@@ -1,6 +1,36 @@
 Recent Changes
 ==============
 
+Version 1.4: 2013-01-11
+===========
+
+core
+----
+
+build task ticket `<SHA-1>_<platform>` contained self generated SHA-1.
+Original SHA-1 from patch set is used instead.
+
+ssh commands changes
+--------------------
+
+put
+:
+
+* race condition if status --canceled for the last running task was reported.
+
+show
+:
+
+* fixed wrong time format
+* new column TB-ID (Bot) added to the table
+
+Documentation
+-------------
+
+* schedule command: fixed some formating issues
+* put command: fixed formatting issues
+* get command: fixed formatting issues
+
 Version 1.3: 2013-01-10
 ===========
 

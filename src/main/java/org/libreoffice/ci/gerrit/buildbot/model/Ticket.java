@@ -9,14 +9,12 @@
 
 package org.libreoffice.ci.gerrit.buildbot.model;
 
-import com.google.gerrit.server.util.IdGenerator;
-
 public class Ticket {
-	int id;
+	String id;
 	Platform tbPlatform;
 	long startTime;
 
-	public Ticket(int id, Platform tbPlatform) {
+	public Ticket(String id, Platform tbPlatform) {
 		this.id = id;
 		this.tbPlatform = tbPlatform;
 		startTime = System.currentTimeMillis();
@@ -24,24 +22,18 @@ public class Ticket {
 
 	@Override
 	public String toString() {
-
-		return id(id) + "_" + tbPlatform.name();
+		return id + "_" + tbPlatform.name();
 	}
 
 	public long getStartTime() {
 		return startTime;
 	}
 	
-
-	private static String id(final int id) {
-		  return IdGenerator.format(id);
-	}
-	
 	public String getPlatform() {
 		return tbPlatform.toString();
 	}
 
-	public String getDecoratedId() {
-		return id(id);
+	public String getId() {
+		return id;
 	}
 }

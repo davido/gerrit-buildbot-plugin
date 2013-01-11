@@ -125,7 +125,7 @@ public final class GetCommand extends SshCommand {
             StringBuilder builder = new StringBuilder(256);
             short status = 0;
             builder.append(String.format("Build %s on %s started at %s\n\n",
-                    tbPlatformJob.getTicket().getDecoratedId(),
+                    tbPlatformJob.getTicket().getId(),
                     tbPlatformJob.getPlatformString(),
                     time(tbPlatformJob.getStartTime(), 0)
                     ));

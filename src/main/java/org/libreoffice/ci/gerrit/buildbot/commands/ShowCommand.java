@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.server.project.ProjectControl;
-import com.google.gerrit.server.util.IdGenerator;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.inject.Inject;
 
@@ -61,8 +60,8 @@ public final class ShowCommand extends SshCommand {
         stdout.print("----------------------------------------------"
                 + "--------------------------------\n");
 
-        stdout.print(String.format("%-16s %-12s %-12s %-22s %s\n", //
-                "Task-Id", "Start/End", "Type/State", "Ref", "Branch"));
+        stdout.print(String.format("%-17s %-12s %-12s %-22s %-3s %s\n", //
+                "Task-Id", "Start/End", "Type/State", "Ref", "Bot", "Branch"));
         int numberOfPendingTasks = 0;
 
         List<GerritJob> changes = control.getGerritJobs();
@@ -71,16 +70,17 @@ public final class ShowCommand extends SshCommand {
                 if (type == null || type.equals(TaskType.CHANGE)) {
                     numberOfPendingTasks++;
                     stdout.print(String.format(
-                            "%-16s %-12s %-12s %-22s %s\n", //
-                            id(change.getId()), time(change.getStartTime(), 0),
+                            "%-17s %-12s %-12s %-22s %-3s %s\n", //
+                            change.getId(), time(change.getStartTime(), 0),
                             "Change", change.getGerritRef(),
+                            "-",
                             change.getGerritBranch()));
                 }
                 if (type == null || type.equals(TaskType.JOB)) {
                     List<BuildbotPlatformJob> list = change.getBuildbotList();
                     synchronized (list) {
                         for (BuildbotPlatformJob job : list) {
-                            String jobId = id(job.getParent().getId()) + "_"
+                            String jobId = job.getParent().getId() + "_"
                                     + job.getPlatformString();
                             String time = "-";
                             Ticket t = job.getTicket();
@@ -97,9 +97,11 @@ public final class ShowCommand extends SshCommand {
                                 time = time(t.getStartTime(), 0);
                             }
                             stdout.print(String.format(
-                                    "%-16s %-12s %-12s %-22s %s\n", //
+                                    "%-17s %-12s %-12s %-22s %-3s %s\n", //
                                     jobId, time, status, job.getParent()
-                                            .getGerritRef(), job.getParent()
+                                            .getGerritRef(),
+                                            job.getTinderboxId() == null ? "-" : job.getTinderboxId(),
+                                            job.getParent()
                                             .getGerritBranch()));
                             numberOfPendingTasks++;
                         }
@@ -112,15 +114,8 @@ public final class ShowCommand extends SshCommand {
         stdout.print("  " + numberOfPendingTasks + " task(s)\n");
     }
 
-    private static String id(final int id) {
-        return IdGenerator.format(id);
-    }
-
     private static String time(final long now, final long delay) {
         final Date when = new Date(now + delay);
-        if (delay < 24 * 60 * 60 * 1000L) {
-            return new SimpleDateFormat("HH:mm:ss.SSS").format(when);
-        }
         return new SimpleDateFormat("MMM-dd HH:mm").format(when);
     }
 }

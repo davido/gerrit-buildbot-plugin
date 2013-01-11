@@ -30,13 +30,8 @@ import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
-import com.google.gerrit.server.util.IdGenerator;
-import com.google.inject.Inject;
 
 public class LogicControlImpl implements LogicControl {
-
-	@Inject
-	IdGenerator generator;
 	
 	final Map<Platform, TBBlockingQueue> tbQueueMap = new ConcurrentHashMap<Platform, TBBlockingQueue>();
 	final List<GerritJob> gerritJobList = Collections
@@ -80,14 +75,14 @@ public class LogicControlImpl implements LogicControl {
 
 	public void startGerritJob(PatchSetCreatedEvent event) {
 		synchronized (gerritJobList) {
-			GerritJob job = new GerritJob(this, event.change.branch, event.patchSet.ref, event.patchSet.revision, generator.next());
+			GerritJob job = new GerritJob(this, event.change.branch, event.patchSet.ref, event.patchSet.revision);
 			startJob(job);
 		}
 	}
 
 	public void startGerritJob(CommentAddedEvent event) {
 		synchronized (gerritJobList) {
-			GerritJob job = new GerritJob(this, event.change.branch, event.patchSet.ref, event.patchSet.revision, generator.next());
+			GerritJob job = new GerritJob(this, event.change.branch, event.patchSet.ref, event.patchSet.revision);
 			startJob(job);
 		}
 	}
@@ -95,7 +90,7 @@ public class LogicControlImpl implements LogicControl {
 	public void startGerritJob(Change change, PatchSet patchSet) {
 		synchronized (gerritJobList) {
 			GerritJob job = new GerritJob(this, change.getDest().getShortName(), 
-					patchSet.getRefName(), patchSet.getRevision().get(), generator.next());
+					patchSet.getRefName(), patchSet.getRevision().get());
 			startJob(job);
 		}
 	}
