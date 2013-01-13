@@ -55,7 +55,7 @@ public final class ScheduleCommand extends SshCommand {
 	@Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the job should be scheduled")
 	private ProjectControl projectControl;
 
-	@Argument(index = 0, required = true, multiValued = false, metaVar = "{COMMIT | CHANGE,PATCHSET}", usage = "commit or patch set to schedule")
+	@Argument(index = 0, required = true, multiValued = true, metaVar = "{COMMIT | CHANGE,PATCHSET}", usage = "commit or patch set(s) to schedule")
 	void addPatchSetId(final String token) {
 		try {
 			patchSetIds.addAll(parsePatchSetId(token));
@@ -66,11 +66,19 @@ public final class ScheduleCommand extends SshCommand {
 		}
 	}
 
+	protected String getDescription() {
+        return "Manually trigger a build for specified patch sets";
+    }
+
 	@Override
 	public void run() throws UnloggedFailure, Failure, Exception {
 		log.debug("schedule");
+		for (PatchSet.Id id : patchSetIds) {
+			doSchedule(id);
+		}
+	}
 
-		PatchSet.Id id = patchSetIds.iterator().next();
+	private void doSchedule(PatchSet.Id id) throws OrmException {
 		PatchSet patchSet = db.patchSets().get(id);
 
 		Change change = db.changes().get(id.getParentKey());
@@ -102,8 +110,8 @@ public final class ScheduleCommand extends SshCommand {
 		}
 
 		// check branch if configured
-		if (config.getBranch() != null) {
-			if (!config.getBranch().equals(change.getDest().getShortName())) {
+		if (!config.getBranches().isEmpty()) {
+			if (!config.getBranches().contains(change.getDest().getShortName())) {
 				String tmp = String.format("error: branch not match  %s",
 						change.getDest().getShortName());
 				log.warn(tmp);

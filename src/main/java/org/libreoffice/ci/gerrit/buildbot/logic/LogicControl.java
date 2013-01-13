@@ -10,6 +10,7 @@
 package org.libreoffice.ci.gerrit.buildbot.logic;
 
 import java.util.List;
+import java.util.Set;
 
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
@@ -29,6 +30,8 @@ public interface LogicControl {
 	void startGerritJob(Change change, PatchSet patchSet);
 	List<GerritJob> getGerritJobs();
 	GerritJob findJobByRevision(String revision);
-	TbJobDescriptor launchTbJob(Platform platform, String box);
+	TbJobDescriptor launchTbJob(Platform platform, Set<String> branch, String box);
 	TbJobResult setResultPossible(String ticket, TaskStatus status, String log);
+	void stop();
+	void start();
 }

@@ -40,8 +40,8 @@ public final class ShowCommand extends SshCommand {
     @Inject
     LogicControl control;
 
-    public ShowCommand() {
-        log.debug("in ctr");
+    protected String getDescription() {
+        return "Display the buildbot work queue";
     }
 
     @Override

@@ -13,6 +13,7 @@ import org.libreoffice.ci.gerrit.buildbot.commands.GetCommand;
 import org.libreoffice.ci.gerrit.buildbot.commands.PutCommand;
 import org.libreoffice.ci.gerrit.buildbot.commands.ScheduleCommand;
 import org.libreoffice.ci.gerrit.buildbot.commands.ShowCommand;
+import org.libreoffice.ci.gerrit.buildbot.commands.VersionCommand;
 
 import com.google.gerrit.sshd.PluginCommandModule;
 
@@ -24,6 +25,7 @@ public class SshBuildbotModule extends PluginCommandModule {
 		command("get").to(GetCommand.class);
 		command("put").to(PutCommand.class);
 		command("schedule").to(ScheduleCommand.class);
+		command("version").to(VersionCommand.class);
 	}
 
 }

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
@@ -20,7 +21,6 @@ import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.GerritNotifyListener;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
 import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
@@ -33,21 +33,38 @@ import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
 public class LogicControlImpl implements LogicControl {
 	
-	final Map<Platform, TBBlockingQueue> tbQueueMap = new ConcurrentHashMap<Platform, TBBlockingQueue>();
-	final List<GerritJob> gerritJobList = Collections
-			.synchronizedList(new ArrayList<GerritJob>());
-	final List<GerritNotifyListener> gerritNotifiers = Collections
-			.synchronizedList(new ArrayList<GerritNotifyListener>());
+	private final Map<Platform, TBBlockingQueue> tbQueueMap = 
+        new ConcurrentHashMap<Platform, TBBlockingQueue>();
+	private final List<GerritJob> gerritJobList = 
+        Collections.synchronizedList(new ArrayList<GerritJob>());
+
 	private BuildbotConfig config;
 
-	public LogicControlImpl(final BuildbotConfig config) {
+	public LogicControlImpl(BuildbotConfig config) {
 		this.config = config;
-		for (int i = 0; i < Platform.values().length; i++) {
-			tbQueueMap.put(Platform.values()[i],
-					new TBBlockingQueue(Platform.values()[i]));
-		}
 	}
 
+	@Override
+	public void start() {
+		for (int i = 0; i < Platform.values().length; i++) {
+            tbQueueMap.put(Platform.values()[i],
+            				new TBBlockingQueue(Platform.values()[i]));
+		}
+	}
+	
+	@Override
+	public void stop() {
+		synchronized (gerritJobList) {
+			for (GerritJob job : gerritJobList) {
+				for (BuildbotPlatformJob task : job.getBuildbotList()) {
+					task.setAbort(true);
+				}
+			}
+            gerritJobList.clear();
+			tbQueueMap.clear();
+		}
+	}
+	
 	private TBBlockingQueue getQueue(Platform p) {
 		return tbQueueMap.get(p);
 	}
@@ -57,21 +74,6 @@ public class LogicControlImpl implements LogicControl {
 			gerritJobList.remove(job);
 		}
 	}
-
-//	// Notifiy all listener about the ready jobs 
-//	public void notifyGerritJobFinished(GerritJob job) {
-//		for (GerritNotifyListener l : gerritNotifiers) {
-//			l.notifyGerritJobFinished(job);
-//		}
-//	}
-//
-//	public void addGerritNotifyListener(GerritNotifyListener l) {
-//		gerritNotifiers.add(l);
-//	}
-//
-//	public void removeGerritNotifyListener(GerritNotifyListener l) {
-//		gerritNotifiers.remove(l);
-//	}
 
 	public void startGerritJob(PatchSetCreatedEvent event) {
 		synchronized (gerritJobList) {
@@ -116,12 +118,11 @@ public class LogicControlImpl implements LogicControl {
 		return null;
 	}
 
-	public TbJobDescriptor launchTbJob(Platform platform, String box) {
+	public TbJobDescriptor launchTbJob(Platform platform, Set<String> branchSet, String box) {
 		synchronized (gerritJobList) {
 			TBBlockingQueue platformQueue = getQueue(platform);
 	
-			// no waiting jobs in prio queue ?
-			BuildbotPlatformJob tbJob = platformQueue.poll();
+			BuildbotPlatformJob tbJob = platformQueue.poll(branchSet);
 			if (tbJob == null) {
 				return null;
 			}

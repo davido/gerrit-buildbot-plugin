@@ -9,13 +9,18 @@
 
 package org.libreoffice.ci.gerrit.buildbot.config;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
 public class BuildbotConfig {
 
 	private String email;
 	private String project;
 	private TriggerStrategie triggerStrategie;
 	private String reviewerGroupName;
-	private String branch;
+	private List<String> branches = Lists.newArrayList();
 	private String logDir;
 
 	public String getEmail() {
@@ -58,11 +63,11 @@ public class BuildbotConfig {
 		this.reviewerGroupName = reviewerGroupName;
 	}
 
-	public String getBranch() {
-		return branch;
+	public List<String> getBranches() {
+		return branches;
 	}
 
-	public void setBranch(String branch) {
-		this.branch = branch;
+	public void setBranches(String[] branches) {
+		this.branches = Arrays.asList(branches);
 	}
 }

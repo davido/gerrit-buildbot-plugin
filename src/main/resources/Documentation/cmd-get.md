@@ -13,6 +13,7 @@ ssh -p @SSH_PORT@ gerrit @PLUGIN@ get
   --platform <NAME> | -a <NAME>
   --id <BUILDBOT> | -i <BUILDBOT>
   [--format <TEXT | BASH> | -f <TEXT | BASH>]
+  {BRANCH...}
 ```
 
 DESCRIPTION
@@ -52,7 +53,7 @@ OPTIONS
 -------
 
 `--project`
-:	Name of the project to trigger a build for. The project must be 
+:	Name of the project to trigger a build for. The project must be
 	configured in `$gerrit_site/etc/buildbot.config` file.
 
 `--platform`

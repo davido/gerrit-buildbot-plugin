@@ -1,5 +1,38 @@
-Recent Changes
-==============
+@PLUGIN@ changelog
+==================
+
+Version 1.5: 2013-01-14
+===========
+
+core
+----
+
+* Ajust google juice binding initialization: plugin is reloaded without resource leak.
+
+ssh commands
+------------
+
+get
+:
+
+* add support for branch[es] argument
+
+version
+:
+
+* new command to display plugin version
+
+
+Configuration
+-------------
+
+* support multiple branch names
+
+```
+branch = `<NAME1>`
+branch = `<NAME2>`
+[...]
+```
 
 Version 1.4: 2013-01-11
 ===========
@@ -10,8 +43,8 @@ core
 build task ticket `<SHA-1>_<platform>` contained self generated SHA-1.
 Original SHA-1 from patch set is used instead.
 
-ssh commands changes
---------------------
+ssh commands
+------------
 
 put
 :
@@ -66,7 +99,11 @@ Configuration
 -------------
 
 * introduce new optional restriction in trigger strategie:
+
+```
 branch = `<NAME>`
+```
+
 If set, only patch sets for that branch are considered for building. That affects all kind of strategies.
 
 Documentation

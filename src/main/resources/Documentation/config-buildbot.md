@@ -1,5 +1,5 @@
-Buildbot Plugin - Configuration
-===============================
+@PLUGIN@ configuration
+======================
 
 This plugin is a multi project and multi platform queue manager
 for patch verification.

@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
@@ -23,6 +24,7 @@ import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
 import com.google.gerrit.common.data.ApprovalType;
 import com.google.gerrit.common.data.ApprovalTypes;
 import com.google.gerrit.common.data.GlobalCapability;
@@ -42,7 +44,7 @@ import com.google.inject.Inject;
 public final class GetCommand extends SshCommand {
     static final Logger log = LoggerFactory.getLogger(GetCommand.class);
 
-    @Option(name = "--project", aliases={"-p"}, required = true, metaVar = "PROJECT", usage = "name of the project for which the job should be polled")
+    @Option(name = "--project", aliases={"-p"}, required = true, metaVar = "PROJECT", usage = "name of the project for which the task should be polled")
     private ProjectControl projectControl;
 
     @Option(name = "--platform", aliases={"-a"}, required = true, metaVar = "PLATFORM", usage = "name of the platform")
@@ -53,6 +55,13 @@ public final class GetCommand extends SshCommand {
 
     @Option(name = "--format", aliases={"-f"}, required = false, metaVar = "FORMAT", usage = "output display format")
     private FormatType format = FormatType.TEXT;
+    
+	@Argument(index = 0, required = false, multiValued = true, metaVar = "BRANCH", usage = "branch[es] to get a task for")
+	void addPatchSetId(final String branch) {
+		branchSet.add(branch);
+	}
+	
+	private Set<String> branchSet = Sets.newHashSet();
 
     @Inject
     LogicControl control;
@@ -69,6 +78,10 @@ public final class GetCommand extends SshCommand {
     @Inject
     private ReviewDb db;
 
+    protected String getDescription() {
+        return "Get a task from platform specific queue";
+    }
+
     @Override
     public void run() throws UnloggedFailure, Failure, Exception {
         log.debug("project: {}", projectControl.getProject().getName());
@@ -80,7 +93,7 @@ public final class GetCommand extends SshCommand {
             stderr.write("\n");
             return;
         }
-        TbJobDescriptor jobDescriptor = control.launchTbJob(platform, box);
+        TbJobDescriptor jobDescriptor = control.launchTbJob(platform, branchSet, box);
         if (jobDescriptor == null) {
             if (format != null && format == FormatType.BASH) {
                 stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));

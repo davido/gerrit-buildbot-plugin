@@ -17,7 +17,7 @@ import com.google.inject.Provider;
 
 public class LogicControlProvider implements Provider<LogicControl> {
 
-	private BuildbotConfig config;
+	BuildbotConfig config;
 
 	@Inject
 	LogicControlProvider(BuildbotConfig config) {

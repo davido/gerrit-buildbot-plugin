@@ -44,7 +44,6 @@ public class GerritJob implements Runnable {
     public String abbreviate(String s) {
       return s.substring(0, Math.min(s.length(), 9));
     }
-
 	
 	public void start() {
 		thread = new Thread(this, "name");

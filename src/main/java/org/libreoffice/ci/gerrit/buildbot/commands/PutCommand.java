@@ -88,6 +88,10 @@ public final class PutCommand extends SshCommand implements
 
     private final static String LOGFILE_SERVLET_SUFFIX = "plugins/buildbot/log?file=";
 
+    protected String getDescription() {
+        return "Acknowledge executed task and report the result";
+    }
+
     @Override
     public void run() throws UnloggedFailure, Failure, Exception {
         log.debug("ticket: {}", ticket);

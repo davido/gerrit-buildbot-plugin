@@ -9,15 +9,41 @@
 
 package org.libreoffice.ci.gerrit.buildbot.model;
 
-import java.util.concurrent.LinkedBlockingQueue;
+import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.Set;
 
-public class TBBlockingQueue extends LinkedBlockingQueue<BuildbotPlatformJob> {
+import com.google.common.collect.Lists;
+
+public class TBBlockingQueue implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	Platform platform;
+	private final LinkedList<BuildbotPlatformJob> queue = Lists.newLinkedList();
 
 	public TBBlockingQueue(Platform platform) {
 		this.platform = platform;
 	}
+
+	public void add(BuildbotPlatformJob tbJob) {
+		synchronized (queue) {
+			queue.add(tbJob);
+		}
+	}
+
+	public BuildbotPlatformJob poll(Set<String> branchSet) {
+		synchronized (queue) {
+			if (branchSet.isEmpty()) {
+				return queue.poll();
+			}
+			for (int i = 0; i < queue.size(); i++) {
+				if (branchSet.contains(queue.get(i).getParent().getGerritBranch())) {
+					return queue.remove(i);
+				}
+			}
+			return null;
+		}
+	}
+
 }

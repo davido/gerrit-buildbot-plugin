@@ -43,8 +43,10 @@ OPTIONS
 :	Type og the items to show: `job` and `task` types are supported.
 	Default is to show all items.
 
-This queue contains 4 tasks: one job and 3 tasks scheduled for build
+EXAMPLES
 --------
+
+This queue contains 4 tasks: one job and 3 tasks scheduled for build
 
 ```
     $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ show --project foo
