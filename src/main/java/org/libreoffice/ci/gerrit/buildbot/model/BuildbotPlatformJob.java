@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
-import org.libreoffice.ci.gerrit.buildbot.logic.impl.LogicControlImpl;
+import org.libreoffice.ci.gerrit.buildbot.logic.impl.ProjectControlImpl;
 
 public class BuildbotPlatformJob implements Runnable {
 	Ticket ticket;
@@ -54,7 +54,7 @@ public class BuildbotPlatformJob implements Runnable {
 			if (started.get()) {
 				break;
 			}
-			LogicControlImpl.sleep(100);
+			ProjectControlImpl.sleep(100);
 		}
 
 		log("TBJob Waiting for ReadyLock");
@@ -62,7 +62,7 @@ public class BuildbotPlatformJob implements Runnable {
 			if (ready.get()) {
 				break;
 			}
-			LogicControlImpl.sleep(100);
+			ProjectControlImpl.sleep(100);
 		}
 
 		log("TBJob ready");

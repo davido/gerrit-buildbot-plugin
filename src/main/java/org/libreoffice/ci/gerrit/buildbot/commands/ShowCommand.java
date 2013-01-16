@@ -14,7 +14,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
+import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
+import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Ticket;
@@ -38,8 +39,11 @@ public final class ShowCommand extends SshCommand {
     private TaskType type;
 
     @Inject
-    LogicControl control;
+    BuildbotLogicControl control;
 
+    @Inject
+    BuildbotConfig config;
+    
     protected String getDescription() {
         return "Display the buildbot work queue";
     }
@@ -48,7 +52,7 @@ public final class ShowCommand extends SshCommand {
     public void run() throws UnloggedFailure, Failure, Exception {
         log.debug("project: {}", projectControl.getProject().getName());
 
-        if (!control.isProjectSupported(projectControl.getProject().getName())) {
+        if (!config.isProjectSupported(projectControl.getProject().getName())) {
             String message = String.format(
                     "project <%s> is not enabled for building!", projectControl
                             .getProject().getName());
@@ -64,7 +68,7 @@ public final class ShowCommand extends SshCommand {
                 "Task-Id", "Start/End", "Type/State", "Ref", "Bot", "Branch"));
         int numberOfPendingTasks = 0;
 
-        List<GerritJob> changes = control.getGerritJobs();
+        List<GerritJob> changes = control.getGerritJobs(projectControl.getProject().getName());
         synchronized (changes) {
             for (GerritJob change : changes) {
                 if (type == null || type.equals(TaskType.CHANGE)) {

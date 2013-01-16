@@ -13,8 +13,8 @@ import static com.google.inject.Scopes.SINGLETON;
 
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfigProvider;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControlProvider;
+import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
+import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControlProvider;
 
 import com.google.gerrit.extensions.events.LifecycleListener;
 import com.google.inject.AbstractModule;
@@ -25,7 +25,7 @@ class BuildbotModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(BuildbotConfig.class).toProvider(BuildbotConfigProvider.class).in(SINGLETON);
-        bind(LogicControl.class).toProvider(LogicControlProvider.class).in(SINGLETON);
+        bind(BuildbotLogicControl.class).toProvider(BuildbotLogicControlProvider.class).in(SINGLETON);
         bind(StreamEventPipeline.class).in(SINGLETON);
         bind(LifecycleListener.class).annotatedWith(UniqueAnnotations.create())
         .to(StreamEventPipeline.class);

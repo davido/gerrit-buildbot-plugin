@@ -17,8 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
-import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
+import org.libreoffice.ci.gerrit.buildbot.logic.ProjectControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
@@ -31,17 +30,14 @@ import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
-public class LogicControlImpl implements LogicControl {
-	
+public class ProjectControlImpl implements ProjectControl {
+
 	private final Map<Platform, TBBlockingQueue> tbQueueMap = 
         new ConcurrentHashMap<Platform, TBBlockingQueue>();
 	private final List<GerritJob> gerritJobList = 
         Collections.synchronizedList(new ArrayList<GerritJob>());
 
-	private BuildbotConfig config;
-
-	public LogicControlImpl(BuildbotConfig config) {
-		this.config = config;
+	public ProjectControlImpl() {
 	}
 
 	@Override
@@ -77,21 +73,21 @@ public class LogicControlImpl implements LogicControl {
 
 	public void startGerritJob(PatchSetCreatedEvent event) {
 		synchronized (gerritJobList) {
-			GerritJob job = new GerritJob(this, event.change.branch, event.patchSet.ref, event.patchSet.revision);
+			GerritJob job = new GerritJob(this, event.change.project, event.change.branch, event.patchSet.ref, event.patchSet.revision);
 			startJob(job);
 		}
 	}
 
 	public void startGerritJob(CommentAddedEvent event) {
 		synchronized (gerritJobList) {
-			GerritJob job = new GerritJob(this, event.change.branch, event.patchSet.ref, event.patchSet.revision);
+			GerritJob job = new GerritJob(this, event.change.project, event.change.branch, event.patchSet.ref, event.patchSet.revision);
 			startJob(job);
 		}
 	}
 	
 	public void startGerritJob(Change change, PatchSet patchSet) {
 		synchronized (gerritJobList) {
-			GerritJob job = new GerritJob(this, change.getDest().getShortName(), 
+			GerritJob job = new GerritJob(this, change.getProject().get(), change.getDest().getShortName(), 
 					patchSet.getRefName(), patchSet.getRevision().get());
 			startJob(job);
 		}
@@ -103,10 +99,10 @@ public class LogicControlImpl implements LogicControl {
 		job.start();
 	}
 
-	public TbJobResult setResultPossible(String ticket, TaskStatus status, String log) {
+	public TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String log) {
 		synchronized (gerritJobList) {
 			for (GerritJob job : gerritJobList) {
-				TbJobResult jobResult = job.setResultPossible(ticket, log, status);
+				TbJobResult jobResult = job.setResultPossible(ticket, boxId, log, status);
 				if (jobResult != null) {
 					if (job.allJobsReady()) {
 						job.createTBResultList();
@@ -147,11 +143,6 @@ public class LogicControlImpl implements LogicControl {
 		}
 	}
 
-	@Override
-	public boolean isProjectSupported(String project) {
-		return config.getProject().equals(project);
-	}
-	
 	public List<GerritJob> getGerritJobs() {
 		return gerritJobList;
 	}

@@ -7,21 +7,19 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
+import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
 import org.libreoffice.ci.gerrit.buildbot.config.TriggerStrategie;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
+import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.gerrit.common.ChangeHooks;
 import com.google.gerrit.common.ChangeListener;
 import com.google.gerrit.common.data.ApprovalType;
 import com.google.gerrit.common.data.ApprovalTypes;
-import com.google.gerrit.common.errors.NoSuchGroupException;
 import com.google.gerrit.extensions.events.LifecycleListener;
 import com.google.gerrit.reviewdb.client.Account;
-import com.google.gerrit.reviewdb.client.AccountGroup;
 import com.google.gerrit.reviewdb.client.ApprovalCategory;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
@@ -29,7 +27,6 @@ import com.google.gerrit.reviewdb.client.PatchSetApproval;
 import com.google.gerrit.reviewdb.server.ReviewDb;
 import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.account.AccountByEmailCache;
-import com.google.gerrit.server.account.GroupCache;
 import com.google.gerrit.server.account.GroupMembership;
 import com.google.gerrit.server.config.SitePaths;
 import com.google.gerrit.server.events.AccountAttribute;
@@ -62,9 +59,6 @@ public class StreamEventPipeline implements LifecycleListener {
 
     @Inject
     private AccountByEmailCache byEmailCache;
-
-    @Inject
-    private GroupCache groupCache;
     
     @Inject
     BuildbotConfig config;
@@ -73,13 +67,11 @@ public class StreamEventPipeline implements LifecycleListener {
     private SitePaths site;
     
     @Inject
-    LogicControl control;
+    BuildbotLogicControl control;
 
     ApprovalCategory verified;
 
     ApprovalCategory reviewed;
-
-    AccountGroup.UUID reviewerGroupId;
 
     @Override
     public void stop() {
@@ -107,46 +99,22 @@ public class StreamEventPipeline implements LifecycleListener {
                 reviewed = category;
             }
         }
-        
-        if (config.getReviewerGroupName() != null) {        	
-        	initReviewerGroup();
-        }
-        
-        control.start();
+         control.start();
     }
-
-	private AccountGroup findGroup(final String name) throws OrmException,
-			NoSuchGroupException {
-		final AccountGroup g = groupCache.get(new AccountGroup.NameKey(name));
-		if (g == null) {
-			throw new NoSuchGroupException(name);
-		}
-		return g;
-	}
-  
-	private void initReviewerGroup() {
-		Preconditions.checkNotNull(config.getReviewerGroupName(), "ReviewerGroup can not be null");
-		try {
-            final AccountGroup reviewerGroup = findGroup(config.getReviewerGroupName());
-            reviewerGroupId = reviewerGroup.getGroupUUID();
-        } catch (OrmException e) {
-            throw new IllegalStateException(String.format("Can not retrieve group: %s", config.getReviewerGroupName()));
-        } catch (NoSuchGroupException e) {
-            throw new IllegalStateException(String.format("Group doesn't exist: %s", config.getReviewerGroupName()));
-        }
-	}
 
     private final ChangeListener listener = new ChangeListener() {
         @Override
         public void onChangeEvent(final ChangeEvent event) {
+        	
             if (event instanceof PatchSetCreatedEvent) {
                 PatchSetCreatedEvent patchSetCreatedEvent = (PatchSetCreatedEvent) event;
                 log.debug("patch-set-created project: {}", patchSetCreatedEvent.change.project);
-//                if (!control.isProjectSupported(patchSetCreatedEvent.change.project)) {
-//                    log.debug("skip event: buildbot is not activated for project: {} ", patchSetCreatedEvent.change.project);
-//                    return;
-//                }
-                if (TriggerStrategie.PATCHSET_CREATED != config.getTriggerStrategie()) {
+                if (!config.isProjectSupported(patchSetCreatedEvent.change.project)) {
+                    log.debug("skip event: buildbot is not activated for project: {} ", patchSetCreatedEvent.change.project);
+                    return;
+                }
+                BuildbotProject p = config.findProject(patchSetCreatedEvent.change.project);
+                if (TriggerStrategie.PATCHSET_CREATED != p.getTriggerStrategie()) {
                     log.debug("skip event: non PATCHSET_CREATED trigger strategie for project: {} ", patchSetCreatedEvent.change.project);
                     return;
                 }
@@ -156,15 +124,18 @@ public class StreamEventPipeline implements LifecycleListener {
                 control.startGerritJob(patchSetCreatedEvent);
             } else if (event instanceof CommentAddedEvent) {
                 CommentAddedEvent commentAddedEvent = (CommentAddedEvent) event;
-                if (TriggerStrategie.POSITIVE_REVIEW != config.getTriggerStrategie()) {
+                if (!config.isProjectSupported(commentAddedEvent.change.project)) {
+                    log.debug("skip event: buildbot is not activated for project: {} ", commentAddedEvent.change.project);
+                    return;
+                }
+                BuildbotProject p = config.findProject(commentAddedEvent.change.project);
+                if (TriggerStrategie.POSITIVE_REVIEW != p.getTriggerStrategie()) {
                     log.debug("skip event: non POSITIVE_REVIEW trigger strategie for project: {} ", commentAddedEvent.change.project);
                     return;
                 }
-
                 log.debug("investigating commentAddedEvent branch: {}, ref: {}", 
                         commentAddedEvent.change.branch,
                         commentAddedEvent.patchSet.ref);
-
                 if (isEventOriginatorBuildbot(commentAddedEvent)) {
                     log.debug("ignore comment (buildbot is the originator)");
                     return;
@@ -214,15 +185,17 @@ public class StreamEventPipeline implements LifecycleListener {
         }
 
         // check if build job is pending for this patch set
-        GerritJob job = control.findJobByRevision(commentAddedEvent.patchSet.revision);
+        GerritJob job = control.findJobByRevision(commentAddedEvent.change.project, 
+        		commentAddedEvent.patchSet.revision);
         if (job != null) {
             log.debug("ignore this comment: build job was already scheduled at {}", job.getStartTime());
             return false;
         }
 
+        BuildbotProject p = config.findProject(commentAddedEvent.change.project);
         // check branch if configured
-        if (!config.getBranches().isEmpty()) {
-        	if (!config.getBranches().contains(commentAddedEvent.change.branch)) {
+        if (!p.getBranches().isEmpty()) {
+        	if (!p.getBranches().contains(commentAddedEvent.change.branch)) {
         		log.debug("ignore this comment: branch not match {}", commentAddedEvent.change.branch);
         		return false;
         	}
@@ -248,7 +221,7 @@ public class StreamEventPipeline implements LifecycleListener {
         List<PositiveReviewResultEntry> res = new ArrayList<PositiveReviewResultEntry>();
 
         // Check other approvals
-        checkApprovals(list, res);
+        checkApprovals(p, list, res);
 
         /**
          * it has no review < 0,
@@ -276,7 +249,7 @@ public class StreamEventPipeline implements LifecycleListener {
         return positive;
     }
 
-    private void checkApprovals(Collection<PatchSetApproval> approvals,
+    private void checkApprovals(BuildbotProject p, Collection<PatchSetApproval> approvals,
             List<PositiveReviewResultEntry> res) {
         for (PatchSetApproval attr : approvals) {
             PositiveReviewResultEntry r = new PositiveReviewResultEntry();
@@ -286,7 +259,7 @@ public class StreamEventPipeline implements LifecycleListener {
 
             log.debug("check approval from user: {}", eventAuthor.getUserName());
             GroupMembership members = eventAuthor.getEffectiveGroups();
-            if (members.contains(reviewerGroupId)) {
+            if (members.contains(p.getReviewerGroupId())) {
                 r.approvedByMemberOfGroup = true;
                 log.debug("user {} is member of Reviewer group", eventAuthor.getUserName());
             }

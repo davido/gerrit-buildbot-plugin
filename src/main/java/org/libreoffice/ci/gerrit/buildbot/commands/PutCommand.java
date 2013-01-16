@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
+import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritNotifyListener;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
@@ -56,7 +56,7 @@ public final class PutCommand extends SshCommand implements
     private String ticket;
 
     @Option(name = "--id", aliases={"-i"}, required = true, metaVar = "TB", usage = "id of the tinderbox")
-    private String box;
+    private String boxId;
     
     @Option(metaVar = "STATUS", name = "--status", aliases = { "-s" }, required = true, usage = "success|failed|canceled")
     private TaskStatus status; 
@@ -65,7 +65,7 @@ public final class PutCommand extends SshCommand implements
     private String urllog;
 
     @Inject
-    LogicControl control;
+    BuildbotLogicControl control;
 
     @Inject
     private PublishComments.Factory publishCommentsFactory;
@@ -117,7 +117,7 @@ public final class PutCommand extends SshCommand implements
         	}
         }
         
-        TbJobResult result = control.setResultPossible(ticket, status, urllog);
+        TbJobResult result = control.setResultPossible(ticket, boxId, status, urllog);
         if (result == null) {
         	String tmp = String.format("Can not find task for ticket %s", ticket);
         	stderr.print(tmp);

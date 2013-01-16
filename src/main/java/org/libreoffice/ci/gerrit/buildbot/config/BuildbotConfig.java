@@ -9,19 +9,16 @@
 
 package org.libreoffice.ci.gerrit.buildbot.config;
 
-import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class BuildbotConfig {
 
 	private String email;
-	private String project;
-	private TriggerStrategie triggerStrategie;
-	private String reviewerGroupName;
-	private List<String> branches = Lists.newArrayList();
 	private String logDir;
+	private ImmutableList<BuildbotProject> projects;
 
 	public String getEmail() {
 		return email;
@@ -29,14 +26,6 @@ public class BuildbotConfig {
 
 	public void setEmail(String email) {
 		this.email = email;
-	}
-
-	public String getProject() {
-		return project;
-	}
-
-	public void setProject(String project) {
-		this.project = project;
 	}
 
 	public String getLogDir() {
@@ -47,27 +36,25 @@ public class BuildbotConfig {
 		this.logDir = logDir;
 	}
 
-	public void setTriggerStrategie(TriggerStrategie triggerStrategie) {
-		this.triggerStrategie = triggerStrategie;		
+	public void setProjects(ImmutableList<BuildbotProject> projects) {
+		this.projects = projects;
 	}
 	
-	public TriggerStrategie getTriggerStrategie() {
-		return this.triggerStrategie;
+	public List<BuildbotProject> getProjects() {
+		return projects;
 	}
 
-	public String getReviewerGroupName() {
-		return reviewerGroupName;
+	public BuildbotProject findProject(String name) {
+		Preconditions.checkNotNull(name, "name must not be null");
+		for (BuildbotProject p : projects) {
+			if (p.getName().equals(name)) {
+				return p;
+			}
+		}
+		return null;
 	}
 
-	public void setReviewerGroupName(String reviewerGroupName) {
-		this.reviewerGroupName = reviewerGroupName;
-	}
-
-	public List<String> getBranches() {
-		return branches;
-	}
-
-	public void setBranches(String[] branches) {
-		this.branches = Arrays.asList(branches);
+	public boolean isProjectSupported(String name) {
+		return findProject(name) == null ? false : true;
 	}
 }

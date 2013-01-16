@@ -17,7 +17,7 @@ import java.util.Set;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
+import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
@@ -64,7 +64,7 @@ public final class GetCommand extends SshCommand {
 	private Set<String> branchSet = Sets.newHashSet();
 
     @Inject
-    LogicControl control;
+    BuildbotLogicControl control;
 
     @Inject
     private PublishComments.Factory publishCommentsFactory;
@@ -85,7 +85,7 @@ public final class GetCommand extends SshCommand {
     @Override
     public void run() throws UnloggedFailure, Failure, Exception {
         log.debug("project: {}", projectControl.getProject().getName());
-        if (!control.isProjectSupported(projectControl.getProject().getName())) {
+        if (!config.isProjectSupported(projectControl.getProject().getName())) {
             String message = String.format(
                     "project <%s> is not enabled for building!", projectControl
                             .getProject().getName());
@@ -93,7 +93,8 @@ public final class GetCommand extends SshCommand {
             stderr.write("\n");
             return;
         }
-        TbJobDescriptor jobDescriptor = control.launchTbJob(platform, branchSet, box);
+		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
+				.getProject().getName(), platform, branchSet, box);
         if (jobDescriptor == null) {
             if (format != null && format == FormatType.BASH) {
                 stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));

@@ -15,9 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
-import org.libreoffice.ci.gerrit.buildbot.logic.impl.LogicControlImpl;
+import org.libreoffice.ci.gerrit.buildbot.logic.impl.ProjectControlImpl;
 
 public class GerritJob implements Runnable {
+	String gerritProject;
 	String gerritBranch;
 	String gerritRef;
 	String gerritRevision;
@@ -28,11 +29,12 @@ public class GerritJob implements Runnable {
 	final List<BuildbotPlatformJob> tinderBoxThreadList = Collections
 			.synchronizedList(new ArrayList<BuildbotPlatformJob>());
 	List<TbJobResult> tbResultList;
-	LogicControlImpl control;
+	ProjectControlImpl control;
 
-	public GerritJob(LogicControlImpl control, String gerritBranch,
+	public GerritJob(ProjectControlImpl control, String project, String gerritBranch,
 			String gerritRef, String gerritRevision) {
 		this.control = control;
+		this.gerritProject = project;
 		this.gerritBranch = gerritBranch;
 		this.gerritRef = gerritRef;
 		this.gerritRevision = gerritRevision;
@@ -129,13 +131,18 @@ public class GerritJob implements Runnable {
 		return null;
 	}
 
-	public TbJobResult setResultPossible(String ticket, String log, TaskStatus status) {
+	public TbJobResult setResultPossible(String ticket, String boxId, String log, TaskStatus status) {
 		BuildbotPlatformJob job = getTbJob(ticket);
 		if (job != null) {
 			if (job.getResult() != null) {
                 // result already set: ignore
                 return null;
             }
+			
+			if (!job.getTinderboxId().equals(boxId)) {
+				// tinderbox doesn't match, ignore
+				return null;
+			}
 			
 			// Before we report a status back, check different strategies/optimisations
 			// 1. if status is failed, then discard all pending tasks.

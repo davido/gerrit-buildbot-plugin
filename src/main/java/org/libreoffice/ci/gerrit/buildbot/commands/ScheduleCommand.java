@@ -16,7 +16,8 @@ import java.util.Set;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
-import org.libreoffice.ci.gerrit.buildbot.logic.LogicControl;
+import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
+import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public final class ScheduleCommand extends SshCommand {
 	static final Logger log = LoggerFactory.getLogger(ScheduleCommand.class);
 
 	@Inject
-	LogicControl control;
+	BuildbotLogicControl control;
 
 	@Inject
 	BuildbotConfig config;
@@ -73,6 +74,15 @@ public final class ScheduleCommand extends SshCommand {
 	@Override
 	public void run() throws UnloggedFailure, Failure, Exception {
 		log.debug("schedule");
+		
+		final String p = projectControl.getProject().getName();
+		if (!config.isProjectSupported(p)) {
+			String tmp = String.format(
+					"error: project %s is not supported", p);
+			log.warn(tmp);
+			stderr.print(tmp + "\n");
+			return;
+		}
 		for (PatchSet.Id id : patchSetIds) {
 			doSchedule(id);
 		}
@@ -98,7 +108,8 @@ public final class ScheduleCommand extends SshCommand {
 		}
 
 		// check if build job is pending for this patch set
-		GerritJob job = control.findJobByRevision(patchSet.getRevision()
+		GerritJob job = control.findJobByRevision(projectControl.getProject().getName(),
+				patchSet.getRevision()
 				.toString());
 		if (job != null) {
 			String tmp = String.format(
@@ -109,9 +120,10 @@ public final class ScheduleCommand extends SshCommand {
 			return;
 		}
 
+		BuildbotProject p = config.findProject(projectControl.getProject().getName());
 		// check branch if configured
-		if (!config.getBranches().isEmpty()) {
-			if (!config.getBranches().contains(change.getDest().getShortName())) {
+		if (!p.getBranches().isEmpty()) {
+			if (!p.getBranches().contains(change.getDest().getShortName())) {
 				String tmp = String.format("error: branch not match  %s",
 						change.getDest().getShortName());
 				log.warn(tmp);
@@ -124,7 +136,7 @@ public final class ScheduleCommand extends SshCommand {
 			 log.debug("dispatch event branch: {}, ref: {}",
                      change.getDest().getShortName(),
                      patchSet.getRefName());
-             control.startGerritJob(change, patchSet);
+             control.startGerritJob(projectControl.getProject().getName(), change, patchSet);
 		}
 	}
 

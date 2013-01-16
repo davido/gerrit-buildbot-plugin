@@ -23,15 +23,14 @@ import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
-public interface LogicControl {
-	boolean isProjectSupported(String project);
+public interface ProjectControl {
 	void startGerritJob(PatchSetCreatedEvent event);
 	void startGerritJob(CommentAddedEvent event);
 	void startGerritJob(Change change, PatchSet patchSet);
 	List<GerritJob> getGerritJobs();
 	GerritJob findJobByRevision(String revision);
 	TbJobDescriptor launchTbJob(Platform platform, Set<String> branch, String box);
-	TbJobResult setResultPossible(String ticket, TaskStatus status, String log);
+	TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String log);
 	void stop();
 	void start();
 }

@@ -1,6 +1,39 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.6: 2013-01-15
+===========
+
+core
+----
+
+* if --id option in get command wasn't match the --id option in put command, the result was still accepted. Fixed.
+* Multiple project support activated
+
+Configuration: non compatible change
+------------------------------------
+
+* support multiple projects
+
+Example buildbot.config
+-------
+
+```
+[...]
+[project "foo"]
+  trigger = manually
+  branch = master
+  branch = bar
+  branch = baz
+
+[project "bar"]
+  trigger = positive_review
+  reviewerGroupName = Reviewer
+  branch = master
+  branch = baz
+[...]
+```
+
 Version 1.5: 2013-01-14
 ===========
 
