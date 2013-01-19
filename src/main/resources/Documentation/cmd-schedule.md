@@ -92,7 +92,6 @@ SEE ALSO
 
 * [get](cmd-get.html)
 * [put](cmd-put.html)
-* [schedule](cmd-schedule.html)
 * [show](cmd-show.html)
 
 Buildbot

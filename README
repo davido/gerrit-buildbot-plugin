@@ -5,13 +5,14 @@ Buildbot Gerrit Plugin (BGP) is a multi project and multi platform queue manager
 for patch verification.
 
 It coordinates the decental located tinderboxes without having a continued
-network connection to them by maintaining project and platform specific blocking
-queue of tasks for each gerrit patch. A patch set considered verified
+network connection to them by maintaining project and platform specific working
+queue of tasks for each gerrit patch. A patch set considered to be verified
 (+1) if and only if all tinderbox tasks are reported success back.
-In this case gerrit verify status +1 is reported back to gerrit.
+In this case `verified` status +1 is reported back to gerrit.
 In addition log publication is provided by log servlet.
 
 There are a number of build trigger strategies:
+MANUALLY: build is triggered by `schedule`command
 PATCHSET_CREATED: build is triggered immediately after new patch set is uploaded
 POSITIVE_REVIEW: proposed patch get build if and only if:
 * it is not merged
@@ -23,7 +24,7 @@ POSITIVE_REVIEW: proposed patch get build if and only if:
 
 Workflow description
 ====================
-0. During BGP activation the configuration file buildbot.config is read and
+1. During BGP activation the configuration file buildbot.config is read and
    gerrit-stream event listener is installed.
 Depending on trigger strategie for specific project, build is triggered, if
 1a. User submit a gerrit patch, PatchSetCreatedEvent is triggered by gerrit and
@@ -31,25 +32,57 @@ Depending on trigger strategie for specific project, build is triggered, if
 1b. The patch get aproved with gerrit `review` ssh command (or through web UI).
    BGP consumes gerrit's CommentAddedEvent, checks if for the project, that event
    is triggered for, BGP is activated and check Norbert's rule:
-
-When build is triggered, the follow actions are taken:
-a) create a Gerrit Job instance
-b) populate platform task map with verify task per platform.
-   Platforms are currently hard coded: WINDOWS, LINUX and MAC.
+2. When build is triggered, the follow actions are taken:
+2a.  create a Gerrit Job instance
+2b.  populate platform specific queue with build task per platform.
 3. tinderbox that configured gerrit verification
-   (see tinbuild2 script in LO repo) periodically calls BGP `get-task` ssh
+   (see tinbuild2 script in LO repo) periodically calls BGP `get` ssh
    command and get gerrit patch for veification. Note that because of blocking
    queue only one tinderbox per platform and per gerrit job get engaged.
    When a tinderbox get assign a test build, repport that in a review message.
 4. tinderbox build the recieved gerrit task and report the outcome and the
-   the log file with BGP `report` ssh command. When a tinderbox outcome is known
-   repport that in a review message (success, failure, canceled)
+   the log file with BGP `put` ssh command. When a tinderbox outcome is known,
+   report that in a review message (success, failed, canceled)
    Note: these review message do not impact verify status. They just
    provide progress information.
    If --state=canceled is reported, then the task is rescheduled again in the 
    build queue.
 5. Once all tasks for a job are ready, the combined verify result is reported
    back to gerrit through BGP.
+
+Aditional features
+==================
+
+Forge reviewer Identity
+-----------------------
+
+Per default a review is reported back to gerrit with Buildbot own identity,
+i. e. so called "forge reviewer identity" feature is activated per default.
+It can be overriden (setting configure option `user.forgeReviewerIdentity`
+to `false`) to report a review wih caller's own identity.
+
+Mutliple branches support
+-------------------------
+
+Multiple branches per project are supported. A branch must be confoigured in
+`project.NAME.branch` to be considered for bulld scheduling.
+
+Skipping pending build task
+---------------------------
+
+With per project and per branch option `project.PROJECT_NAME.branch.BRANCH_NAME.policy`
+`soft` or `strict` outcome reporting policy can be configured. If 
+`project.PROJECT_NAME.branch.BRANCH_NAME.policy` is set to `soft` then
+build is skipped for pending tasks in the platform specific queue once result
+for one (or more) build task(s) is reported. With the option 
+`project.PROJECT_NAME.branch.BRANCH_NAME.skipThreshold` the min. number of reported
+result can be configured. Default is 1.
+
+Example: build for platform `MAC` is ready and result is reported by `put` command.
+Build on `Linux` platform is still runnning, and `Windows` platform is pending.
+Now `Linux` platform is ready and is reported by `put`command: when `Windows` task
+ist still pending, then it is skipped: the task is dropped from `Windows` queue and
+combined status `+1` is reported back to gerrit.
 
 Contribution:
 =============

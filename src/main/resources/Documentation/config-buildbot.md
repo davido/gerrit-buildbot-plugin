@@ -24,6 +24,12 @@ trigger strategie, reviewerGroupName and branch.
 :	EMail of (optionally non interactive account) owner of buildbot. 
         Buildbot verification are published by this user. Mandatory.
 
+`user.forgeReviewerIdentity`
+:	Forge reviewer identity. With `put` command Buildbot reports verification
+        status with buildbot own identity. If this option is set to `false`
+        (default is `true`) then the verification status is reported under caller's
+        own identity.
+
 `log.directory`
 :       Directory where log files are put. Those are the log of verification.
         Currently these log are published through plugins own LogServlet. 
@@ -77,3 +83,15 @@ Sample `buildbot.config`:
   branch = master
   trigger = patchset_created
 ```
+
+SEE ALSO
+--------
+
+* [get](cmd-get.html)
+* [put](cmd-put.html)
+* [schedule](cmd-schedule.html)
+* [show](cmd-show.html)
+
+Buildbot
+--------
+Part of [Gerrit Buildbot Plugin](index.html)

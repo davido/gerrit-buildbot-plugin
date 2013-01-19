@@ -29,6 +29,7 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
 	
 	private final static String SECTION_USER = "user";
 	private static final String KEY_MAIL = "mail";
+	private static final String KEY_FORGE_REVIEWER_IDENTITY = "forgeReviewerIdentity";
 
 	private final static String SECTION_LOG = "log";	
 	private static final String KEY_DIRECTORY = "directory";
@@ -76,6 +77,9 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
 
 		config = new BuildbotConfig();
 		config.setEmail(cfg.getString(SECTION_USER, null, KEY_MAIL));
+		config.setForgeReviewerIdentity(cfg.getBoolean(
+				SECTION_USER, null, KEY_FORGE_REVIEWER_IDENTITY, true));
+		
 		config.setLogDir(cfg.getString(SECTION_LOG, null, KEY_DIRECTORY));
 
 		ImmutableList.Builder<BuildbotProject> dest = ImmutableList.builder();

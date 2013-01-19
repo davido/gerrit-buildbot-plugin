@@ -19,6 +19,7 @@ public class BuildbotConfig {
 	private String email;
 	private String logDir;
 	private ImmutableList<BuildbotProject> projects;
+	private boolean forgeReviewerIdentity;
 
 	public String getEmail() {
 		return email;
@@ -56,5 +57,13 @@ public class BuildbotConfig {
 
 	public boolean isProjectSupported(String name) {
 		return findProject(name) == null ? false : true;
+	}
+
+	public void setForgeReviewerIdentity(boolean forge) {
+		this.forgeReviewerIdentity = forge;
+	}
+	
+	public boolean isForgeReviewerIdentity() {
+		return this.forgeReviewerIdentity;
 	}
 }

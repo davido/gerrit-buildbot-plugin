@@ -12,6 +12,7 @@ package org.libreoffice.ci.gerrit.buildbot.commands;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
@@ -192,14 +193,28 @@ public final class PutCommand extends SshCommand implements
                         tbResult.getLog() == null ? StringUtils.EMPTY : tbResult.getLog(),
                         tbResult.getStatus().name()));
             }
-            aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));
-            publishCommentsFactory.create(patchset.getId(),
-                    builder.toString(), aps, true).call();
+            aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));            
+            getCommenter(aps, patchset, builder).call();
         } catch (Exception e) {
             e.printStackTrace();
             die(e);
         }
     }
+
+	private PublishComments getCommenter(
+			Set<ApprovalCategoryValue.Id> aps, PatchSet patchset,
+			StringBuilder builder) throws NoSuchFieldException,
+			IllegalAccessException {
+		PublishComments commenter = publishCommentsFactory.create(patchset.getId(),
+		        builder.toString(), aps, true);
+		if (config.isForgeReviewerIdentity()) {
+			// Replace current user with buildbot user
+			Field field = commenter.getClass().getDeclaredField("user");
+			field.setAccessible(true);
+			field.set(commenter, control.getBuildbot());
+		}
+		return commenter;
+	}
 
     void notifyGerritBuildbotPlatformJobFinished(TbJobResult tbJobResult) {
         ApprovalCategory verified = null;
@@ -227,9 +242,8 @@ public final class PutCommand extends SshCommand implements
                     time(tbJobResult.getEndTime(), 0),
                     tbJobResult.getLog() == null ? StringUtils.EMPTY : tbJobResult.getLog(),
                     tbJobResult.getStatus().name()));
-            aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
-            publishCommentsFactory.create(patchset.getId(),
-                    builder.toString(), aps, true).call();
+            aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));            
+            getCommenter(aps, patchset, builder).call();
         } catch (Exception e) {
             e.printStackTrace();
             die(e);

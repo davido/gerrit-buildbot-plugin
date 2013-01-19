@@ -16,6 +16,7 @@ import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
+import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
@@ -24,6 +25,8 @@ public class BuildbotLogicControl {
 	private final Map<String, ProjectControl> projectMap = new ConcurrentHashMap<String, ProjectControl>();
 
 	private BuildbotConfig config;
+
+	private IdentifiedUser buildbot;
 
 	public BuildbotLogicControl(BuildbotConfig config) {
 		this.config = config;
@@ -83,5 +86,13 @@ public class BuildbotLogicControl {
 	}
 	public void startGerritJob(CommentAddedEvent event) {
 		projectMap.get(event.change.project).startGerritJob(event);
+	}
+
+	public IdentifiedUser getBuildbot() {
+		return buildbot;
+	}
+
+	public void setBuildbot(IdentifiedUser buildbot) {
+		this.buildbot = buildbot;
 	}
 }

@@ -1,6 +1,22 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.7: 2013-01-19
+===========
+
+Configuration:
+--------------
+
+* new (optional configuration option) `user.forgeReviewIdentity` can be set to report verification status with Buildbot its own identity.
+
+ssh commands
+------------
+
+verify
+:
+
+* Manually override verification status
+
 Version 1.6: 2013-01-15
 ===========
 
@@ -158,3 +174,16 @@ Implement positive_review build trigger strategie.
 Version 1.0: 2012-08-01
 ===========
 Fist version.
+
+SEE ALSO
+--------
+
+* [config](config-buildbot.html)
+* [get](cmd-get.html)
+* [put](cmd-put.html)
+* [schedule](cmd-schedule.html)
+* [show](cmd-show.html)
+
+Buildbot
+--------
+Part of [Gerrit Buildbot Plugin](index.html)

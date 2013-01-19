@@ -10,9 +10,11 @@ Problems
 
 TODOs:
 ======
-* add --branch name to get command, refactor internal queue not to be derived 
-  from BlockingQueue.
+* Implement `--drop` option for schedule ssh command.
+* Put TB-ID (passed with `--id`) into review message.
+* Implement `Skipping pending build task` feature.
 * Replace log file publication with jenkins.
+* make platforms to be configurable per project base.
 * persist the job and task list in the data base.
 * the plug-in need to be restartable. That is when the
    plug in is brought back up after being down, it should resume where it
@@ -21,11 +23,10 @@ TODOs:
    restart. This will make maintenance-driven restart less intrusive/costly.
 * Pipe line visualisation: with gerrit jobs and tasks per platform are get
   currently building and pending.
-* management cockpit/dashboard with previously build taskes with statistics.
 * Enhance gerrit's core patch view with table containing tinderbox
   verification status on per platform base.
 * If a patch is 'submitted' while the verification tinbuild are pending then
-** we let already running tindebox finish, and still report the result
+* we let already running tindebox finish, and still report the result
  in the 'review' comment as usual, but leave the verify flags untouched
-** any platform that is not started yet is 'discarded' for that patch.
+* any platform that is not started yet is 'discarded' for that patch.
  IOW the tasks that are not started yet are de-queued by 'Submit'.

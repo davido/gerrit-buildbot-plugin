@@ -45,8 +45,7 @@ public class StreamEventPipeline implements LifecycleListener {
     @Inject
     private ChangeHooks hooks;
 
-    // buildbot itself
-    IdentifiedUser user;
+    IdentifiedUser buildbot;
 
     @Inject
     SchemaFactory<ReviewDb> schema;
@@ -87,8 +86,9 @@ public class StreamEventPipeline implements LifecycleListener {
                     + config.getEmail());
         }
         Account.Id id = ids.iterator().next();
-        user = identifiedUserFactory.create(id);
-        hooks.addChangeListener(listener, user);
+        buildbot = identifiedUserFactory.create(id);
+        control.setBuildbot(buildbot);
+        hooks.addChangeListener(listener, buildbot);
 
         // categories
         for (ApprovalType type : approvalTypes.getApprovalTypes()) {
@@ -158,7 +158,7 @@ public class StreamEventPipeline implements LifecycleListener {
             IdentifiedUser eventAuthor = identifiedUserFactory.create(id);
 
             // check if the buildbot itself is the originator of this event
-            if (eventAuthor.getAccountId().equals(user.getAccountId())) {
+            if (eventAuthor.getAccountId().equals(buildbot.getAccountId())) {
                 return true;
             }
             return false;
