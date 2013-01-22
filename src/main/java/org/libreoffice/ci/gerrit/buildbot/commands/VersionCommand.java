@@ -13,18 +13,16 @@ import org.libreoffice.ci.gerrit.buildbot.config.BuildbotVersion;
 
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
-import com.google.gerrit.sshd.SshCommand;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class VersionCommand extends SshCommand {
+public final class VersionCommand extends BuildbotSshCommand {
 
-  //@Override
   protected String getDescription() {
     return "Display buildbot version";
   }
 
   @Override
-  protected void run() throws Failure {
+  protected void doRun() throws Failure {
     String v = BuildbotVersion.getVersion();
     if (v == null) {
       throw new Failure(1, "fatal: version unavailable");

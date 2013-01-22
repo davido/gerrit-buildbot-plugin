@@ -9,13 +9,9 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
-import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
-import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Ticket;
@@ -25,11 +21,9 @@ import org.slf4j.LoggerFactory;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.server.project.ProjectControl;
-import com.google.gerrit.sshd.SshCommand;
-import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class ShowCommand extends SshCommand {
+public final class ShowCommand extends BuildbotSshCommand {
     static final Logger log = LoggerFactory.getLogger(ShowCommand.class);
 
     @Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the queue should be shown")
@@ -38,38 +32,32 @@ public final class ShowCommand extends SshCommand {
     @Option(name = "--type", aliases = { "-t" }, required = false, metaVar = "TYPE", usage = "which type of tasks to display")
     private TaskType type;
 
-    @Inject
-    BuildbotLogicControl control;
-
-    @Inject
-    BuildbotConfig config;
-    
     protected String getDescription() {
         return "Display the buildbot work queue";
     }
 
     @Override
-    public void run() throws UnloggedFailure, Failure, Exception {
-        log.debug("project: {}", projectControl.getProject().getName());
-
-        if (!config.isProjectSupported(projectControl.getProject().getName())) {
-            String message = String.format(
-                    "project <%s> is not enabled for building!", projectControl
-                            .getProject().getName());
-            stderr.print(message);
-            stderr.write("\n");
-            return;
-        }
-
-        stdout.print("----------------------------------------------"
-                + "--------------------------------\n");
-
-        stdout.print(String.format("%-17s %-12s %-12s %-22s %-3s %s\n", //
-                "Task-Id", "Start/End", "Type/State", "Ref", "Bot", "Branch"));
-        int numberOfPendingTasks = 0;
-
-        List<GerritJob> changes = control.getGerritJobs(projectControl.getProject().getName());
-        synchronized (changes) {
+    public void doRun() {
+        synchronized (control) {
+            log.debug("project: {}", projectControl.getProject().getName());
+    
+            if (!config.isProjectSupported(projectControl.getProject().getName())) {
+                String message = String.format(
+                        "project <%s> is not enabled for building!", projectControl
+                                .getProject().getName());
+                stderr.print(message);
+                stderr.write("\n");
+                return;
+            }
+    
+            stdout.print("----------------------------------------------"
+                    + "--------------------------------\n");
+    
+            stdout.print(String.format("%-17s %-12s %-12s %-22s %-3s %s\n", //
+                    "Task-Id", "Start/End", "Type/State", "Ref", "Bot", "Branch"));
+            int numberOfPendingTasks = 0;
+    
+            List<GerritJob> changes = control.getGerritJobs(projectControl.getProject().getName());
             for (GerritJob change : changes) {
                 if (type == null || type.equals(TaskType.CHANGE)) {
                     numberOfPendingTasks++;
@@ -112,14 +100,9 @@ public final class ShowCommand extends SshCommand {
                     }
                 }
             }
-        }
-        stdout.print("----------------------------------------------"
-                + "--------------------------------\n");
-        stdout.print("  " + numberOfPendingTasks + " task(s)\n");
-    }
-
-    private static String time(final long now, final long delay) {
-        final Date when = new Date(now + delay);
-        return new SimpleDateFormat("MMM-dd HH:mm").format(when);
+            stdout.print("----------------------------------------------"
+                    + "--------------------------------\n");
+            stdout.print("  " + numberOfPendingTasks + " task(s)\n");
+        }   
     }
 }

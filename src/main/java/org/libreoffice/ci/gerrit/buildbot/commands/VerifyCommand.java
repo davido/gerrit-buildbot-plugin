@@ -9,7 +9,6 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -18,14 +17,11 @@ import java.util.Set;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
-import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
-import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.common.data.ApprovalType;
-import com.google.gerrit.common.data.ApprovalTypes;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.ApprovalCategory;
@@ -33,37 +29,19 @@ import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
-import com.google.gerrit.reviewdb.server.ReviewDb;
 import com.google.gerrit.server.IdentifiedUser;
-import com.google.gerrit.server.patch.PublishComments;
 import com.google.gerrit.server.project.ProjectControl;
-import com.google.gerrit.sshd.SshCommand;
 import com.google.gerrit.util.cli.CmdLineParser;
 import com.google.gwtorm.server.OrmException;
 import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class VerifyCommand extends SshCommand {
+public final class VerifyCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(VerifyCommand.class);
 
 	@Inject
 	IdentifiedUser user;
-	
-	@Inject
-	BuildbotLogicControl control;
-
-	@Inject
-	BuildbotConfig config;
-
-	@Inject
-	private ApprovalTypes approvalTypes;
-
-    @Inject
-    private PublishComments.Factory publishCommentsFactory;
-
-	@Inject
-	private ReviewDb db;
 	
 	private final Set<PatchSet.Id> patchSetIds = new HashSet<PatchSet.Id>();
 
@@ -97,26 +75,28 @@ public final class VerifyCommand extends SshCommand {
     }
 
 	@Override
-	public void run() throws UnloggedFailure, Failure, Exception {
-		log.debug("verify");
-		
-		final String p = projectControl.getProject().getName();
-		if (!config.isProjectSupported(p)) {
-			String tmp = String.format(
-					"error: project %s is not supported", p);
-			log.warn(tmp);
-			stderr.print(tmp + "\n");
-			return;
-		}
-		if (patchSetIds.size() > 1) {
-			String tmp = "error: only one commit|patch set can be provided";
-			log.warn(tmp);
-			stderr.print(tmp + "\n");
-			return;
-		}
-		for (PatchSet.Id id : patchSetIds) {
-			doVerify(id);
-		}
+	public void doRun() throws UnloggedFailure, OrmException {
+	    synchronized (control) {
+    		log.debug("verify");
+    		
+    		final String p = projectControl.getProject().getName();
+    		if (!config.isProjectSupported(p)) {
+    			String tmp = String.format(
+    					"error: project %s is not supported", p);
+    			log.warn(tmp);
+    			stderr.print(tmp + "\n");
+    			return;
+    		}
+    		if (patchSetIds.size() > 1) {
+    			String tmp = "error: only one commit|patch set can be provided";
+    			log.warn(tmp);
+    			stderr.print(tmp + "\n");
+    			return;
+    		}
+    		for (PatchSet.Id id : patchSetIds) {
+    			doVerify(id);
+    		}   
+        }
 	}
 
 	private void doVerify(PatchSet.Id id) throws OrmException {
@@ -136,41 +116,22 @@ public final class VerifyCommand extends SshCommand {
 		overrideVerifyStatus(patchSet);
 	}
 
-    public void overrideVerifyStatus(PatchSet patchSet) {
-    	Set<ApprovalCategoryValue.Id> aps = new HashSet<ApprovalCategoryValue.Id>();
-    	Short v = 0;
-        for (ApproveOption ao : optionList) {
-          v = ao.value();
-          if (v != null) {
-            aps.add(new ApprovalCategoryValue.Id(ao.getCategoryId(), v));
-          }
-        }
-        
-        try {
-			StringBuilder builder = new StringBuilder(
-					String.format(
-							"Verification Status of the Buildbot is manually set to %d by %s",
-							v, user.getUserName()));
-			getCommenter(aps, patchSet, builder).call();
-        } catch (Exception e) {
-            e.printStackTrace();
-            die(e);
-        }
-    }
-
-	private PublishComments getCommenter(
-			Set<ApprovalCategoryValue.Id> aps, PatchSet patchset,
-			StringBuilder builder) throws NoSuchFieldException,
-			IllegalAccessException {
-		PublishComments commenter = publishCommentsFactory.create(patchset.getId(),
-		        builder.toString(), aps, true);
-		if (config.isForgeReviewerIdentity()) {
-			// Replace current user with buildbot user
-			Field field = commenter.getClass().getDeclaredField("user");
-			field.setAccessible(true);
-			field.set(commenter, control.getBuildbot());
+	private void overrideVerifyStatus(PatchSet ps) {
+		Short v = 0;
+		for (ApproveOption ao : optionList) {
+			v = ao.value();
 		}
-		return commenter;
+		final String changeComment = String
+				.format("Verification status of the Buildbot is manually set to %d by %s",
+						v, user.getUserName());
+		try {
+			approveOne(ps.getId(), changeComment, optionList);
+		} catch (Exception e) {
+        	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
+        	writeError(tmp);
+        	log.error(tmp, e);
+			die(e);
+        }
 	}
 
 	private Set<PatchSet.Id> parsePatchSetId(final String patchIdentity)

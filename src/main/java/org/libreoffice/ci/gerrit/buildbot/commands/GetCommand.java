@@ -9,15 +9,11 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
-import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
-import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
@@ -25,23 +21,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
-import com.google.gerrit.common.data.ApprovalType;
-import com.google.gerrit.common.data.ApprovalTypes;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
-import com.google.gerrit.reviewdb.client.ApprovalCategory;
-import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
-import com.google.gerrit.reviewdb.server.ReviewDb;
-import com.google.gerrit.server.patch.PublishComments;
 import com.google.gerrit.server.project.ProjectControl;
-import com.google.gerrit.sshd.SshCommand;
-import com.google.gwtorm.server.ResultSet;
-import com.google.inject.Inject;
+import com.google.gwtorm.server.OrmException;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class GetCommand extends SshCommand {
+public final class GetCommand extends BuildbotSshCommand {
     static final Logger log = LoggerFactory.getLogger(GetCommand.class);
 
     @Option(name = "--project", aliases={"-p"}, required = true, metaVar = "PROJECT", usage = "name of the project for which the task should be polled")
@@ -63,97 +51,76 @@ public final class GetCommand extends SshCommand {
 	
 	private Set<String> branchSet = Sets.newHashSet();
 
-    @Inject
-    BuildbotLogicControl control;
-
-    @Inject
-    private PublishComments.Factory publishCommentsFactory;
-
-    @Inject
-    BuildbotConfig config;
-
-    @Inject
-    private ApprovalTypes approvalTypes;
-
-    @Inject
-    private ReviewDb db;
-
-    protected String getDescription() {
-        return "Get a task from platform specific queue";
-    }
+	protected String getDescription() {
+		return "Get a task from platform specific queue";
+	}
 
     @Override
-    public void run() throws UnloggedFailure, Failure, Exception {
-        log.debug("project: {}", projectControl.getProject().getName());
-        if (!config.isProjectSupported(projectControl.getProject().getName())) {
-            String message = String.format(
-                    "project <%s> is not enabled for building!", projectControl
-                            .getProject().getName());
-            stderr.print(message);
-            stderr.write("\n");
-            return;
-        }
-		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
-				.getProject().getName(), platform, branchSet, box);
-        if (jobDescriptor == null) {
-            if (format != null && format == FormatType.BASH) {
-                stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
-            } else {
-                stdout.print("empty");
+    public void doRun() throws UnloggedFailure, OrmException, Failure {
+        synchronized (control) {
+            log.debug("project: {}", projectControl.getProject().getName());
+            if (!config.isProjectSupported(projectControl.getProject().getName())) {
+                String message = String.format(
+                        "project <%s> is not enabled for building!", projectControl
+                                .getProject().getName());
+                stderr.print(message);
+                stderr.write("\n");
+                return;
             }
-        } else {
-            notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
-            String output;
-            if (format != null && format == FormatType.BASH) {
-                output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
-                        jobDescriptor.getTicket(),
-                        jobDescriptor.getBranch(),
-                        jobDescriptor.getRef());
-            } else {
-                output = String.format("engaged: ticket=%s branch=%s ref=%s\n",
-                        jobDescriptor.getTicket(),
-                        jobDescriptor.getBranch(),
-                        jobDescriptor.getRef());
+    		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
+    				.getProject().getName(), platform, branchSet, box);
+            if (jobDescriptor == null) {
+                if (format != null && format == FormatType.BASH) {
+                    stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
+                } else {
+                    stdout.print("empty");
+                }
+            } else {	
+    			final List<PatchSet> matches = db
+    					.patchSets()
+    					.byRevision(
+    							new RevId(jobDescriptor.getBuildbotPlatformJob()
+    									.getParent().getGerritRevision())).toList();
+    			if (matches.size() == 1) {
+    				notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob(),
+    						matches.get(0));
+    			}
+                reportOutcome(jobDescriptor);
             }
-            stdout.print(output);
         }
     }
 
-    void notifyGerritBuildbotPlatformJobStarted(BuildbotPlatformJob tbPlatformJob) {
-        ApprovalCategory verified = null;
-        for (ApprovalType type : approvalTypes.getApprovalTypes()) {
-            final ApprovalCategory category = type.getCategory();
-            // VRIF
-            if ("CRVW".equals(category.getId().get())) {
-                verified = category;
-                break;
-            }
-        }
+	private void reportOutcome(TbJobDescriptor jobDescriptor) {
+		String output;
+		if (format != null && format == FormatType.BASH) {
+		    output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
+		            jobDescriptor.getTicket(),
+		            jobDescriptor.getBranch(),
+		            jobDescriptor.getRef());
+		} else {
+		    output = String.format("engaged: ticket=%s branch=%s ref=%s\n",
+		            jobDescriptor.getTicket(),
+		            jobDescriptor.getBranch(),
+		            jobDescriptor.getRef());
+		}
+		stdout.print(output);
+	}
 
-        Set<ApprovalCategoryValue.Id> aps = new HashSet<ApprovalCategoryValue.Id>();
-        PatchSet patchset = null;
+    void notifyGerritBuildbotPlatformJobStarted(final BuildbotPlatformJob tbPlatformJob,
+    		final PatchSet ps) {
+        final short status = 0;
+        String changeComment = String.format("Build %s on %s started at %s by %s\n\n",
+                tbPlatformJob.getTicket().getId(),
+                tbPlatformJob.getPlatformString(),
+                time(tbPlatformJob.getStartTime(), 0),
+                tbPlatformJob.getTinderboxId());            
         try {
-            ResultSet<PatchSet> result = db.patchSets().byRevision(
-                    new RevId(tbPlatformJob.getParent().getGerritRevision()));
-            patchset = result.iterator().next();
-            StringBuilder builder = new StringBuilder(256);
-            short status = 0;
-            builder.append(String.format("Build %s on %s started at %s\n\n",
-                    tbPlatformJob.getTicket().getId(),
-                    tbPlatformJob.getPlatformString(),
-                    time(tbPlatformJob.getStartTime(), 0)
-                    ));
-            aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
-            publishCommentsFactory.create(patchset.getId(),
-                    builder.toString(), aps, true).call();
+            approveOne(ps.getId(), changeComment, reviewed.getLabelName(), status);
         } catch (Exception e) {
-            e.printStackTrace();
+        	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
+        	writeError(tmp);
+        	log.error(tmp, e);
             die(e);
         }
-    }
-
-    private static String time(final long now, final long delay) {
-        final Date when = new Date(now + delay);
-        return new SimpleDateFormat("MMM-dd HH:mm").format(when);
     }
 }

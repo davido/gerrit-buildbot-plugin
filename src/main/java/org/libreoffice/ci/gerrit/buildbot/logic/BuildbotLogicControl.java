@@ -54,11 +54,13 @@ public class BuildbotLogicControl {
 
 	public TbJobDescriptor launchTbJob(String project, Platform platform,
 			Set<String> branch, String box) {
-		return projectMap.get(project).launchTbJob(platform, branch, box);
+	    synchronized (projectMap) {
+	        return projectMap.get(project).launchTbJob(platform, branch, box);
+	    }
 	}
 	
 	public TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String log) {
-		synchronized (projectMap) {			
+		synchronized (projectMap) {
 			for (Map.Entry<String, ProjectControl> entry : projectMap.entrySet()) {
 				TbJobResult result = entry.getValue().setResultPossible(ticket, boxId, status, log);
 				if (result != null) {
@@ -70,22 +72,33 @@ public class BuildbotLogicControl {
 	}
 	
 	public List<GerritJob> getGerritJobs(String project) {
-		return projectMap.get(project).getGerritJobs();
+	    synchronized (projectMap) {
+	        return projectMap.get(project).getGerritJobs();
+	    }
 	}
 	
 	public GerritJob findJobByRevision(String project, String revision) {
-		return projectMap.get(project).findJobByRevision(revision);
+	    synchronized (projectMap) {
+	        return projectMap.get(project).findJobByRevision(revision);
+	    }
 	}
 	
 	public void startGerritJob(String project, Change change, PatchSet patchSet) {
-		projectMap.get(project).startGerritJob(change, patchSet);
+	    synchronized (projectMap) {
+	        projectMap.get(project).startGerritJob(change, patchSet);
+	    }
 	}
 	
 	public void startGerritJob(PatchSetCreatedEvent event) {
-		projectMap.get(event.change.project).startGerritJob(event);
+	    synchronized (projectMap) {
+	        projectMap.get(event.change.project).startGerritJob(event);
+	    }
 	}
+	
 	public void startGerritJob(CommentAddedEvent event) {
-		projectMap.get(event.change.project).startGerritJob(event);
+	    synchronized (projectMap) {
+	        projectMap.get(event.change.project).startGerritJob(event);
+	    }
 	}
 
 	public IdentifiedUser getBuildbot() {
