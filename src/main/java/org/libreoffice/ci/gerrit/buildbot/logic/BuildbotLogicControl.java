@@ -59,10 +59,10 @@ public class BuildbotLogicControl {
 	    }
 	}
 	
-	public TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String log) {
+	public TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String logurl) {
 		synchronized (projectMap) {
 			for (Map.Entry<String, ProjectControl> entry : projectMap.entrySet()) {
-				TbJobResult result = entry.getValue().setResultPossible(ticket, boxId, status, log);
+				TbJobResult result = entry.getValue().setResultPossible(ticket, boxId, status, logurl);
 				if (result != null) {
 					return result;
 				}
@@ -83,6 +83,12 @@ public class BuildbotLogicControl {
 	    }
 	}
 	
+	void startGerritJob(String project, String branch, String ref, String revision) {
+	    synchronized (projectMap) {
+            projectMap.get(project).startGerritJob(project, branch, ref, revision);
+        } 
+	}
+
 	public void startGerritJob(String project, Change change, PatchSet patchSet) {
 	    synchronized (projectMap) {
 	        projectMap.get(project).startGerritJob(change, patchSet);
