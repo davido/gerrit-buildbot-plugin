@@ -76,15 +76,22 @@ public class ProjectControlImpl implements ProjectControl {
 		}
 	}
 
-	public void startGerritJob(PatchSetCreatedEvent event) {
-	    if (log.isDebugEnabled()) {
-            log.debug("startGerritJob: {} {} {} {}", new String[] {
-                    event.change.project, event.change.branch, event.patchSet.ref,
-                    event.patchSet.revision });
+	public void startGerritJob(String project, String branch, String ref, String revision) {
+	    synchronized (gerritJobList) {
+	        GerritJob job = new GerritJob(this, project, branch, ref, revision);
+            startJob(job);
 	    }
-		synchronized (gerritJobList) {
-			GerritJob job = new GerritJob(this, event.change.project, event.change.branch, event.patchSet.ref, event.patchSet.revision);
-			startJob(job);
+	}
+
+	public void startGerritJob(PatchSetCreatedEvent event) {
+	    synchronized (gerritJobList) {
+    	    if (log.isDebugEnabled()) {
+                log.debug("startGerritJob: {} {} {} {}", new String[] {
+                        event.change.project, event.change.branch, event.patchSet.ref,
+                        event.patchSet.revision });
+    	    }
+    	    startGerritJob(event.change.project, event.change.branch, event.patchSet.ref,
+                    event.patchSet.revision);
 		}
 	}
 
@@ -95,8 +102,8 @@ public class ProjectControlImpl implements ProjectControl {
 		                event.change.project, event.change.branch, event.patchSet.ref,
 		                event.patchSet.revision });
 		    }
-			GerritJob job = new GerritJob(this, event.change.project, event.change.branch, event.patchSet.ref, event.patchSet.revision);
-			startJob(job);
+		    startGerritJob(event.change.project, event.change.branch, event.patchSet.ref,
+                    event.patchSet.revision);
 		}
 	}
 	
@@ -107,9 +114,8 @@ public class ProjectControlImpl implements ProjectControl {
 		                change.getProject().get(), change.getDest().getShortName(), 
 		                patchSet.getRefName(), patchSet.getRevision().get() });
 		    }
-			GerritJob job = new GerritJob(this, change.getProject().get(), change.getDest().getShortName(), 
+		    startGerritJob(change.getProject().get(), change.getDest().getShortName(), 
 					patchSet.getRefName(), patchSet.getRevision().get());
-			startJob(job);
 		}
 	}
 

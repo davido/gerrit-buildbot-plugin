@@ -24,13 +24,14 @@ import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
 public interface ProjectControl {
+    void startGerritJob(String project, String branch, String ref, String revision);
 	void startGerritJob(PatchSetCreatedEvent event);
 	void startGerritJob(CommentAddedEvent event);
 	void startGerritJob(Change change, PatchSet patchSet);
 	List<GerritJob> getGerritJobs();
 	GerritJob findJobByRevision(String revision);
 	TbJobDescriptor launchTbJob(Platform platform, Set<String> branch, String box);
-	TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String log);
+	TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String logurl);
 	void stop();
 	void start();
 }
