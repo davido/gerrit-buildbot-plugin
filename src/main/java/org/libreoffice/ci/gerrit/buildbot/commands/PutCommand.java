@@ -9,15 +9,10 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
@@ -29,12 +24,15 @@ import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
+import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.config.CanonicalWebUrl;
+import com.google.gerrit.sshd.CommandMetaData;
 import com.google.gwtorm.server.OrmException;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@CommandMetaData(name="get", descr="Acknowledge executed task and report the result")
 public final class PutCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(PutCommand.class);
 
@@ -42,7 +40,7 @@ public final class PutCommand extends BuildbotSshCommand {
 	private String ticket;
 
 	@Option(name = "--id", aliases = { "-i" }, required = true, metaVar = "TB", usage = "id of the tinderbox")
-	private String boxId;
+	private String box;
 
 	@Option(metaVar = "STATUS", name = "--status", aliases = { "-s" }, required = true, usage = "success|failed|canceled")
 	private TaskStatus status;
@@ -55,26 +53,12 @@ public final class PutCommand extends BuildbotSshCommand {
 	@Nullable
 	Provider<String> urlProvider;
 
-	private final static String LOGFILE_SERVLET_SUFFIX = "plugins/buildbot/log?file=";
-	private final static String LOGFILE_SUFFIX = ".log";
-
-	protected String getDescription() {
-		return "Acknowledge executed task and report the result";
-	}
+	@Inject IdentifiedUser user;
 
 	@Override
 	public void doRun() throws UnloggedFailure, OrmException, Failure {
 	    synchronized (control) {
     		log.debug("ticket: {}", ticket);
-    		if ("-".equals(urllog)) {
-    			try {
-    				writeLogFile();
-    			} catch (IOException e) {
-    				log.error(e.getMessage());
-    				die(e);
-    			}
-    		}
-    
     		if (Strings.isNullOrEmpty(ticket)) {
     			String tmp = "No ticket is provided";
     			stderr.print(tmp);
@@ -82,19 +66,43 @@ public final class PutCommand extends BuildbotSshCommand {
     			log.warn(tmp);
     			return;
     		}
-    
-    		if (status.isSuccess() || status.isFailed()) {
-    			if (Strings.isNullOrEmpty(urllog)) {
-    				String tmp = String.format("No log is provided for status %s",
-    						status.name());
-    				stderr.print(tmp);
-    				stderr.write("\n");
-    				log.warn(tmp);
-    				return;
-    			}
-    		}
-    
-    		TbJobResult result = control.setResultPossible(ticket, boxId, status,
+            if (box != null) {
+                String project = control.findProjectByTicket(ticket);
+                if (project == null) {
+                    String tmp = String.format("Can not find task for ticket %s",
+                            ticket);
+                    stderr.print(tmp);
+                    stderr.write("\n");
+                    log.warn(tmp);
+                    return;
+                }
+                if (!config.isIdentityBuildbotAdmin4Project(project, user)) {
+                    String message = String.format(
+                            "only member of buildbot admin group allowed to pass --id option!",
+                            project);
+                    stderr.print(message);
+                    stderr.write("\n");
+                    return;
+                }
+            } else {
+                // default is to use username as TB-ID
+                box = user.getUserName();
+            }
+            if (status.isSuccess() || status.isFailed()) {
+                if (Strings.isNullOrEmpty(urllog)) {
+                    String tmp = String.format(
+                            "No log is provided for status %s", status.name());
+                    stderr.print(tmp);
+                    stderr.write("\n");
+                    log.warn(tmp);
+                    return;
+                }
+            }
+            if ("-".equals(urllog)) {
+                urllog = config.getPublisher().publishLog(config, ticket,
+                        box, status, in);
+            }
+    		TbJobResult result = control.setResultPossible(ticket, box, status,
     				urllog);
     		if (result == null) {
     			String tmp = String.format("Can not find task for ticket %s",
@@ -128,16 +136,14 @@ public final class PutCommand extends BuildbotSshCommand {
     		}
     
     		if (result.getTbPlatformJob().getParent().allJobsReady()) {
-    		    log.debug("all jobs are ready");
     			notifyGerritJobFinished(result.getTbPlatformJob().getParent(), matches.get(0));
     		}
-    		
-    		log.debug("done");
 	    }
 	}
 
 	public void notifyGerritJobFinished(GerritJob job, final PatchSet ps) {
 		StringBuilder builder = new StringBuilder(256);
+		builder.append(String.format("Build %s:\n", job.getId()));
 		short combinedStatus = 1;
 		for (TbJobResult tbResult : job.getTbResultList()) {
 			// ignore canceled tasks
@@ -147,12 +153,21 @@ public final class PutCommand extends BuildbotSshCommand {
 			if (!tbResult.getStatus().isSuccess()) {
 				combinedStatus = -1;
 			}
-			builder.append(String.format(
-					"* Build %s on %s completed %s : %s\n",
-					tbResult.getDecoratedId(),
-					tbResult.getPlatform().name(),
-					tbResult.getLog() == null ? StringUtils.EMPTY : tbResult
-							.getLog(), tbResult.getStatus().name()));
+			// old not pulished impl on 2.5 branch was
+			//short combinedStatus = verifiedType.getMax().getValue();
+			//if (!tbResult.getStatus().isSuccess() || job.isStale()) {
+            //    // Later we want this to be configurable
+            //    // currently only report success and ignore failure
+            //    // Note we reported already -1 on per platform task base
+            //    log.warn("notifyGerritJobFinished return");
+            //    return;
+            //}
+            builder.append(String.format("* on %s %s : %s\n",
+                    tbResult.getPlatform()
+                            .name(),
+                    tbResult
+                            .getStatus().name(),
+                    Strings.nullToEmpty(tbResult.getLog())));
 		}
 		try {
 			approveOne(ps.getId(), builder.toString(),
@@ -167,14 +182,13 @@ public final class PutCommand extends BuildbotSshCommand {
 
 	void notifyGerritBuildbotPlatformJobFinished(TbJobResult tbJobResult, final PatchSet ps) {
 		short status = 0;
-		String msg = String.format(
-				"Build %s on %s complete at %s %s : %s", tbJobResult
-						.getDecoratedId(),
-				tbJobResult.getPlatform().name(),
-				time(tbJobResult.getEndTime(), 0),
-				tbJobResult.getLog() == null ? StringUtils.EMPTY
-						: tbJobResult.getLog(), tbJobResult.getStatus()
-						.name());
+		String msg = String.format("%s %s (%s)\n\nBuild on %s at %s: %s",
+                tbJobResult.getPlatform().name(),
+                tbJobResult.getStatus().name(),
+                tbJobResult.getDecoratedId(),
+                tbJobResult.getTinderboxId(),
+                time(tbJobResult.getEndTime(), 0),
+                Strings.nullToEmpty(tbJobResult.getLog()));
 		try {
 			approveOne(ps.getId(), msg, "Code-Review", status);
 		} catch (Exception e) {
@@ -184,22 +198,4 @@ public final class PutCommand extends BuildbotSshCommand {
 			die(e);
 		}
 	}
-
-	private void writeLogFile() throws IOException {
-		urllog = ticket + LOGFILE_SUFFIX;
-		String file = config.getLogDir() + File.separator + urllog;
-		int sChunk = 8192;
-		GZIPInputStream zipin = new GZIPInputStream(in);
-		byte[] buffer = new byte[sChunk];
-		FileOutputStream out = new FileOutputStream(file);
-		int length;
-		while ((length = zipin.read(buffer, 0, sChunk)) != -1)
-			out.write(buffer, 0, length);
-		out.flush();
-		out.close();
-		zipin.close();
-		in.close();		
-		urllog = urlProvider.get() + LOGFILE_SERVLET_SUFFIX + urllog;
-	}
-
 }

@@ -14,56 +14,68 @@ import java.util.Set;
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 
 public class TbJobResult {
-	BuildbotPlatformJob tbPlatformJob;
-	String decoratedId;
-	Platform platform;
-	TaskStatus status;
-	String log;
-	long endTime;
+    BuildbotPlatformJob tbPlatformJob;
+    String decoratedId;
+    Platform platform;
+    TaskStatus status;
+    String log;
+    long endTime;
+    String tinderboxId;
+
     private Set<BuildbotPlatformJob> discardedTasks;
 
-	public TbJobResult(BuildbotPlatformJob tbPlatformJob, String decoratedId, 
-			Platform platform, TaskStatus status, String log, 
-			Set<BuildbotPlatformJob> discardedTasks) {
-		this.tbPlatformJob = tbPlatformJob;
-		this.decoratedId = decoratedId;
-		this.platform = platform;
-		this.status = status;
-		this.log = log;
-		this.endTime = System.currentTimeMillis();
-		this.discardedTasks = discardedTasks;
-	}
-	
-	public String getDecoratedId() {
-		return decoratedId;
-	}
-	
-	public String getLog() {
-		return log;
-	}
+    public TbJobResult(BuildbotPlatformJob tbPlatformJob, String decoratedId,
+            Platform platform, TaskStatus status, String log, String boxId,
+            Set<BuildbotPlatformJob> discardedTasks) {
+        this.tbPlatformJob = tbPlatformJob;
+        this.decoratedId = decoratedId;
+        this.platform = platform;
+        this.status = status;
+        this.log = log;
+        this.endTime = System.currentTimeMillis();
+        this.tinderboxId = boxId;
+        this.discardedTasks = discardedTasks;
+    }
 
-	public Platform getPlatform() {
-		return platform;
-	}
+    public String getDecoratedId() {
+        return decoratedId;
+    }
 
-	public TaskStatus getStatus() {
-		return status;
-	}
-	
-	public long getEndTime() {
-		return endTime;
-	}
-	
-	public BuildbotPlatformJob getTbPlatformJob() {
-		return tbPlatformJob;
-	}
+    public String getLog() {
+        return log;
+    }
 
-	public boolean ignoreJobStatus() {
-		if (getStatus() == TaskStatus.CANCELED) {
-			return true;
-		}
-		return false;
-	}
+    public Platform getPlatform() {
+        return platform;
+    }
+
+    public TaskStatus getStatus() {
+        return status;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public BuildbotPlatformJob getTbPlatformJob() {
+        return tbPlatformJob;
+    }
+
+    public boolean ignoreJobStatus() {
+        if (getStatus() == TaskStatus.CANCELED) {
+            return true;
+        }
+        return false;
+    }
+
+    public String getTinderboxId() {
+        return tinderboxId;
+    }
+
+    public void setTinderboxId(String tinderboxId) {
+        this.tinderboxId = tinderboxId;
+    }
+
     public Set<BuildbotPlatformJob> getDiscardedTasks() {
         return discardedTasks;
     }

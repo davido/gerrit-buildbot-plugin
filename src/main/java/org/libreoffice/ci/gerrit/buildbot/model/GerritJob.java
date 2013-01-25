@@ -21,179 +21,223 @@ import org.libreoffice.ci.gerrit.buildbot.logic.impl.ProjectControlImpl;
 import com.google.common.collect.Sets;
 
 public class GerritJob implements Runnable {
-	String gerritProject;
-	String gerritBranch;
-	String gerritRef;
-	String gerritRevision;
-	Thread thread;
-	String id;
-	long startTime;
+    String gerritProject;
+    String gerritChange;
+    String gerritBranch;
+    String gerritRef;
+    String gerritRevision;
+    Thread thread;
+    String id;
+    long startTime;
 
-	final List<BuildbotPlatformJob> tinderBoxThreadList = Collections
-			.synchronizedList(new ArrayList<BuildbotPlatformJob>());
-	List<TbJobResult> tbResultList;
-	ProjectControlImpl control;
+    final List<BuildbotPlatformJob> tinderBoxThreadList = Collections
+            .synchronizedList(new ArrayList<BuildbotPlatformJob>());
+    List<TbJobResult> tbResultList;
+    ProjectControlImpl control;
+    private boolean stale;
 
-	public GerritJob(ProjectControlImpl control, String project, String gerritBranch,
-			String gerritRef, String gerritRevision) {
-		this.control = control;
-		this.gerritProject = project;
-		this.gerritBranch = gerritBranch;
-		this.gerritRef = gerritRef;
-		this.gerritRevision = gerritRevision;
-		this.id = abbreviate(gerritRevision);
-		this.startTime = System.currentTimeMillis();
-	}
+    public GerritJob(ProjectControlImpl control, String project, String change,
+            String gerritBranch, String gerritRef, String gerritRevision) {
+        this.control = control;
+        this.gerritProject = project;
+        this.gerritChange = change;
+        this.gerritBranch = gerritBranch;
+        this.gerritRef = gerritRef;
+        this.gerritRevision = gerritRevision;
+        this.id = abbreviate(gerritRevision);
+        this.startTime = System.currentTimeMillis();
+    }
 
     /** Obtain a shorter version of this key string, using a leading prefix. */
     public String abbreviate(String s) {
-      return s.substring(0, Math.min(s.length(), 9));
+        return s.substring(0, Math.min(s.length(), 9));
     }
-	
-	public void start() {
-		thread = new Thread(this, "name");
-		thread.start();
-	}
 
-	public String getGerritBranch() {
-		return gerritBranch;
-	}
+    public void start() {
+        thread = new Thread(this, "name");
+        thread.start();
+    }
 
-	public boolean allJobsReady() {
-		boolean done = true;
-		for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
-			if (!tbJob.isReady()) {
-				done = false;
-			}
-		}
-		return done;
-	}
+    public String getGerritChange() {
+        return gerritChange;
+    }
 
-	@Override
-	public void run() {
+    public String getGerritBranch() {
+        return gerritBranch;
+    }
 
-		boolean done = false;
-		while (!done) {
-			done = true;
+    public boolean allJobsReady() {
+        boolean done = true;
+        for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
+            if (!tbJob.isReady()) {
+                done = false;
+            }
+        }
+        return done;
+    }
 
-			for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
-				if (!tbJob.isReady()) {
-					done = false;
-				}
-			}
+    @Override
+    public void run() {
 
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
+        boolean done = false;
+        while (!done) {
+            done = true;
 
-				e.printStackTrace();
-			}
-		}
-		control.finishGerritJob(this);
-	}
+            // important to synchronise here
+            // because setResultPossible() might
+            // replace a cancelled task
+            synchronized (tinderBoxThreadList) {
+                for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
+                    if (!tbJob.isReady()) {
+                        done = false;
+                    }
+                }
+            }
 
-	public void createTBResultList() {
-		tbResultList = new ArrayList<TbJobResult>();
-		// GET AND REGISTER RESULTS
-		for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
-			tbResultList.add(tbJob.getResult());
-		}
-	}
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
 
-	public void poulateTBPlatformQueueMap(
-			Map<Platform, TBBlockingQueue> tbQueueMap) {
-		for (int i = 0; i < Platform.values().length; i++) {
-			Platform platform = Platform.values()[i];
-			initPlatformJob(tbQueueMap, platform);
-		}
-	}
+                e.printStackTrace();
+            }
+        }
+        control.finishGerritJob(this);
+    }
 
-	private void initPlatformJob(Map<Platform, TBBlockingQueue> tbQueueMap,
-			Platform platform) {
-		BuildbotPlatformJob tbJob = new BuildbotPlatformJob(this, platform);
-		tinderBoxThreadList.add(tbJob);
-		tbQueueMap.get(platform).add(tbJob);
-		tbJob.start();
-	}
+    public void createTBResultList() {
+        tbResultList = new ArrayList<TbJobResult>();
+        // GET AND REGISTER RESULTS
+        for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
+            tbResultList.add(tbJob.getResult());
+        }
+    }
 
-	public String getId() {
-		return id;
-	}
+    public void poulateTBPlatformQueueMap(
+            Map<Platform, TBBlockingQueue> tbQueueMap) {
+        for (int i = 0; i < Platform.values().length; i++) {
+            Platform platform = Platform.values()[i];
+            initPlatformJob(tbQueueMap, platform);
+        }
+    }
 
-	BuildbotPlatformJob getTbJob(String ticket) {
-		for (BuildbotPlatformJob job : tinderBoxThreadList) {
-			if (!job.isStarted()) {
-				continue;
-			}
+    private void initPlatformJob(Map<Platform, TBBlockingQueue> tbQueueMap,
+            Platform platform) {
+        synchronized (tinderBoxThreadList) {
+            BuildbotPlatformJob tbJob = new BuildbotPlatformJob(this, platform);
+            tinderBoxThreadList.add(tbJob);
+            tbQueueMap.get(platform).add(tbJob);
+            tbJob.start();
+        }
+    }
 
-			if (job.getTicketString() != null
-					&& job.getTicketString().equals(ticket)) {
-				return job;
-			}
-		}
-		return null;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public TbJobResult setResultPossible(String ticket, String boxId, String log, TaskStatus status) {
-		BuildbotPlatformJob task = getTbJob(ticket);
-		if (task == null || task.getResult() != null) {
+    public BuildbotPlatformJob getTbJob(String ticket) {
+        for (BuildbotPlatformJob job : tinderBoxThreadList) {
+            if (!job.isStarted()) {
+                continue;
+            }
+
+            if (job.getTicketString() != null
+                    && job.getTicketString().equals(ticket)) {
+                return job;
+            }
+        }
+        return null;
+    }
+
+    public TbJobResult setResultPossible(String ticket, String boxId,
+            String log, TaskStatus status) {
+        BuildbotPlatformJob task = getTbJob(ticket);
+        if (task == null || task.getResult() != null) {
             return null;
         }
-			
-		if (!task.getTinderboxId().equals(boxId)) {
-			// tinderbox doesn't match, ignore
-			return null;
-		}
 
-		Set<BuildbotPlatformJob> discardedTasks = Sets.newHashSet();
-		// Before we report a status back, check different strategies/optimisations
-		// 1. if status is failed, then discard all pending tasks.
-		if (status.isFailed()) {
-			for (BuildbotPlatformJob task2 : tinderBoxThreadList) {
-				if (task2.getTicketString() != null
-					&& task2.getTicketString().equals(ticket)) {
-					// skip the same task
-					continue;
-				}
-				// discard pending tasks
-				if (task2.isDiscardable()) {
-				    discardedTasks.add(task2);
-					task2.discard();
-				}
-			}
-		}
-		
-        TbJobResult jobResult = task.createResult(log, status, discardedTasks);
-     
-     	// 2. if status is canceled, the reschedule a new task for the same platform
-        // reuse the same id and drop the old task from the list (replace it)
-     	if (status.isCanceled()) {
-     		// important! add a new instance first
-     	    // and only then remove the old one,
-     	    // otherwise thread get terminated
-     		initPlatformJob(control.getTbQueueMap(), task.platform);
-     		tinderBoxThreadList.remove(task);
-     	}
-		return jobResult;
-	}
+        if (!task.getTinderboxId().equals(boxId)) {
+            // tinderbox doesn't match, ignore
+            return null;
+        }
 
-	public long getStartTime() {
-		return startTime;
-	}
+        synchronized (tinderBoxThreadList) {
+            Set<BuildbotPlatformJob> discardedTasks = Sets.newHashSet();
+            // Before we report a status back, check different
+            // strategies/optimisations
+            // 1. if status is failed, then discard all pending tasks.
+            if (status.isFailed()) {
+                for (BuildbotPlatformJob task2 : tinderBoxThreadList) {
+                    if (task2.getTicketString() != null
+                            && task2.getTicketString().equals(ticket)) {
+                        // skip the same task
+                        continue;
+                    }
+                    // discard pending tasks
+                    if (task2.isDiscardable()) {
+                        discardedTasks.add(task2);
+                        task2.discard();
+                    }
+                }
+            }
+            TbJobResult jobResult = task.createResult(log, status, boxId, discardedTasks);
+            // 2. if status is canceled, the reschedule a new task for the same
+            // platform
+            // reuse the same id and drop the old task from the list (replace
+            // it)
+            // Important to synchronie the block, so that the job is not ready.
+            if (status.isCancelled()) {
+                tinderBoxThreadList.remove(task);
+                initPlatformJob(control.getTbQueueMap(), task.platform);
+            }
+            return jobResult;
+        }
+    }
 
-	public List<BuildbotPlatformJob> getBuildbotList() {
-		return tinderBoxThreadList;
-	}
+    public long getStartTime() {
+        return startTime;
+    }
 
-	public String getGerritRef() {
-		return gerritRef;
-	}
+    public List<BuildbotPlatformJob> getBuildbotList() {
+        return tinderBoxThreadList;
+    }
 
-	public List<TbJobResult> getTbResultList() {
-		return tbResultList;
-	}
+    public String getGerritRef() {
+        return gerritRef;
+    }
 
-	public String getGerritRevision() {
-		return gerritRevision;
-	}
+    public List<TbJobResult> getTbResultList() {
+        return tbResultList;
+    }
+
+    public String getGerritRevision() {
+        return gerritRevision;
+    }
+
+    /**
+     * If a new patch for a change is 'submitted' while the verification tinbuild are pending then
+     * If no tasks for the job are running, then the whole job is dropped
+     * we let already running tindebox finish, and still report the result
+     * in the 'review' comment as usual, but leave the verify flags untouched
+     * any platform that is not started yet is 'discarded' for that patch.
+     * IOW the tasks that are not started yet are de-queued by 'Submit'.
+     **/
+    public void handleStale(Map<Platform, TBBlockingQueue> tbQueueMap) {
+        this.setStale(true);
+        synchronized (tinderBoxThreadList) {
+            for (BuildbotPlatformJob task : tinderBoxThreadList) {
+                if (task.isDiscardable()) {
+                    task.discard();
+                    tbQueueMap.get(task.getPlatform()).remove(task);
+                }
+            }
+        }
+    }
+
+    public boolean isStale() {
+        return stale;
+    }
+
+    private void setStale(boolean stale) {
+        this.stale = stale;
+    }
 }

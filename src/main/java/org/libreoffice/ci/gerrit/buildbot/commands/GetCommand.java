@@ -25,35 +25,40 @@ import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
+import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.project.ProjectControl;
+import com.google.gerrit.sshd.CommandMetaData;
 import com.google.gwtorm.server.OrmException;
+import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@CommandMetaData(name="get", descr="Get a task from platform specific queue")
 public final class GetCommand extends BuildbotSshCommand {
     static final Logger log = LoggerFactory.getLogger(GetCommand.class);
 
-    @Option(name = "--project", aliases={"-p"}, required = true, metaVar = "PROJECT", usage = "name of the project for which the task should be polled")
+    @Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the task should be polled")
     private ProjectControl projectControl;
 
-    @Option(name = "--platform", aliases={"-a"}, required = true, metaVar = "PLATFORM", usage = "name of the platform")
+    @Option(name = "--platform", aliases = { "-a" }, required = true, metaVar = "PLATFORM", usage = "name of the platform")
     private Platform platform;
-    
-    @Option(name = "--id", aliases={"-i"}, required = true, metaVar = "TB", usage = "id of the tinderbox")
+
+    @Option(name = "--id", aliases = { "-i" }, required = false, metaVar = "TB", usage = "id of the tinderbox")
     private String box;
 
-    @Option(name = "--format", aliases={"-f"}, required = false, metaVar = "FORMAT", usage = "output display format")
+    @Option(name = "--format", aliases = { "-f" }, required = false, metaVar = "FORMAT", usage = "output display format")
     private FormatType format = FormatType.TEXT;
-    
-	@Argument(index = 0, required = false, multiValued = true, metaVar = "BRANCH", usage = "branch[es] to get a task for")
-	void addPatchSetId(final String branch) {
-		branchSet.add(branch);
-	}
-	
-	private Set<String> branchSet = Sets.newHashSet();
 
-	protected String getDescription() {
-		return "Get a task from platform specific queue";
-	}
+    @Argument(index = 0, required = false, multiValued = true, metaVar = "BRANCH", usage = "branch[es] to get a task for")
+    void addPatchSetId(final String branch) {
+        branchSet.add(branch);
+    }
+
+    @Option(name = "--test", aliases = { "-t" }, required = false, metaVar = "TEST", usage = "peek a task for test only. Task is not removed from the queue and no reporting a result is possible.")
+    boolean test = false;
+
+    @Inject IdentifiedUser user;
+
+    private Set<String> branchSet = Sets.newHashSet();
 
     @Override
     public void doRun() throws UnloggedFailure, OrmException, Failure {
@@ -67,24 +72,41 @@ public final class GetCommand extends BuildbotSshCommand {
                 stderr.write("\n");
                 return;
             }
+            if (box != null) {
+                if (!config.isIdentityBuildbotAdmin4Project(projectControl
+                        .getProject().getName(), user)) {
+                    String message = String.format(
+                            "only member of buildbot admin group allowed to pass --id option!",
+                            projectControl.getProject().getName());
+                    stderr.print(message);
+                    stderr.write("\n");
+                    return;
+                }
+            } else {
+                // default is to use username as TB-ID
+                box = user.getUserName();
+            }
     		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
-    				.getProject().getName(), platform, branchSet, box);
+    				.getProject().getName(), platform, branchSet, box, test);
             if (jobDescriptor == null) {
                 if (format != null && format == FormatType.BASH) {
                     stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
                 } else {
                     stdout.print("empty");
                 }
-            } else {	
-    			final List<PatchSet> matches = db
-    					.patchSets()
-    					.byRevision(
-    							new RevId(jobDescriptor.getBuildbotPlatformJob()
-    									.getParent().getGerritRevision())).toList();
-    			if (matches.size() == 1) {
-    				notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob(),
-    						matches.get(0));
-    			}
+            } else {
+                if (!test) {
+                    // TODO: simplify ps search
+        			final List<PatchSet> matches = db
+        					.patchSets()
+        					.byRevision(
+        							new RevId(jobDescriptor.getBuildbotPlatformJob()
+        									.getParent().getGerritRevision())).toList();
+        			if (matches.size() == 1) {
+        				notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob(),
+        						matches.get(0));
+        			}
+                }
                 reportOutcome(jobDescriptor);
             }
         }
@@ -109,11 +131,12 @@ public final class GetCommand extends BuildbotSshCommand {
     void notifyGerritBuildbotPlatformJobStarted(final BuildbotPlatformJob tbPlatformJob,
     		final PatchSet ps) {
         final short status = 0;
-        String changeComment = String.format("Build %s on %s started at %s by %s\n\n",
-                tbPlatformJob.getTicket().getId(),
-                tbPlatformJob.getPlatformString(),
-                time(tbPlatformJob.getStartTime(), 0),
-                tbPlatformJob.getTinderboxId());            
+        String changeComment = String.format(
+                "%s build started for %s on %s at %s\n\n", tbPlatformJob
+                        .getPlatformString(), tbPlatformJob
+                        .getTicket().getId(), tbPlatformJob
+                        .getTinderboxId(),
+                time(tbPlatformJob.getStartTime(), 0));
         try {
             approveOne(ps.getId(), changeComment, "Code-Review", status);
         } catch (Exception e) {

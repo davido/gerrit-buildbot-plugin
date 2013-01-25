@@ -8,42 +8,50 @@ import com.google.common.collect.Lists;
 import com.google.gerrit.reviewdb.client.AccountGroup;
 
 public class BuildbotProject implements Serializable {
-	private static final long serialVersionUID = 1L;
-	private String name;
-	private TriggerStrategy triggerStrategy;
-	private AccountGroup.UUID reviewerGroupId;
-	private List<String> branches = Lists.newArrayList();
+    private static final long serialVersionUID = 1L;
+    private String name;
+    private TriggerStrategy triggerStrategy;
+    private AccountGroup.UUID reviewerGroupId;
+    private AccountGroup.UUID buildbotAdminGroupId;
+    private List<String> branches = Lists.newArrayList();
 
-	public BuildbotProject(String name) {
-		this.name = name;
-	}
-	
-	public String getName() {
-		return name;
-	}
+    public BuildbotProject(String name) {
+        this.name = name;
+    }
 
-	public void setTriggerStrategy(TriggerStrategy triggerStrategy) {
-		this.triggerStrategy = triggerStrategy;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public TriggerStrategy getTriggerStrategy() {
-		return this.triggerStrategy;
-	}
+    public void setTriggerStrategy(TriggerStrategy triggerStrategy) {
+        this.triggerStrategy = triggerStrategy;
+    }
 
-	public List<String> getBranches() {
-		return branches;
-	}
+    public TriggerStrategy getTriggerStrategy() {
+        return this.triggerStrategy;
+    }
 
-	public void setBranches(String[] branches) {
-		this.branches = Arrays.asList(branches);
-	}
+    public List<String> getBranches() {
+        return branches;
+    }
 
-	public AccountGroup.UUID getReviewerGroupId() {
-		return reviewerGroupId;
-	}
+    public void setBranches(String[] branches) {
+        this.branches = Arrays.asList(branches);
+    }
 
-	public void setReviewerGroupId(AccountGroup.UUID reviewerGroupId) {
-		this.reviewerGroupId = reviewerGroupId;
-	}
+    public AccountGroup.UUID getReviewerGroupId() {
+        return reviewerGroupId;
+    }
 
+    public void setReviewerGroupId(AccountGroup.UUID reviewerGroupId) {
+        this.reviewerGroupId = reviewerGroupId;
+    }
+
+    public AccountGroup.UUID getBuildbotAdminGroupId() {
+        return buildbotAdminGroupId;
+    }
+
+    public void setBuildbotAdminGroupId(AccountGroup.UUID buildbotAdminGroupId) {
+        this.buildbotAdminGroupId = buildbotAdminGroupId;
+    }
 }

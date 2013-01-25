@@ -10,11 +10,13 @@
 package org.libreoffice.ci.gerrit.buildbot.logic;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 
@@ -24,14 +26,18 @@ import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
 public interface ProjectControl {
-    void startGerritJob(String project, String branch, String ref, String revision);
+    void startGerritJob(String project, String change, String branch, String ref, String revision);
 	void startGerritJob(PatchSetCreatedEvent event);
 	void startGerritJob(CommentAddedEvent event);
 	void startGerritJob(Change change, PatchSet patchSet);
 	List<GerritJob> getGerritJobs();
 	GerritJob findJobByRevision(String revision);
-	TbJobDescriptor launchTbJob(Platform platform, Set<String> branch, String box);
+	GerritJob findJobByTicket(String ticket);
+	GerritJob findJobByChange(String change);
+	TbJobDescriptor launchTbJob(Platform platform, Set<String> branch, String box, boolean test);
 	TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String logurl);
 	void stop();
 	void start();
+	Map<Platform, TBBlockingQueue> getTbQueueMap();
+    void handleStaleJob(GerritJob job);
 }

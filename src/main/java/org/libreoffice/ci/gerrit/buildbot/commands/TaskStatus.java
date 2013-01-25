@@ -4,14 +4,15 @@ public enum TaskStatus {
 	SUCCESS,
 	FAILED,
 	CANCELED,
+	CANCELLED,
 	DISCARDED;
 
 	public boolean isSuccess() {
 		return this == SUCCESS;
 	}
 	
-	public boolean isCanceled() {
-		return this == CANCELED;
+	public boolean isCancelled() {
+		return this == CANCELED || this == CANCELLED;
 	}
 
 	public boolean isFailed() {

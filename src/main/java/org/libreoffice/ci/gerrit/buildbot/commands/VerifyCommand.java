@@ -85,7 +85,6 @@ public final class VerifyCommand extends BuildbotSshCommand {
 	public void doRun() throws UnloggedFailure, OrmException {
 	    synchronized (control) {
     		log.debug("verify");
-    		
     		final String p = projectControl.getProject().getName();
     		if (!config.isProjectSupported(p)) {
     			String tmp = String.format(
@@ -102,8 +101,8 @@ public final class VerifyCommand extends BuildbotSshCommand {
     		}
     		for (PatchSet.Id id : patchSetIds) {
     			doVerify(id);
-    		}   
-        }
+    		}
+	    }
 	}
 
 	private void doVerify(PatchSet.Id id) throws OrmException {

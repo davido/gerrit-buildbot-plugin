@@ -70,6 +70,11 @@ public class BuildbotPlatformJob implements Runnable {
 
 	}
 
+	public String testBuildOnly(Platform tbPlatform) {
+	    ticket = new Ticket(parent.getId(), tbPlatform);
+	    return ticket.toString();
+	}
+
 	public String createAndSetTicket(Platform tbPlatform, String box) {
 		ticket = new Ticket(parent.getId(), tbPlatform);
 		this.box = box;
@@ -78,8 +83,8 @@ public class BuildbotPlatformJob implements Runnable {
 		return ticket.toString();
 	}
 
-	public TbJobResult createResult(String log, TaskStatus status, Set<BuildbotPlatformJob> discardedTasks) {
-		result = new TbJobResult(this, ticket.getId(), platform, status, log, discardedTasks);
+	public TbJobResult createResult(String log, TaskStatus status, String boxId, Set<BuildbotPlatformJob> discardedTasks) {
+		result = new TbJobResult(this, ticket.getId(), platform, status, log, boxId, discardedTasks);
 		ready.set(true);
 
 		try {
@@ -93,7 +98,7 @@ public class BuildbotPlatformJob implements Runnable {
 	public TbJobResult discard() {
 		assert (started.get() == false);
 		assert (ready.get() == false);
-		result = new TbJobResult(this, StringUtils.EMPTY, platform, TaskStatus.DISCARDED, null, null);
+		result = new TbJobResult(this, StringUtils.EMPTY, platform, TaskStatus.DISCARDED, null, null, null);
 		abort = true;
 
 		try {

@@ -9,9 +9,11 @@
 
 package org.libreoffice.ci.gerrit.buildbot.model;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Set;
+import org.libreoffice.ci.gerrit.buildbot.utils.QueueUtils;
 
 import com.google.common.collect.Lists;
 
@@ -74,4 +76,15 @@ public class TBBlockingQueue implements Serializable {
         }
     }
 
+    public int dumpTasks(PrintWriter stdout) {
+        int pendingTasks = 0;
+        synchronized (queue) {
+            if (queue.isEmpty()) {
+                stdout.print("empty\n");
+                return pendingTasks;
+            }
+            pendingTasks = QueueUtils.dumpTasks(stdout, pendingTasks, queue);
+        }
+        return pendingTasks;
+    }
 }

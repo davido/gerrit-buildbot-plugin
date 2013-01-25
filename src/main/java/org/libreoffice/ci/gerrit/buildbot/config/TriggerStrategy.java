@@ -2,7 +2,7 @@ package org.libreoffice.ci.gerrit.buildbot.config;
 
 public enum TriggerStrategy {
 
-	/**
+    /**
 	 * patch set created event
 	 */
 	PATCHSET_CREATED,
