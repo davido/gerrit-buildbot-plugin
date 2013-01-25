@@ -1,6 +1,14 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.8: 2013-01-25
+===========
+
+core
+----
+
+bug fixed: When a tb reported `failed` status back -- discarding pending tasks -- the next `get` command still engaged with the purged tasks. The try to report with `put` for purged task failed with no such task error.
+
 Version 1.7: 2013-01-19
 ===========
 

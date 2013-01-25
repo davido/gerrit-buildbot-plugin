@@ -24,6 +24,8 @@ import org.libreoffice.ci.gerrit.buildbot.model.Platform;
 import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
@@ -32,6 +34,7 @@ import com.google.gerrit.server.events.PatchSetCreatedEvent;
 
 public class ProjectControlImpl implements ProjectControl {
 
+    static final Logger log = LoggerFactory.getLogger(ProjectControl.class);
 	private final Map<Platform, TBBlockingQueue> tbQueueMap = 
         new ConcurrentHashMap<Platform, TBBlockingQueue>();
 	private final List<GerritJob> gerritJobList = 
@@ -42,6 +45,7 @@ public class ProjectControlImpl implements ProjectControl {
 
 	@Override
 	public void start() {
+	    log.debug("started");
 		for (int i = 0; i < Platform.values().length; i++) {
             tbQueueMap.put(Platform.values()[i],
             				new TBBlockingQueue(Platform.values()[i]));
@@ -50,6 +54,7 @@ public class ProjectControlImpl implements ProjectControl {
 	
 	@Override
 	public void stop() {
+	    log.debug("stopped");
 		synchronized (gerritJobList) {
 			for (GerritJob job : gerritJobList) {
 				for (BuildbotPlatformJob task : job.getBuildbotList()) {
@@ -72,6 +77,11 @@ public class ProjectControlImpl implements ProjectControl {
 	}
 
 	public void startGerritJob(PatchSetCreatedEvent event) {
+	    if (log.isDebugEnabled()) {
+            log.debug("startGerritJob: {} {} {} {}", new String[] {
+                    event.change.project, event.change.branch, event.patchSet.ref,
+                    event.patchSet.revision });
+	    }
 		synchronized (gerritJobList) {
 			GerritJob job = new GerritJob(this, event.change.project, event.change.branch, event.patchSet.ref, event.patchSet.revision);
 			startJob(job);
@@ -80,6 +90,11 @@ public class ProjectControlImpl implements ProjectControl {
 
 	public void startGerritJob(CommentAddedEvent event) {
 		synchronized (gerritJobList) {
+		    if (log.isDebugEnabled()) {
+		        log.debug("startGerritJob: {} {} {} {}", new String[] {
+		                event.change.project, event.change.branch, event.patchSet.ref,
+		                event.patchSet.revision });
+		    }
 			GerritJob job = new GerritJob(this, event.change.project, event.change.branch, event.patchSet.ref, event.patchSet.revision);
 			startJob(job);
 		}
@@ -87,6 +102,11 @@ public class ProjectControlImpl implements ProjectControl {
 	
 	public void startGerritJob(Change change, PatchSet patchSet) {
 		synchronized (gerritJobList) {
+		    if (log.isDebugEnabled()) {
+		        log.debug("CommentAddedEvent: {} {} {} {}", new String[] {
+		                change.getProject().get(), change.getDest().getShortName(), 
+		                patchSet.getRefName(), patchSet.getRevision().get() });
+		    }
 			GerritJob job = new GerritJob(this, change.getProject().get(), change.getDest().getShortName(), 
 					patchSet.getRefName(), patchSet.getRevision().get());
 			startJob(job);
@@ -94,36 +114,61 @@ public class ProjectControlImpl implements ProjectControl {
 	}
 
 	private void startJob(GerritJob job) {
+	    if (log.isDebugEnabled()) {
+	        log.debug("start job {}", job.getId());
+	    }
 		job.poulateTBPlatformQueueMap(tbQueueMap);
 		gerritJobList.add(job);
 		job.start();
 	}
 
-	public TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String log) {
+	public TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String logurl) {
 		synchronized (gerritJobList) {
+		    TbJobResult jobResult = null;
+		    if (log.isDebugEnabled()) {
+		        log.debug("set result {}, {}, {}", new String[] { ticket, boxId, status.name() });
+		    }
 			for (GerritJob job : gerritJobList) {
-				TbJobResult jobResult = job.setResultPossible(ticket, boxId, log, status);
+			    jobResult = job.setResultPossible(ticket, boxId, logurl, status);
 				if (jobResult != null) {
+				    Set<BuildbotPlatformJob> discardedTasks = jobResult.getDiscardedTasks();
+				    for (BuildbotPlatformJob task : discardedTasks) {
+				        log.debug("remove discarded task: {} for {}", 
+				                task.getParent().getId(), task.getPlatform().name());
+				        getQueue(task.getPlatform()).remove(task);
+                    }
 					if (job.allJobsReady()) {
 						job.createTBResultList();
 					}
-					return jobResult;
+					break;
 				}
 			}
+			if (log.isDebugEnabled()) {
+			    // dump queues
+			    for (Platform p : Platform.values()) {                    
+			        TBBlockingQueue platformQueue = getQueue(p);
+			        if (!platformQueue.isEmpty()) { 
+			            Set<String> emptyBranchSet = Collections.emptySet();
+			            BuildbotPlatformJob tbJob = platformQueue.peek(emptyBranchSet);
+			            log.debug("pending task: {}", tbJob.getPlatform().name());
+			        }
+			    }
+			}
+			return jobResult;
 		}
-		return null;
 	}
 
 	public TbJobDescriptor launchTbJob(Platform platform, Set<String> branchSet, String box) {
 		synchronized (gerritJobList) {
+           if (log.isDebugEnabled()) {
+                log.debug("poll task {}, {}", platform.name(), box);
+            }
 			TBBlockingQueue platformQueue = getQueue(platform);
-	
 			BuildbotPlatformJob tbJob = platformQueue.poll(branchSet);
 			if (tbJob == null) {
 				return null;
 			}
 			tbJob.createAndSetTicket(platform, box);
-	
 			TbJobDescriptor desc = new TbJobDescriptor(tbJob);
 			return desc;
 		}

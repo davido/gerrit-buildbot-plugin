@@ -98,25 +98,26 @@ public final class VerifyCommand extends SshCommand {
 
 	@Override
 	public void run() throws UnloggedFailure, Failure, Exception {
-		log.debug("verify");
-		
-		final String p = projectControl.getProject().getName();
-		if (!config.isProjectSupported(p)) {
-			String tmp = String.format(
-					"error: project %s is not supported", p);
-			log.warn(tmp);
-			stderr.print(tmp + "\n");
-			return;
-		}
-		if (patchSetIds.size() > 1) {
-			String tmp = "error: only one commit|patch set can be provided";
-			log.warn(tmp);
-			stderr.print(tmp + "\n");
-			return;
-		}
-		for (PatchSet.Id id : patchSetIds) {
-			doVerify(id);
-		}
+	    synchronized (control) {
+    		log.debug("verify");
+    		final String p = projectControl.getProject().getName();
+    		if (!config.isProjectSupported(p)) {
+    			String tmp = String.format(
+    					"error: project %s is not supported", p);
+    			log.warn(tmp);
+    			stderr.print(tmp + "\n");
+    			return;
+    		}
+    		if (patchSetIds.size() > 1) {
+    			String tmp = "error: only one commit|patch set can be provided";
+    			log.warn(tmp);
+    			stderr.print(tmp + "\n");
+    			return;
+    		}
+    		for (PatchSet.Id id : patchSetIds) {
+    			doVerify(id);
+    		}
+	    }
 	}
 
 	private void doVerify(PatchSet.Id id) throws OrmException {

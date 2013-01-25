@@ -73,19 +73,21 @@ public final class ScheduleCommand extends SshCommand {
 
 	@Override
 	public void run() throws UnloggedFailure, Failure, Exception {
-		log.debug("schedule");
-		
-		final String p = projectControl.getProject().getName();
-		if (!config.isProjectSupported(p)) {
-			String tmp = String.format(
-					"error: project %s is not supported", p);
-			log.warn(tmp);
-			stderr.print(tmp + "\n");
-			return;
-		}
-		for (PatchSet.Id id : patchSetIds) {
-			doSchedule(id);
-		}
+	    synchronized (control) {
+    		log.debug("schedule");
+    		
+    		final String p = projectControl.getProject().getName();
+    		if (!config.isProjectSupported(p)) {
+    			String tmp = String.format(
+    					"error: project %s is not supported", p);
+    			log.warn(tmp);
+    			stderr.print(tmp + "\n");
+    			return;
+    		}
+    		for (PatchSet.Id id : patchSetIds) {
+    			doSchedule(id);
+    		}
+	    }
 	}
 
 	private void doSchedule(PatchSet.Id id) throws OrmException {

@@ -17,33 +17,61 @@ import com.google.common.collect.Lists;
 
 public class TBBlockingQueue implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	Platform platform;
-	private final LinkedList<BuildbotPlatformJob> queue = Lists.newLinkedList();
+    Platform platform;
+    private final LinkedList<BuildbotPlatformJob> queue = Lists.newLinkedList();
 
-	public TBBlockingQueue(Platform platform) {
-		this.platform = platform;
-	}
+    public TBBlockingQueue(Platform platform) {
+        this.platform = platform;
+    }
 
-	public void add(BuildbotPlatformJob tbJob) {
-		synchronized (queue) {
-			queue.add(tbJob);
-		}
-	}
+    public void add(BuildbotPlatformJob tbJob) {
+        synchronized (queue) {
+            queue.add(tbJob);
+        }
+    }
 
-	public BuildbotPlatformJob poll(Set<String> branchSet) {
-		synchronized (queue) {
-			if (branchSet.isEmpty()) {
-				return queue.poll();
-			}
-			for (int i = 0; i < queue.size(); i++) {
-				if (branchSet.contains(queue.get(i).getParent().getGerritBranch())) {
-					return queue.remove(i);
-				}
-			}
-			return null;
-		}
-	}
+    public BuildbotPlatformJob poll(Set<String> branchSet) {
+        synchronized (queue) {
+            if (branchSet.isEmpty()) {
+                return queue.poll();
+            }
+            for (int i = 0; i < queue.size(); i++) {
+                if (branchSet.contains(queue.get(i).getParent()
+                        .getGerritBranch())) {
+                    return queue.remove(i);
+                }
+            }
+            return null;
+        }
+    }
+
+    public BuildbotPlatformJob peek(Set<String> branchSet) {
+        synchronized (queue) {
+            if (branchSet.isEmpty()) {
+                return queue.peek();
+            }
+            for (int i = 0; i < queue.size(); i++) {
+                if (branchSet.contains(queue.get(i).getParent()
+                        .getGerritBranch())) {
+                    return queue.get(i);
+                }
+            }
+            return null;
+        }
+    }
+
+    public boolean remove(BuildbotPlatformJob job) {
+        synchronized (queue) {
+            return queue.remove(job);
+        }
+    }
+    
+    public boolean isEmpty() {
+        synchronized (queue) {
+            return queue.isEmpty();
+        }
+    }
 
 }

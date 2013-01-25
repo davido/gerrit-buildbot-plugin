@@ -26,7 +26,6 @@ import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.GerritNotifyListener;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +48,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-public final class PutCommand extends SshCommand implements
-        GerritNotifyListener {
+public final class PutCommand extends SshCommand {
     static final Logger log = LoggerFactory.getLogger(PutCommand.class);
 
     @Option(metaVar = "TICKET", name = "--ticket", aliases = { "-t" }, required = true, usage = "ticket of the job")
@@ -95,43 +93,42 @@ public final class PutCommand extends SshCommand implements
 
     @Override
     public void run() throws UnloggedFailure, Failure, Exception {
-        log.debug("ticket: {}", ticket);
-        if ("-".equals(urllog)) {
-            writeLogFile();
-        }
-        
-        if (Strings.isNullOrEmpty(ticket)) {
-        	String tmp = "No ticket is provided";
-        	stderr.print(tmp);
-        	stderr.write("\n");
-        	log.warn(tmp);
-        	return;
-        }
-        
-        if (status.isSuccess() || status.isFailed()) {
-        	if (Strings.isNullOrEmpty(urllog)) {
-        		String tmp = String.format("No log is provided for status %s", status.name());
-        		stderr.print(tmp);
+        synchronized (control) {
+            log.debug("ticket: {}", ticket);
+            if ("-".equals(urllog)) {
+                writeLogFile();
+            }
+            
+            if (Strings.isNullOrEmpty(ticket)) {
+            	String tmp = "No ticket is provided";
+            	stderr.print(tmp);
             	stderr.write("\n");
             	log.warn(tmp);
             	return;
-        	}
-        }
-        
-        TbJobResult result = control.setResultPossible(ticket, boxId, status, urllog);
-        if (result == null) {
-        	String tmp = String.format("Can not find task for ticket %s", ticket);
-        	stderr.print(tmp);
-        	stderr.write("\n");
-        	log.warn(tmp);
-        	return;
-        }
-        notifyGerritBuildbotPlatformJobFinished(result);
-                
-        // Synchronize?
-        Thread.sleep(1000);
-
-        synchronized (control) {
+            }
+            
+            if (status.isSuccess() || status.isFailed()) {
+            	if (Strings.isNullOrEmpty(urllog)) {
+            		String tmp = String.format("No log is provided for status %s", status.name());
+            		stderr.print(tmp);
+                	stderr.write("\n");
+                	log.warn(tmp);
+                	return;
+            	}
+            }
+            
+            TbJobResult result = control.setResultPossible(ticket, boxId, status, urllog);
+            if (result == null) {
+            	String tmp = String.format("Can not find task for ticket %s", ticket);
+            	stderr.print(tmp);
+            	stderr.write("\n");
+            	log.warn(tmp);
+            	return;
+            }
+            notifyGerritBuildbotPlatformJobFinished(result);
+                    
+            // Synchronize?
+            Thread.sleep(1000);
             if (result.getTbPlatformJob().getParent().allJobsReady()) {
                 notifyGerritJobFinished(result.getTbPlatformJob().getParent());
             }
@@ -159,7 +156,6 @@ public final class PutCommand extends SshCommand implements
         urllog = urlProvider.get() + LOGFILE_SERVLET_SUFFIX + urllog;
     }
 
-    @Override
     public void notifyGerritJobFinished(GerritJob job) {
         ApprovalCategory verified = null;
         for (ApprovalType type : approvalTypes.getApprovalTypes()) {
@@ -187,7 +183,7 @@ public final class PutCommand extends SshCommand implements
                 if (!tbResult.getStatus().isSuccess()) {
                     combinedStatus = -1;
                 }
-                builder.append(String.format("* Build %s on %s completed %s : %s\n",
+                builder.append(String.format("* Build %s on %s %s : %s\n",
                         tbResult.getDecoratedId(),
                         tbResult.getPlatform().name(),
                         tbResult.getLog() == null ? StringUtils.EMPTY : tbResult.getLog(),
@@ -236,7 +232,7 @@ public final class PutCommand extends SshCommand implements
             StringBuilder builder = new StringBuilder(256);
             // we don't know what other guys say...
             short status = 0;
-            builder.append(String.format("Build %s on %s complete at %s %s : %s",
+            builder.append(String.format("Build %s on %s at %s %s : %s",
                     tbJobResult.getDecoratedId(),
                     tbJobResult.getPlatform().name(),
                     time(tbJobResult.getEndTime(), 0),

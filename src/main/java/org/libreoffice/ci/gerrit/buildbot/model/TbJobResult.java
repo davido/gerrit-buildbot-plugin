@@ -9,6 +9,8 @@
 
 package org.libreoffice.ci.gerrit.buildbot.model;
 
+import java.util.Set;
+
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 
 public class TbJobResult {
@@ -18,15 +20,18 @@ public class TbJobResult {
 	TaskStatus status;
 	String log;
 	long endTime;
+    private Set<BuildbotPlatformJob> discardedTasks;
 
 	public TbJobResult(BuildbotPlatformJob tbPlatformJob, String decoratedId, 
-			Platform platform, TaskStatus status, String log) {
+			Platform platform, TaskStatus status, String log, 
+			Set<BuildbotPlatformJob> discardedTasks) {
 		this.tbPlatformJob = tbPlatformJob;
 		this.decoratedId = decoratedId;
 		this.platform = platform;
 		this.status = status;
 		this.log = log;
 		this.endTime = System.currentTimeMillis();
+		this.discardedTasks = discardedTasks;
 	}
 	
 	public String getDecoratedId() {
@@ -58,5 +63,13 @@ public class TbJobResult {
 			return true;
 		}
 		return false;
-	}	
+	}
+    public Set<BuildbotPlatformJob> getDiscardedTasks() {
+        return discardedTasks;
+    }
+
+    public void setDiscardedTasks(Set<BuildbotPlatformJob> discardedTasks) {
+        this.discardedTasks = discardedTasks;
+    }
+
 }

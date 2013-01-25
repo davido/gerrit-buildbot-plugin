@@ -9,6 +9,7 @@
 
 package org.libreoffice.ci.gerrit.buildbot.model;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
@@ -77,8 +78,8 @@ public class BuildbotPlatformJob implements Runnable {
 		return ticket.toString();
 	}
 
-	public TbJobResult createResult(String log, TaskStatus status) {
-		result = new TbJobResult(this, ticket.getId(), platform, status, log);
+	public TbJobResult createResult(String log, TaskStatus status, Set<BuildbotPlatformJob> discardedTasks) {
+		result = new TbJobResult(this, ticket.getId(), platform, status, log, discardedTasks);
 		ready.set(true);
 
 		try {
@@ -92,7 +93,7 @@ public class BuildbotPlatformJob implements Runnable {
 	public TbJobResult discard() {
 		assert (started.get() == false);
 		assert (ready.get() == false);
-		result = new TbJobResult(this, StringUtils.EMPTY, platform, TaskStatus.DISCARDED, null);
+		result = new TbJobResult(this, StringUtils.EMPTY, platform, TaskStatus.DISCARDED, null, null);
 		abort = true;
 
 		try {

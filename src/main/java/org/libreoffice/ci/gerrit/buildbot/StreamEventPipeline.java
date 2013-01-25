@@ -68,9 +68,9 @@ public class StreamEventPipeline implements LifecycleListener {
     @Inject
     BuildbotLogicControl control;
 
-    ApprovalCategory verified;
+    private ApprovalCategory verified;
 
-    ApprovalCategory reviewed;
+    private ApprovalCategory reviewed;
 
     @Override
     public void stop() {
@@ -99,7 +99,7 @@ public class StreamEventPipeline implements LifecycleListener {
                 reviewed = category;
             }
         }
-         control.start();
+        control.start();
     }
 
     private final ChangeListener listener = new ChangeListener() {

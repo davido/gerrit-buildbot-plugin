@@ -9,6 +9,7 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
@@ -84,38 +85,40 @@ public final class GetCommand extends SshCommand {
 
     @Override
     public void run() throws UnloggedFailure, Failure, Exception {
-        log.debug("project: {}", projectControl.getProject().getName());
-        if (!config.isProjectSupported(projectControl.getProject().getName())) {
-            String message = String.format(
-                    "project <%s> is not enabled for building!", projectControl
-                            .getProject().getName());
-            stderr.print(message);
-            stderr.write("\n");
-            return;
-        }
-		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
-				.getProject().getName(), platform, branchSet, box);
-        if (jobDescriptor == null) {
-            if (format != null && format == FormatType.BASH) {
-                stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
-            } else {
-                stdout.print("empty");
+        synchronized (control) {
+            log.debug("project: {}", projectControl.getProject().getName());
+            if (!config.isProjectSupported(projectControl.getProject().getName())) {
+                String message = String.format(
+                        "project <%s> is not enabled for building!", projectControl
+                                .getProject().getName());
+                stderr.print(message);
+                stderr.write("\n");
+                return;
             }
-        } else {
-            notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
-            String output;
-            if (format != null && format == FormatType.BASH) {
-                output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
-                        jobDescriptor.getTicket(),
-                        jobDescriptor.getBranch(),
-                        jobDescriptor.getRef());
+    		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
+    				.getProject().getName(), platform, branchSet, box);
+            if (jobDescriptor == null) {
+                if (format != null && format == FormatType.BASH) {
+                    stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
+                } else {
+                    stdout.print("empty");
+                }
             } else {
-                output = String.format("engaged: ticket=%s branch=%s ref=%s\n",
-                        jobDescriptor.getTicket(),
-                        jobDescriptor.getBranch(),
-                        jobDescriptor.getRef());
+                notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
+                String output;
+                if (format != null && format == FormatType.BASH) {
+                    output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
+                            jobDescriptor.getTicket(),
+                            jobDescriptor.getBranch(),
+                            jobDescriptor.getRef());
+                } else {
+                    output = String.format("engaged: ticket=%s branch=%s ref=%s\n",
+                            jobDescriptor.getTicket(),
+                            jobDescriptor.getBranch(),
+                            jobDescriptor.getRef());
+                }
+                stdout.print(output);
             }
-            stdout.print(output);
         }
     }
 
@@ -144,12 +147,26 @@ public final class GetCommand extends SshCommand {
                     time(tbPlatformJob.getStartTime(), 0)
                     ));
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
-            publishCommentsFactory.create(patchset.getId(),
-                    builder.toString(), aps, true).call();
+            getCommenter(aps, patchset, builder).call();
         } catch (Exception e) {
             e.printStackTrace();
             die(e);
         }
+    }
+
+    private PublishComments getCommenter(
+            Set<ApprovalCategoryValue.Id> aps, PatchSet patchset,
+            StringBuilder builder) throws NoSuchFieldException,
+            IllegalAccessException {
+        PublishComments commenter = publishCommentsFactory.create(patchset.getId(),
+                builder.toString(), aps, true);
+        if (config.isForgeReviewerIdentity()) {
+            // Replace current user with buildbot user
+            Field field = commenter.getClass().getDeclaredField("user");
+            field.setAccessible(true);
+            field.set(commenter, control.getBuildbot());
+        }
+        return commenter;
     }
 
     private static String time(final long now, final long delay) {
