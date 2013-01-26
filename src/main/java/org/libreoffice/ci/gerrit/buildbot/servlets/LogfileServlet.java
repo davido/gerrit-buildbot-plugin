@@ -82,7 +82,10 @@ public class LogfileServlet extends HttpServlet {
 			throws IOException, UnsupportedEncodingException {
 		RandomAccessFile randomAccessFile = new RandomAccessFile(logFile, "r");
 		long size = randomAccessFile.length();
-		long skipSize = 400;
+		long skipSize = 4000;
+		if (size < skipSize) {
+		    skipSize = size / 2;
+		}
 		if (size > skipSize) {
 			randomAccessFile.seek(size - skipSize);
 			randomAccessFile.readLine();

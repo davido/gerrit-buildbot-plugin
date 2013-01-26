@@ -5,6 +5,34 @@ Version 2.0: 2013-04-20
 ===========
 
 merge buildbot-2.5 brach to master
+=======
+Version 1.10: 2013-01-27
+===========
+
+configuration
+-------------
+
+* support extern log file publication (jenkins)
+
+Example buildbot.config
+-------
+
+```
+[...]
+
+[log]
+  mode = extern
+  host = ci.libreoffice.org
+  url = https://ci.libreoffice.org
+  job = buildbot
+
+[...]
+```
+
+core
+----
+
+bug fixed: race condition reporting task with status `cancelled` leads to discarding the whole job instead of replacing the task with the new one in status `INIT` and preserving the job. Test case for that is added.
 
 Version 1.9: 2013-01-26
 ===========

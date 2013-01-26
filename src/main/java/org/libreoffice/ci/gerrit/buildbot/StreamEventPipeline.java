@@ -67,7 +67,7 @@ public class StreamEventPipeline implements LifecycleListener {
     	hooks.removeChangeListener(listener);
     	control.stop();
     }
-    
+
     @Override
     public void start() {
         Set<Account.Id> ids = byEmailCache.get(config.getEmail());
@@ -94,8 +94,19 @@ public class StreamEventPipeline implements LifecycleListener {
                     return;
                 }
                 BuildbotProject p = config.findProject(patchSetCreatedEvent.change.project);
+
                 if (TriggerStrategy.PATCHSET_CREATED != p.getTriggerStrategy()) {
-                    log.debug("skip event: non PATCHSET_CREATED trigger strategy for project: {} ", patchSetCreatedEvent.change.project);
+                    log.debug("skip event: non PATCHSET_CREATED trigger strategie for project: {} ", 
+                            patchSetCreatedEvent.change.project);
+                    synchronized (control) {
+                        GerritJob job = control.findJobByChange(
+                                patchSetCreatedEvent.change.project, 
+                                patchSetCreatedEvent.change.id);
+                        if (job == null) {
+                            return;
+                        }
+                        control.handleStaleJob(patchSetCreatedEvent.change.project, job);
+                    }
                     return;
                 }
                 log.debug("dispatch event branch: {}, ref: {}",
@@ -109,8 +120,9 @@ public class StreamEventPipeline implements LifecycleListener {
                     return;
                 }
                 BuildbotProject p = config.findProject(commentAddedEvent.change.project);
+
                 if (TriggerStrategy.POSITIVE_REVIEW != p.getTriggerStrategy()) {
-                    log.debug("skip event: non POSITIVE_REVIEW trigger strategy for project: {} ", commentAddedEvent.change.project);
+                    log.debug("skip event: non POSITIVE_REVIEW trigger strategie for project: {} ", commentAddedEvent.change.project);
                     return;
                 }
                 log.debug("investigating commentAddedEvent branch: {}, ref: {}", 
@@ -245,6 +257,8 @@ public class StreamEventPipeline implements LifecycleListener {
             }
 
             if ("Verified".equals(attr.getLabel())) {
+            //buildbot-2.5-plugin
+            //if (verified.getId().get().toString().equals(attr.getCategoryId().toString())) {
                 short v = Short.valueOf(attr.getValue()).shortValue();
                 if (v > 0) {
                     r.positiveVerify = true;
@@ -252,6 +266,8 @@ public class StreamEventPipeline implements LifecycleListener {
                     r.negativeVerify = true;
                 }
             } else if ("Code-Review".equals(attr.getLabel())) {
+            //buildbot-2.5-plugin
+            //} else if (reviewed.getId().get().toString().equals(attr.getCategoryId().toString())) {
                 short v = Short.valueOf(attr.getValue()).shortValue();
                 if (v > 0) {
                     r.positiveReview = true;
