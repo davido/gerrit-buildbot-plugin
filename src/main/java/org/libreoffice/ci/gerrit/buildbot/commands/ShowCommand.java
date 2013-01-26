@@ -9,16 +9,10 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
-import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
-import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.Ticket;
+import org.libreoffice.ci.gerrit.buildbot.utils.QueueUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,67 +55,7 @@ public final class ShowCommand extends SshCommand {
                 stderr.write("\n");
                 return;
             }
-    
-            stdout.print("----------------------------------------------"
-                    + "--------------------------------\n");
-    
-            stdout.print(String.format("%-17s %-12s %-12s %-22s %-3s %s\n", //
-                    "Task-Id", "Start/End", "Type/State", "Ref", "Bot", "Branch"));
-            int numberOfPendingTasks = 0;
-    
-            List<GerritJob> changes = control.getGerritJobs(projectControl.getProject().getName());
-            synchronized (changes) {
-                for (GerritJob change : changes) {
-                    if (type == null || type.equals(TaskType.CHANGE)) {
-                        numberOfPendingTasks++;
-                        stdout.print(String.format(
-                                "%-17s %-12s %-12s %-22s %-3s %s\n", //
-                                change.getId(), time(change.getStartTime(), 0),
-                                "Change", change.getGerritRef(),
-                                "-",
-                                change.getGerritBranch()));
-                    }
-                    if (type == null || type.equals(TaskType.JOB)) {
-                        List<BuildbotPlatformJob> list = change.getBuildbotList();
-                        synchronized (list) {
-                            for (BuildbotPlatformJob job : list) {
-                                String jobId = job.getParent().getId() + "_"
-                                        + job.getPlatformString();
-                                String time = "-";
-                                Ticket t = job.getTicket();
-                                String status = "Job: ";
-                                if (job.getResult() != null && job.getResult().getStatus().isDiscarded()) {
-                                	status += "DISCARDED";
-                                } else if (!job.isStarted()) {
-                                    status += "INIT";
-                                } else if (job.isReady()) {
-                                    status += job.getResult().getStatus().name();
-                                    time = time(job.getResult().getEndTime(), 0);
-                                } else {
-                                    status += "STARTED";
-                                    time = time(t.getStartTime(), 0);
-                                }
-                                stdout.print(String.format(
-                                        "%-17s %-12s %-12s %-22s %-3s %s\n", //
-                                        jobId, time, status, job.getParent()
-                                                .getGerritRef(),
-                                                job.getTinderboxId() == null ? "-" : job.getTinderboxId(),
-                                                job.getParent()
-                                                .getGerritBranch()));
-                                numberOfPendingTasks++;
-                            }
-                        }
-                    }
-                }
-            }
-            stdout.print("----------------------------------------------"
-                    + "--------------------------------\n");
-            stdout.print("  " + numberOfPendingTasks + " task(s)\n");
+            QueueUtils.dumpQueue(stdout, type, control, projectControl.getProject().getName());
         }
-    }
-
-    private static String time(final long now, final long delay) {
-        final Date when = new Date(now + delay);
-        return new SimpleDateFormat("MMM-dd HH:mm").format(when);
     }
 }

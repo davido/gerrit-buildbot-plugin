@@ -62,6 +62,9 @@ public final class GetCommand extends SshCommand {
 		branchSet.add(branch);
 	}
 	
+	@Option(name = "--test", aliases={"-t"}, required = false, metaVar = "TEST", usage = "peek a task for test only. Task is not removed from the queue and no reporting a result is possible.")
+    boolean test = false;
+
 	private Set<String> branchSet = Sets.newHashSet();
 
     @Inject
@@ -96,7 +99,7 @@ public final class GetCommand extends SshCommand {
                 return;
             }
     		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
-    				.getProject().getName(), platform, branchSet, box);
+    				.getProject().getName(), platform, branchSet, box, test);
             if (jobDescriptor == null) {
                 if (format != null && format == FormatType.BASH) {
                     stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
@@ -104,7 +107,9 @@ public final class GetCommand extends SshCommand {
                     stdout.print("empty");
                 }
             } else {
-                notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
+                if (!test) {
+                    notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
+                }
                 String output;
                 if (format != null && format == FormatType.BASH) {
                     output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
@@ -141,9 +146,10 @@ public final class GetCommand extends SshCommand {
             patchset = result.iterator().next();
             StringBuilder builder = new StringBuilder(256);
             short status = 0;
-            builder.append(String.format("Build %s on %s started at %s\n\n",
+            builder.append(String.format("Build %s on %s started by TB %s at %s\n\n",
                     tbPlatformJob.getTicket().getId(),
                     tbPlatformJob.getPlatformString(),
+                    tbPlatformJob.getTinderboxId(),
                     time(tbPlatformJob.getStartTime(), 0)
                     ));
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));

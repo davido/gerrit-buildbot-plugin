@@ -57,7 +57,7 @@ public final class PutCommand extends SshCommand {
     @Option(name = "--id", aliases={"-i"}, required = true, metaVar = "TB", usage = "id of the tinderbox")
     private String boxId;
     
-    @Option(metaVar = "STATUS", name = "--status", aliases = { "-s" }, required = true, usage = "success|failed|canceled")
+    @Option(metaVar = "STATUS", name = "--status", aliases = { "-s" }, required = true, usage = "success|failed|canceled|cancelled")
     private TaskStatus status; 
 
     @Option(metaVar = "-|LOG", name = "--log", aliases = "-l", required = false, usage = "url of the job log page or - for standard input")
@@ -232,9 +232,10 @@ public final class PutCommand extends SshCommand {
             StringBuilder builder = new StringBuilder(256);
             // we don't know what other guys say...
             short status = 0;
-            builder.append(String.format("Build %s on %s at %s %s : %s",
+            builder.append(String.format("Build %s on %s by TB %s at %s %s : %s",
                     tbJobResult.getDecoratedId(),
                     tbJobResult.getPlatform().name(),
+                    tbJobResult.getTinderboxId(),
                     time(tbJobResult.getEndTime(), 0),
                     tbJobResult.getLog() == null ? StringUtils.EMPTY : tbJobResult.getLog(),
                     tbJobResult.getStatus().name()));

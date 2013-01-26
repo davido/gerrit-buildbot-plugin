@@ -13,6 +13,7 @@ ssh -p @SSH_PORT@ gerrit @PLUGIN@ get
   --platform <NAME> | -a <NAME>
   --id <BUILDBOT> | -i <BUILDBOT>
   [--format <TEXT | BASH> | -f <TEXT | BASH>]
+  [--test] | [-t]
   {BRANCH...}
 ```
 
@@ -72,6 +73,10 @@ OPTIONS
 	called from `shell` script then it must be usefull to source the
 	outcome. Format `BASH` does just that and set the variables, each on
 	new line.
+
+`--test`
+:	Peek a task for a tinderbox test. The task is not removed from the queue
+        and no reporting for that task is possible.
 
 EXAMPLES
 --------

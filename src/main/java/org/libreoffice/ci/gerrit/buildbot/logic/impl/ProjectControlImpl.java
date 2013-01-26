@@ -164,21 +164,26 @@ public class ProjectControlImpl implements ProjectControl {
 		}
 	}
 
-	public TbJobDescriptor launchTbJob(Platform platform, Set<String> branchSet, String box) {
-		synchronized (gerritJobList) {
-           if (log.isDebugEnabled()) {
-                log.debug("poll task {}, {}", platform.name(), box);
+    public TbJobDescriptor launchTbJob(Platform platform,
+            Set<String> branchSet, String box, boolean test) {
+        synchronized (gerritJobList) {
+            if (log.isDebugEnabled()) {
+                log.debug("{} task {}, {}", new String[] {test ? "peek" : "poll", platform.name(), box});
             }
-			TBBlockingQueue platformQueue = getQueue(platform);
-			BuildbotPlatformJob tbJob = platformQueue.poll(branchSet);
-			if (tbJob == null) {
-				return null;
-			}
-			tbJob.createAndSetTicket(platform, box);
-			TbJobDescriptor desc = new TbJobDescriptor(tbJob);
-			return desc;
-		}
-	}
+            TBBlockingQueue platformQueue = getQueue(platform);
+            BuildbotPlatformJob tbJob = test ? platformQueue.peek(branchSet)
+                    : platformQueue.poll(branchSet);
+            if (tbJob == null) {
+                return null;
+            }
+            if (test) {
+                tbJob.testBuildOnly(platform);
+            } else {
+                tbJob.createAndSetTicket(platform, box);
+            }
+            return new TbJobDescriptor(tbJob);
+        }
+    }
 
 	public static void sleep(int i) {
 		try {
@@ -195,7 +200,9 @@ public class ProjectControlImpl implements ProjectControl {
 	}
 
 	public List<GerritJob> getGerritJobs() {
-		return gerritJobList;
+	    synchronized (gerritJobList) {
+	        return gerritJobList;
+	    }
 	}
 	
 	@Override

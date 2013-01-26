@@ -1,13 +1,37 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.9: 2013-01-26
+===========
+
+ssh commands
+------------
+
+put
+:
+
+* american spelling for `cancelled` is added (success|failed|canceled|cancelled).
+* report the TB-ID that build the task
+
+get
+:
+
+* new option `--test` added. This is just a convinience feature so that one can debug one tinderbox configuration whithout messing with the patch verification of real patch.  Note that task is not removed from the queue. Subsequent `get` call without `--test` option would peek the same task again. Moreover, TB-ID is not registered on the queue site, so no reporting back from the same TB for that task is possible. No notification is reported back to gerrit.
+* report the TB-ID that polled the task for build.
+
+core
+----
+
+bug fixed: race condition reporting task with status `cancelled` leads to discarding the whole job instead of replacing the task with the new one in status `INIT` and preserving the job. Test case for that is added.
+
+
 Version 1.8: 2013-01-25
 ===========
 
 core
 ----
 
-bug fixed: When a tb reported `failed` status back -- discarding pending tasks -- the next `get` command still engaged with the purged tasks. The try to report with `put` for purged task failed with no such task error.
+bug fixed: When a tb reported `failed` status back -- discarding pending tasks -- the next `get` command still engaged with the purged tasks. The try to report with `put` for purged task failed with no such task error. Test case for that is added.
 
 test
 ----

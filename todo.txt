@@ -30,3 +30,8 @@ TODOs:
  in the 'review' comment as usual, but leave the verify flags untouched
 * any platform that is not started yet is 'discarded' for that patch.
  IOW the tasks that are not started yet are de-queued by 'Submit'.
+* have the buildbot collect the buildtime of each buildbot... and be able
+  to calculate some states (average build time, max build time... ) so that
+  we can eventually estimate the backlog. i.e estimate how long it will take
+  for a patch added right now, to be tested, based on the current queue depth
+  and the currently active buildbot, knowing their historical speed.

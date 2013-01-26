@@ -76,10 +76,15 @@ public class GerritJob implements Runnable {
 		while (!done) {
 			done = true;
 
-			for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
-				if (!tbJob.isReady()) {
-					done = false;
-				}
+			// important to synchronise here
+			// because setResultPossible() might
+			// replace a cancelled task
+			synchronized (tinderBoxThreadList) {                
+    			for (BuildbotPlatformJob tbJob : tinderBoxThreadList) {
+    				if (!tbJob.isReady()) {
+    					done = false;
+    				}
+    			}
 			}
 
 			try {
@@ -145,36 +150,34 @@ public class GerritJob implements Runnable {
 			return null;
 		}
 
-		Set<BuildbotPlatformJob> discardedTasks = Sets.newHashSet();
-		// Before we report a status back, check different strategies/optimisations
-		// 1. if status is failed, then discard all pending tasks.
-		if (status.isFailed()) {
-			for (BuildbotPlatformJob task2 : tinderBoxThreadList) {
-				if (task2.getTicketString() != null
-					&& task2.getTicketString().equals(ticket)) {
-					// skip the same task
-					continue;
-				}
-				// discard pending tasks
-				if (task2.isDiscardable()) {
-				    discardedTasks.add(task2);
-					task2.discard();
-				}
-			}
+		synchronized (tinderBoxThreadList) {
+    		Set<BuildbotPlatformJob> discardedTasks = Sets.newHashSet();
+    		// Before we report a status back, check different strategies/optimisations
+    		// 1. if status is failed, then discard all pending tasks.
+    		if (status.isFailed()) {
+    			for (BuildbotPlatformJob task2 : tinderBoxThreadList) {
+    				if (task2.getTicketString() != null
+    					&& task2.getTicketString().equals(ticket)) {
+    					// skip the same task
+    					continue;
+    				}
+    				// discard pending tasks
+    				if (task2.isDiscardable()) {
+    				    discardedTasks.add(task2);
+    					task2.discard();
+    				}
+    			}
+    		}
+            TbJobResult jobResult = task.createResult(log, status, boxId, discardedTasks);
+         	// 2. if status is canceled, the reschedule a new task for the same platform
+            // reuse the same id and drop the old task from the list (replace it)
+            // Important to synchronie the block, so that the job is not ready.
+         	if (status.isCancelled()) {
+         	    tinderBoxThreadList.remove(task);
+         		initPlatformJob(control.getTbQueueMap(), task.platform);
+         	}
+    		return jobResult;
 		}
-		
-        TbJobResult jobResult = task.createResult(log, status, discardedTasks);
-     
-     	// 2. if status is canceled, the reschedule a new task for the same platform
-        // reuse the same id and drop the old task from the list (replace it)
-     	if (status.isCanceled()) {
-     		// important! add a new instance first
-     	    // and only then remove the old one,
-     	    // otherwise thread get terminated
-     		initPlatformJob(control.getTbQueueMap(), task.platform);
-     		tinderBoxThreadList.remove(task);
-     	}
-		return jobResult;
 	}
 
 	public long getStartTime() {

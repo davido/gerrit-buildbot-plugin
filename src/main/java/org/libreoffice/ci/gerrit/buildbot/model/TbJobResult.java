@@ -20,10 +20,13 @@ public class TbJobResult {
 	TaskStatus status;
 	String log;
 	long endTime;
+	String tinderboxId;
+
     private Set<BuildbotPlatformJob> discardedTasks;
 
 	public TbJobResult(BuildbotPlatformJob tbPlatformJob, String decoratedId, 
-			Platform platform, TaskStatus status, String log, 
+			Platform platform, TaskStatus status, String log,
+			String boxId,
 			Set<BuildbotPlatformJob> discardedTasks) {
 		this.tbPlatformJob = tbPlatformJob;
 		this.decoratedId = decoratedId;
@@ -31,6 +34,7 @@ public class TbJobResult {
 		this.status = status;
 		this.log = log;
 		this.endTime = System.currentTimeMillis();
+		this.tinderboxId = boxId;
 		this.discardedTasks = discardedTasks;
 	}
 	
@@ -64,6 +68,15 @@ public class TbJobResult {
 		}
 		return false;
 	}
+
+    public String getTinderboxId() {
+        return tinderboxId;
+    }
+
+    public void setTinderboxId(String tinderboxId) {
+        this.tinderboxId = tinderboxId;
+    }
+
     public Set<BuildbotPlatformJob> getDiscardedTasks() {
         return discardedTasks;
     }

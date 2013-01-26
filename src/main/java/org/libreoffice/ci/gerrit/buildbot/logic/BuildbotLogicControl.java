@@ -53,9 +53,9 @@ public class BuildbotLogicControl {
 	}
 
 	public TbJobDescriptor launchTbJob(String project, Platform platform,
-			Set<String> branch, String box) {
+			Set<String> branch, String box, boolean test) {
 	    synchronized (projectMap) {
-	        return projectMap.get(project).launchTbJob(platform, branch, box);
+	        return projectMap.get(project).launchTbJob(platform, branch, box, test);
 	    }
 	}
 	
