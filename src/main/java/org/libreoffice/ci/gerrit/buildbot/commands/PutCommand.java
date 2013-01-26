@@ -9,19 +9,12 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
@@ -40,12 +33,10 @@ import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.reviewdb.server.ReviewDb;
-import com.google.gerrit.server.config.CanonicalWebUrl;
 import com.google.gerrit.server.patch.PublishComments;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
 public final class PutCommand extends SshCommand {
@@ -72,20 +63,11 @@ public final class PutCommand extends SshCommand {
     @Inject
     BuildbotConfig config;
 
-    private final static String LOGFILE_SUFFIX = ".log";
-
     @Inject
     private ApprovalTypes approvalTypes;
 
     @Inject
     private ReviewDb db;
-
-    @Inject
-    @CanonicalWebUrl
-    @Nullable
-    Provider<String> urlProvider;
-
-    private final static String LOGFILE_SERVLET_SUFFIX = "plugins/buildbot/log?file=";
 
     protected String getDescription() {
         return "Acknowledge executed task and report the result";
@@ -95,65 +77,45 @@ public final class PutCommand extends SshCommand {
     public void run() throws UnloggedFailure, Failure, Exception {
         synchronized (control) {
             log.debug("ticket: {}", ticket);
-            if ("-".equals(urllog)) {
-                writeLogFile();
-            }
-            
             if (Strings.isNullOrEmpty(ticket)) {
-            	String tmp = "No ticket is provided";
-            	stderr.print(tmp);
-            	stderr.write("\n");
-            	log.warn(tmp);
-            	return;
+                String tmp = "No ticket is provided";
+                stderr.print(tmp);
+                stderr.write("\n");
+                log.warn(tmp);
+                return;
             }
-            
+
             if (status.isSuccess() || status.isFailed()) {
-            	if (Strings.isNullOrEmpty(urllog)) {
-            		String tmp = String.format("No log is provided for status %s", status.name());
-            		stderr.print(tmp);
-                	stderr.write("\n");
-                	log.warn(tmp);
-                	return;
-            	}
+                if (Strings.isNullOrEmpty(urllog)) {
+                    String tmp = String.format(
+                            "No log is provided for status %s", status.name());
+                    stderr.print(tmp);
+                    stderr.write("\n");
+                    log.warn(tmp);
+                    return;
+                }
             }
-            
-            TbJobResult result = control.setResultPossible(ticket, boxId, status, urllog);
+            if ("-".equals(urllog)) {
+                urllog = config.getPublisher().publishLog(config, ticket,
+                        boxId, status, in);
+            }
+            TbJobResult result = control.setResultPossible(ticket, boxId,
+                    status, urllog);
             if (result == null) {
-            	String tmp = String.format("Can not find task for ticket %s", ticket);
-            	stderr.print(tmp);
-            	stderr.write("\n");
-            	log.warn(tmp);
-            	return;
+                String tmp = String.format("Can not find task for ticket %s",
+                        ticket);
+                stderr.print(tmp);
+                stderr.write("\n");
+                log.warn(tmp);
+                return;
             }
             notifyGerritBuildbotPlatformJobFinished(result);
-                    
             // Synchronize?
             Thread.sleep(1000);
             if (result.getTbPlatformJob().getParent().allJobsReady()) {
                 notifyGerritJobFinished(result.getTbPlatformJob().getParent());
             }
         }
-    }
-
-    private void writeLogFile() throws IOException {
-        try {
-            urllog = ticket + LOGFILE_SUFFIX;
-            String file = config.getLogDir() + File.separator + urllog;
-            int sChunk = 8192;
-            GZIPInputStream zipin = new GZIPInputStream(in);
-            byte[] buffer = new byte[sChunk];
-            FileOutputStream out = new FileOutputStream(file);
-            int length;
-            while ((length = zipin.read(buffer, 0, sChunk)) != -1)
-                out.write(buffer, 0, length);
-            out.flush();
-            out.close();
-            zipin.close();
-            in.close();
-        } catch (Exception e) {
-            die(e);
-        }
-        urllog = urlProvider.get() + LOGFILE_SERVLET_SUFFIX + urllog;
     }
 
     public void notifyGerritJobFinished(GerritJob job) {
@@ -186,7 +148,7 @@ public final class PutCommand extends SshCommand {
                 builder.append(String.format("* Build %s on %s %s : %s\n",
                         tbResult.getDecoratedId(),
                         tbResult.getPlatform().name(),
-                        tbResult.getLog() == null ? StringUtils.EMPTY : tbResult.getLog(),
+                        Strings.nullToEmpty(tbResult.getLog()),
                         tbResult.getStatus().name()));
             }
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));            
@@ -197,20 +159,19 @@ public final class PutCommand extends SshCommand {
         }
     }
 
-	private PublishComments getCommenter(
-			Set<ApprovalCategoryValue.Id> aps, PatchSet patchset,
-			StringBuilder builder) throws NoSuchFieldException,
-			IllegalAccessException {
-		PublishComments commenter = publishCommentsFactory.create(patchset.getId(),
-		        builder.toString(), aps, true);
-		if (config.isForgeReviewerIdentity()) {
-			// Replace current user with buildbot user
-			Field field = commenter.getClass().getDeclaredField("user");
-			field.setAccessible(true);
-			field.set(commenter, control.getBuildbot());
-		}
-		return commenter;
-	}
+    private PublishComments getCommenter(Set<ApprovalCategoryValue.Id> aps,
+            PatchSet patchset, StringBuilder builder)
+            throws NoSuchFieldException, IllegalAccessException {
+        PublishComments commenter = publishCommentsFactory.create(
+                patchset.getId(), builder.toString(), aps, true);
+        if (config.isForgeReviewerIdentity()) {
+            // Replace current user with buildbot user
+            Field field = commenter.getClass().getDeclaredField("user");
+            field.setAccessible(true);
+            field.set(commenter, control.getBuildbot());
+        }
+        return commenter;
+    }
 
     void notifyGerritBuildbotPlatformJobFinished(TbJobResult tbJobResult) {
         ApprovalCategory verified = null;
@@ -237,9 +198,9 @@ public final class PutCommand extends SshCommand {
                     tbJobResult.getPlatform().name(),
                     tbJobResult.getTinderboxId(),
                     time(tbJobResult.getEndTime(), 0),
-                    tbJobResult.getLog() == null ? StringUtils.EMPTY : tbJobResult.getLog(),
+                    Strings.nullToEmpty(tbJobResult.getLog()),
                     tbJobResult.getStatus().name()));
-            aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));            
+            aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
             getCommenter(aps, patchset, builder).call();
         } catch (Exception e) {
             e.printStackTrace();

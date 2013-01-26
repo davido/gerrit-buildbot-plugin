@@ -48,3 +48,13 @@ Task-Id          Start/End    Type/State   Ref                    Branch
 ------------------------------------------------------------------------------
   0 task(s)
 
+10. Integraton with jenkins for log file publication
+
+10.1 install gerrit
+10.2 install the patched version of `external-monitor-job-plugin` (use this patch https://github.com/davido/external-monitor-job-plugin/commit/a760533b0c0156d04d7f6fb35abf3f5b3a51deaa). 
+10.2 configure static ssh port in jenkins, i. e. 97201
+10.3 create user in jenkins, i. e. `gerrit` and add public key to that user (from the remote's user site, who will push log to jenkins)
+10.4 create external monitor job, i. e. buildbot
+10.5 create or add to Open SSH config file new host
+10.6 add corresponding buildbot.config section
+10.7 done

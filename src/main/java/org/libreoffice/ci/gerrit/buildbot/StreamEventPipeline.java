@@ -77,7 +77,7 @@ public class StreamEventPipeline implements LifecycleListener {
     	hooks.removeChangeListener(listener);
     	control.stop();
     }
-    
+
     @Override
     public void start() {
         Set<Account.Id> ids = byEmailCache.get(config.getEmail());

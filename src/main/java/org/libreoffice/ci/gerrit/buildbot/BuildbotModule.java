@@ -15,6 +15,8 @@ import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfigProvider;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControlProvider;
+import org.libreoffice.ci.gerrit.buildbot.publisher.BuildbotLogPublisher;
+import org.libreoffice.ci.gerrit.buildbot.publisher.JenkinsLogPublisher;
 
 import com.google.gerrit.extensions.events.LifecycleListener;
 import com.google.inject.AbstractModule;
@@ -26,6 +28,8 @@ class BuildbotModule extends AbstractModule {
     protected void configure() {
         bind(BuildbotConfig.class).toProvider(BuildbotConfigProvider.class).in(SINGLETON);
         bind(BuildbotLogicControl.class).toProvider(BuildbotLogicControlProvider.class).in(SINGLETON);
+        bind(BuildbotLogPublisher.class).in(SINGLETON);
+        bind(JenkinsLogPublisher.class).in(SINGLETON);
         bind(StreamEventPipeline.class).in(SINGLETON);
         bind(LifecycleListener.class).annotatedWith(UniqueAnnotations.create())
         .to(StreamEventPipeline.class);

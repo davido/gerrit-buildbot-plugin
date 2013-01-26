@@ -45,27 +45,27 @@ import com.google.inject.Inject;
 public final class GetCommand extends SshCommand {
     static final Logger log = LoggerFactory.getLogger(GetCommand.class);
 
-    @Option(name = "--project", aliases={"-p"}, required = true, metaVar = "PROJECT", usage = "name of the project for which the task should be polled")
+    @Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the task should be polled")
     private ProjectControl projectControl;
 
-    @Option(name = "--platform", aliases={"-a"}, required = true, metaVar = "PLATFORM", usage = "name of the platform")
+    @Option(name = "--platform", aliases = { "-a" }, required = true, metaVar = "PLATFORM", usage = "name of the platform")
     private Platform platform;
-    
-    @Option(name = "--id", aliases={"-i"}, required = true, metaVar = "TB", usage = "id of the tinderbox")
+
+    @Option(name = "--id", aliases = { "-i" }, required = true, metaVar = "TB", usage = "id of the tinderbox")
     private String box;
 
-    @Option(name = "--format", aliases={"-f"}, required = false, metaVar = "FORMAT", usage = "output display format")
+    @Option(name = "--format", aliases = { "-f" }, required = false, metaVar = "FORMAT", usage = "output display format")
     private FormatType format = FormatType.TEXT;
-    
-	@Argument(index = 0, required = false, multiValued = true, metaVar = "BRANCH", usage = "branch[es] to get a task for")
-	void addPatchSetId(final String branch) {
-		branchSet.add(branch);
-	}
-	
-	@Option(name = "--test", aliases={"-t"}, required = false, metaVar = "TEST", usage = "peek a task for test only. Task is not removed from the queue and no reporting a result is possible.")
+
+    @Argument(index = 0, required = false, multiValued = true, metaVar = "BRANCH", usage = "branch[es] to get a task for")
+    void addPatchSetId(final String branch) {
+        branchSet.add(branch);
+    }
+
+    @Option(name = "--test", aliases = { "-t" }, required = false, metaVar = "TEST", usage = "peek a task for test only. Task is not removed from the queue and no reporting a result is possible.")
     boolean test = false;
 
-	private Set<String> branchSet = Sets.newHashSet();
+    private Set<String> branchSet = Sets.newHashSet();
 
     @Inject
     BuildbotLogicControl control;
@@ -90,44 +90,49 @@ public final class GetCommand extends SshCommand {
     public void run() throws UnloggedFailure, Failure, Exception {
         synchronized (control) {
             log.debug("project: {}", projectControl.getProject().getName());
-            if (!config.isProjectSupported(projectControl.getProject().getName())) {
+            if (!config.isProjectSupported(projectControl.getProject()
+                    .getName())) {
                 String message = String.format(
-                        "project <%s> is not enabled for building!", projectControl
-                                .getProject().getName());
+                        "project <%s> is not enabled for building!",
+                        projectControl.getProject().getName());
                 stderr.print(message);
                 stderr.write("\n");
                 return;
             }
-    		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
-    				.getProject().getName(), platform, branchSet, box, test);
+            TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
+                    .getProject().getName(), platform, branchSet, box, test);
             if (jobDescriptor == null) {
                 if (format != null && format == FormatType.BASH) {
-                    stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
+                    stdout.print(String
+                            .format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));
                 } else {
                     stdout.print("empty");
                 }
             } else {
                 if (!test) {
-                    notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
+                    notifyGerritBuildbotPlatformJobStarted(jobDescriptor
+                            .getBuildbotPlatformJob());
                 }
                 String output;
                 if (format != null && format == FormatType.BASH) {
-                    output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
-                            jobDescriptor.getTicket(),
-                            jobDescriptor.getBranch(),
-                            jobDescriptor.getRef());
+                    output = String
+                            .format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
+                                    jobDescriptor.getTicket(),
+                                    jobDescriptor.getBranch(),
+                                    jobDescriptor.getRef());
                 } else {
-                    output = String.format("engaged: ticket=%s branch=%s ref=%s\n",
+                    output = String.format(
+                            "engaged: ticket=%s branch=%s ref=%s\n",
                             jobDescriptor.getTicket(),
-                            jobDescriptor.getBranch(),
-                            jobDescriptor.getRef());
+                            jobDescriptor.getBranch(), jobDescriptor.getRef());
                 }
                 stdout.print(output);
             }
         }
     }
 
-    void notifyGerritBuildbotPlatformJobStarted(BuildbotPlatformJob tbPlatformJob) {
+    void notifyGerritBuildbotPlatformJobStarted(
+            BuildbotPlatformJob tbPlatformJob) {
         ApprovalCategory verified = null;
         for (ApprovalType type : approvalTypes.getApprovalTypes()) {
             final ApprovalCategory category = type.getCategory();
@@ -146,12 +151,12 @@ public final class GetCommand extends SshCommand {
             patchset = result.iterator().next();
             StringBuilder builder = new StringBuilder(256);
             short status = 0;
-            builder.append(String.format("Build %s on %s started by TB %s at %s\n\n",
-                    tbPlatformJob.getTicket().getId(),
-                    tbPlatformJob.getPlatformString(),
-                    tbPlatformJob.getTinderboxId(),
-                    time(tbPlatformJob.getStartTime(), 0)
-                    ));
+            builder.append(String.format(
+                    "Build %s on %s started by TB %s at %s\n\n", tbPlatformJob
+                            .getTicket().getId(), tbPlatformJob
+                            .getPlatformString(), tbPlatformJob
+                            .getTinderboxId(),
+                    time(tbPlatformJob.getStartTime(), 0)));
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
             getCommenter(aps, patchset, builder).call();
         } catch (Exception e) {
@@ -160,12 +165,11 @@ public final class GetCommand extends SshCommand {
         }
     }
 
-    private PublishComments getCommenter(
-            Set<ApprovalCategoryValue.Id> aps, PatchSet patchset,
-            StringBuilder builder) throws NoSuchFieldException,
-            IllegalAccessException {
-        PublishComments commenter = publishCommentsFactory.create(patchset.getId(),
-                builder.toString(), aps, true);
+    private PublishComments getCommenter(Set<ApprovalCategoryValue.Id> aps,
+            PatchSet patchset, StringBuilder builder)
+            throws NoSuchFieldException, IllegalAccessException {
+        PublishComments commenter = publishCommentsFactory.create(
+                patchset.getId(), builder.toString(), aps, true);
         if (config.isForgeReviewerIdentity()) {
             // Replace current user with buildbot user
             Field field = commenter.getClass().getDeclaredField("user");

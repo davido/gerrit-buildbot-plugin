@@ -30,10 +30,22 @@ trigger strategie, reviewerGroupName and branch.
         (default is `true`) then the verification status is reported under caller's
         own identity.
 
+`log.mode`
+:       `intern` or `extern` log file publication mode. `Intern`: local servlet is
+        used. `extern`: only jenkins `external-monitor-job` supported.
+
 `log.directory`
-:       Directory where log files are put. Those are the log of verification.
-        Currently these log are published through plugins own LogServlet. 
-        In future jenkins integration would be provided.
+:       Directory where log files are put (used for `intern` mode only).
+
+`log.host`
+:       Host name from Open SSH config file ~/.ssh/config
+
+`log.url`
+:       Url to repot back to gerrit.
+
+`log.job`
+:       Job name. Url reported back to gerrit is of the form `${url}/${job}/build-number`
+
 
 In the keys below, the `NAME` portion identify a project name, and
 must be unique to distinguish the different sections if more than one
