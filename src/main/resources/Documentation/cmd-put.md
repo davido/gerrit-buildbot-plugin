@@ -10,7 +10,7 @@ SYNOPSIS
 ```
 ssh -p @SSH_PORT@ gerrit @PLUGIN@ put
   --ticket <ID> | -t <ID>
-  --status <success|failed|canceled> | -s <success|failed|canceled>
+  --status <success|failed|cancelled> | -s <success|failed|cancelled>
   --id <BUILDBOT> | -i <BUILDBOT>
   [--log <url> | -]
 ```
