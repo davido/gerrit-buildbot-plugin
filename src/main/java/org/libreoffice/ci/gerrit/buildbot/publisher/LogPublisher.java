@@ -9,4 +9,6 @@ public interface LogPublisher {
 
     public String publishLog(BuildbotConfig config, String ticket,
             String boxId, TaskStatus status, InputStream in) throws Exception;
+
+    public String testChannel(BuildbotConfig config);
 }

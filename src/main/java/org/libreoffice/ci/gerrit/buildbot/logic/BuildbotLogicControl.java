@@ -11,6 +11,7 @@ import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
 import org.libreoffice.ci.gerrit.buildbot.logic.impl.ProjectControlImpl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 
@@ -75,6 +76,12 @@ public class BuildbotLogicControl {
 	    synchronized (projectMap) {
 	        return projectMap.get(project).getGerritJobs();
 	    }
+	}
+	
+	public Map<Platform, TBBlockingQueue> getTBQueueMap(String project) {
+	    synchronized (projectMap) {
+            return projectMap.get(project).getTbQueueMap();
+        }
 	}
 	
 	public GerritJob findJobByRevision(String project, String revision) {

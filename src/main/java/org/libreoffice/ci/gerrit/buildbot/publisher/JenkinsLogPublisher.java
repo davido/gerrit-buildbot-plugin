@@ -29,6 +29,7 @@ public class JenkinsLogPublisher implements LogPublisher {
             .getLogger(JenkinsLogPublisher.class);
 
     final static String JENKINS_SSH_COMMAND = "set-external-build-result";
+    final static String JENKINS_TEST_CHANNEL = "who-am-i";
 
     @Override
     public String publishLog(BuildbotConfig config, String ticket,
@@ -77,6 +78,46 @@ public class JenkinsLogPublisher implements LogPublisher {
                 config.getExternalLogViewerJob(), exitValue);
         log.debug("log url: {}", result);
         return result;
+    }
+
+    @Override
+    public String testChannel(BuildbotConfig config) {
+        final String cmd = JENKINS_TEST_CHANNEL;
+        StringBuilder builder = new StringBuilder(cmd.length())
+                .append(">ssh ").append(config.getExternalLogViewerHost())
+                .append(" ").append(cmd).append("\n");
+        OutputStream errStream = newErrorBufferStream();
+        OutputStream outStream = newErrorBufferStream();
+        URIish jenkins = null;
+        try {
+            jenkins = new URIish().setHost(config.getExternalLogViewerHost());
+            RemoteSession ssh = connect(jenkins);
+            Process proc = ssh.exec(cmd, 0/*timeout*/);
+            StreamCopyThread out = new StreamCopyThread(proc.getInputStream(),
+                    outStream);
+            StreamCopyThread err = new StreamCopyThread(proc.getErrorStream(),
+                    errStream);
+            out.start();
+            err.start();
+            try {
+                out.flush();
+                err.flush();
+                proc.waitFor();
+                proc.exitValue();
+                out.halt();
+                err.halt();
+            } catch (InterruptedException interrupted) {
+                log.error("process interupted: ", interrupted);
+            }
+            ssh.disconnect();
+            return builder.append("<").append(outStream.toString()).toString();
+        } catch (IOException e) {
+            log.error(
+                    String.format("Error testing log channel\n"
+                            + "  Exception: %s\n" + " Command: %s\n"
+                            + "  Output: %s", jenkins, e, cmd, errStream), e);
+            return null;
+        }
     }
 
     private static RemoteSession connect(URIish uri) throws TransportException {

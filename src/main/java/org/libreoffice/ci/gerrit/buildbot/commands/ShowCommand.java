@@ -32,12 +32,15 @@ public final class ShowCommand extends SshCommand {
     @Option(name = "--type", aliases = { "-t" }, required = false, metaVar = "TYPE", usage = "which type of tasks to display")
     private TaskType type;
 
+    @Option(name = "--dump", aliases = { "-d" }, required = false, metaVar = "DUMP", usage = "dump all platform queues")
+    private boolean dump = false;
+
     @Inject
     BuildbotLogicControl control;
 
     @Inject
     BuildbotConfig config;
-    
+
     protected String getDescription() {
         return "Display the buildbot work queue";
     }
@@ -46,7 +49,6 @@ public final class ShowCommand extends SshCommand {
     public void run() throws UnloggedFailure, Failure, Exception {
         synchronized (control) {
             log.debug("project: {}", projectControl.getProject().getName());
-    
             if (!config.isProjectSupported(projectControl.getProject().getName())) {
                 String message = String.format(
                         "project <%s> is not enabled for building!", projectControl
@@ -55,7 +57,7 @@ public final class ShowCommand extends SshCommand {
                 stderr.write("\n");
                 return;
             }
-            QueueUtils.dumpQueue(stdout, type, control, projectControl.getProject().getName());
+            QueueUtils.dumpQueue(stdout, type, control, projectControl.getProject().getName(), dump);
         }
     }
 }

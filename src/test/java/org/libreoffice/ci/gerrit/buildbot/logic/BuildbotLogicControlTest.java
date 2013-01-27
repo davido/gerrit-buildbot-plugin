@@ -70,7 +70,7 @@ public class BuildbotLogicControlTest {
         Assert.assertTrue(result.getTbPlatformJob().getParent().allJobsReady());
         dumpQueue();
     }
-    
+
     @Test
     public void test2DiscardedTasks() {
         control.startGerritJob(PROJECT, "master", "4711", "abcdefghijklmnopqrstuvwxyz");
@@ -107,7 +107,7 @@ public class BuildbotLogicControlTest {
         Assert.assertFalse(result.getTbPlatformJob().getParent().allJobsReady());
         dumpQueue();
     }
-    
+
     @Test
     public void testPeekTasks() {
         control.startGerritJob(PROJECT, "master", "4711", "a1bcdefghijklmnopqrstuvwxyz");
@@ -127,15 +127,30 @@ public class BuildbotLogicControlTest {
         dumpQueue();
     }
 
+    @Test
+    public void testManyJobs() {
+        String prefix = "a1bcdefghi";
+        Set<String> branchSet = Sets.newHashSet();
+        for (int i = 0; i < 100; i++) {
+            control.startGerritJob(PROJECT, "master", "4711", prefix + i);
+        }
+        for (int i = 0; i < 50; i++) {
+            for (Platform p : Platform.values()) {
+                TbJobDescriptor job = control.launchTbJob(PROJECT, p, branchSet, "42", false);
+                Assert.assertNotNull(job);
+            }
+        }
+        dumpQueue();
+    }
+
     private void dumpQueue() {
         try {
             Thread.sleep(200);
         } catch (InterruptedException e) {
-
             e.printStackTrace();
         }
         PrintWriter stdout = new PrintWriter(System.out);
-        QueueUtils.dumpQueue(stdout, null, control, PROJECT);
+        QueueUtils.dumpQueue(stdout, null, control, PROJECT, true);
         stdout.flush();
     }
 }

@@ -10,11 +10,13 @@
 package org.libreoffice.ci.gerrit.buildbot.logic;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 
@@ -34,4 +36,5 @@ public interface ProjectControl {
 	TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String logurl);
 	void stop();
 	void start();
+	Map<Platform, TBBlockingQueue> getTbQueueMap();
 }

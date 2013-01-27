@@ -1,6 +1,23 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.11: 2013-01-28
+===========
+
+ssh commands
+------------
+
+show
+:
+
+* added --dump option to dump the content of platform specific queues
+
+test-log-channel
+:
+
+* New ssh command to test that the connection to extern log file channel was estabished successfully.
+
+
 Version 1.10: 2013-01-27
 ===========
 

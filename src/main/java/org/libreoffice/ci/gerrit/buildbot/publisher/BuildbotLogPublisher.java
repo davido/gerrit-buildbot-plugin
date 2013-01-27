@@ -26,7 +26,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 public class BuildbotLogPublisher implements LogPublisher {
-    static final Logger log = LoggerFactory.getLogger(BuildbotLogPublisher.class);
+    static final Logger log = LoggerFactory
+            .getLogger(BuildbotLogPublisher.class);
 
     @Inject
     @CanonicalWebUrl
@@ -61,4 +62,8 @@ public class BuildbotLogPublisher implements LogPublisher {
         return urlProvider.get() + LOGFILE_SERVLET_SUFFIX + urllog;
     }
 
+    @Override
+    public String testChannel(BuildbotConfig config) {
+        throw new IllegalStateException("not implemented!");
+    }
 }

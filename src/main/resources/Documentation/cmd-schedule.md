@@ -59,9 +59,8 @@ OPTIONS
 	corresponding task is dropped from the queue.
 
 `--drop`
-:	Drop an item from the queue. Note: `--force` option
-	is implied in this case: an item is dropped even when some tasks within
-	the job or task itself have running state.
+:	Drop an item from the queue. Only items that are in pinding state are dropped.
+        To drop items in running state `--force` must be provided.
 
 `--all`
 :	Clear the whole queue. If the `--project`option is specified then
