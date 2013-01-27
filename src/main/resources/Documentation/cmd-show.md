@@ -11,6 +11,7 @@ SYNOPSIS
 ssh -p @SSH_PORT@ gerrit @PLUGIN@ show
   --project <NAME> | -p <NAME>
   [--type {change | job | all}]
+  [--dump | -d]
 ```
 
 DESCRIPTION
@@ -40,8 +41,11 @@ OPTIONS
 	configured in `$gerrit_site/etc/buildbot.config` file.
 
 `--type`
-:	Type og the items to show: `job` and `task` types are supported.
+:	Type of the items to show: `job` and `task` types are supported.
 	Default is to show all items.
+
+`--dump`
+:       Dumps platform specific queues.
 
 EXAMPLES
 --------
