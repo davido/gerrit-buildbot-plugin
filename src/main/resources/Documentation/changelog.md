@@ -1,6 +1,23 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.12: 2013-01-29
+===========
+
+configuration
+-------------
+
+* add `user.buildbotAdminGroupName` mandatory configuration option.
+
+ssh commands
+------------
+
+* get `--id` is optionally. Default is user name. Only member of
+  `buildbotAdminGroupName` can provide `--id` option.
+
+* put `--id` is optionally. Default is user name. Only member of
+  `buildbotAdminGroupName` can provide `--id` option.
+
 Version 1.11: 2013-01-28
 ===========
 

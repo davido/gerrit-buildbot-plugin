@@ -25,7 +25,8 @@ public class BuildbotLogicControlTest {
     BuildbotConfig config;
     BuildbotLogicControl control;
     static final String PROJECT = "FOO";
-    static final String TB = "42";
+    static final String TB1 = "42";
+    static final String TB2 = "43";
     static final String URL = "url";
     
     @Before
@@ -52,23 +53,42 @@ public class BuildbotLogicControlTest {
     public void testCompleteJob() {
         control.startGerritJob(PROJECT, "master", "4711", "abcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.LINUX, branchSet, TB, false);
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.LINUX, branchSet, TB1, false);
         Assert.assertNotNull(job);
-        TbJobResult result = control.setResultPossible(job.getTicket(), TB, TaskStatus.SUCCESS, URL);
+        TbJobResult result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
         Assert.assertNotNull(result);
-        job = control.launchTbJob(PROJECT, Platform.LINUX, branchSet, TB, false);
+        job = control.launchTbJob(PROJECT, Platform.LINUX, branchSet, TB1, false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB, false);
+        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB1, false);
         Assert.assertNotNull(job);
-        result = control.setResultPossible(job.getTicket(), TB, TaskStatus.SUCCESS, URL);
-        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB, false);
+        result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
+        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB1, false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.MAC, branchSet, TB, false);
+        job = control.launchTbJob(PROJECT, Platform.MAC, branchSet, TB1, false);
         Assert.assertNotNull(job);
         Assert.assertFalse(result.getTbPlatformJob().getParent().allJobsReady());
-        result = control.setResultPossible(job.getTicket(), TB, TaskStatus.SUCCESS, URL);
+        result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
         Assert.assertTrue(result.getTbPlatformJob().getParent().allJobsReady());
         dumpQueue();
+    }
+
+    @Test()
+    public void testBoxMismatch() {
+        control.startGerritJob(PROJECT, "master", "4711", "abcdefghijklmnopqrstuvwxyz");
+        Set<String> branchSet = Sets.newHashSet();
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.LINUX, branchSet, TB1, true);
+        Assert.assertNotNull(job);
+        TbJobResult result = control.setResultPossible(job.getTicket(), TB2, TaskStatus.SUCCESS, URL);
+        Assert.assertNull(result);
+        dumpQueue();
+    }
+
+    @Test()
+    public void testFindProjectByTicket() {
+        control.startGerritJob(PROJECT, "master", "4711", "abcdefghijklmnopqrstuvwxyz");
+        Set<String> branchSet = Sets.newHashSet();
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.LINUX, branchSet, TB1, false);
+        Assert.assertEquals(PROJECT, control.findProjectByTicket(job.getTicket()));
     }
 
     @Test
@@ -97,12 +117,12 @@ public class BuildbotLogicControlTest {
         Assert.assertNotNull(job);
         TbJobResult result = control.setResultPossible(job.getTicket(), "42", TaskStatus.SUCCESS, "url");
         Assert.assertNotNull(result);
-        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB, false);
+        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB1, false);
         Assert.assertNotNull(job);
-        result = control.setResultPossible(job.getTicket(), TB, TaskStatus.SUCCESS, URL);
-        job = control.launchTbJob(PROJECT, Platform.MAC, branchSet, TB, false);
+        result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
+        job = control.launchTbJob(PROJECT, Platform.MAC, branchSet, TB1, false);
         Assert.assertNotNull(job);
-        result = control.setResultPossible(job.getTicket(), TB, TaskStatus.CANCELED, URL);
+        result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.CANCELED, URL);
         Assert.assertNotNull(result);
         Assert.assertFalse(result.getTbPlatformJob().getParent().allJobsReady());
         dumpQueue();
@@ -120,9 +140,9 @@ public class BuildbotLogicControlTest {
         Assert.assertNotNull(job);
         job = control.launchTbJob(PROJECT, Platform.LINUX, branchSet, "42", false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB, true);
+        job = control.launchTbJob(PROJECT, Platform.WINDOWS, branchSet, TB1, true);
         Assert.assertNotNull(job);
-        job = control.launchTbJob(PROJECT, Platform.MAC, branchSet, TB, false);
+        job = control.launchTbJob(PROJECT, Platform.MAC, branchSet, TB1, false);
         Assert.assertNotNull(job);
         dumpQueue();
     }

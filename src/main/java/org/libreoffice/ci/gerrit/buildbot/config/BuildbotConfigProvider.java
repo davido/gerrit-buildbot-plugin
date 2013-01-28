@@ -41,6 +41,7 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
     private final static String SECTION_USER = "user";
     private static final String KEY_MAIL = "mail";
     private static final String KEY_FORGE_REVIEWER_IDENTITY = "forgeReviewerIdentity";
+    private static final String KEY_BUILDBOT_ADMIN_GROUP_NAME = "buildbotAdminGroupName";
 
     private final static String SECTION_LOG = "log";
     private final static String KEY_MODE = "mode";
@@ -102,6 +103,11 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
         config.setEmail(cfg.getString(SECTION_USER, null, KEY_MAIL));
         config.setForgeReviewerIdentity(cfg.getBoolean(SECTION_USER, null,
                 KEY_FORGE_REVIEWER_IDENTITY, true));
+        String buildbotAdminGroupName = cfg.getString(SECTION_USER, null,
+                KEY_BUILDBOT_ADMIN_GROUP_NAME);
+        Preconditions.checkNotNull(buildbotAdminGroupName,
+                "buildbotAdminGroupName must not be null");
+        config.setBuildbotAdminGroupId(getGroup(buildbotAdminGroupName));
 
         String publisherModeStr = cfg.getString(SECTION_LOG, null, KEY_MODE);
         Preconditions.checkNotNull(publisherModeStr, "log.mode must not be null");
@@ -120,24 +126,24 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
 
         ImmutableList.Builder<BuildbotProject> dest = ImmutableList.builder();
 
-        for (BuildbotProject p : allProjects(cfg)) {
+        for (BuildbotProject p : allProjects(config, cfg)) {
             dest.add(p);
         }
         config.setProjects(dest.build());
         return config;
     }
 
-    private List<BuildbotProject> allProjects(FileBasedConfig cfg) {
+    private List<BuildbotProject> allProjects(BuildbotConfig config, FileBasedConfig cfg) {
         Set<String> names = cfg.getSubsections(SECTION_PROJECT);
         List<BuildbotProject> result = Lists.newArrayListWithCapacity(names
                 .size());
         for (String name : names) {
-            result.add(parseProject(cfg, name));
+            result.add(parseProject(config, cfg, name));
         }
         return result;
     }
 
-    private BuildbotProject parseProject(FileBasedConfig cfg, String name) {
+    private BuildbotProject parseProject(BuildbotConfig config, FileBasedConfig cfg, String name) {
         BuildbotProject p = new BuildbotProject(name);
         String[] branches = cfg
                 .getStringList(SECTION_PROJECT, name, KEY_BRANCH);
@@ -158,22 +164,29 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
                     KEY_REVIEWER_GROUP_NAME);
             Preconditions.checkNotNull(reviewerGroupName,
                     "reviewerGroupName must not be null");
-            p.setReviewerGroupId(getReviewerGroupId(reviewerGroupName));
+            p.setReviewerGroupId(getGroup(reviewerGroupName));
+        }
+
+        String buildbotAdminGroupName = cfg.getString(SECTION_PROJECT, null, KEY_BUILDBOT_ADMIN_GROUP_NAME);
+        if (buildbotAdminGroupName != null) {
+            p.setBuildbotAdminGroupId(getGroup(buildbotAdminGroupName));
+        } else {
+            p.setBuildbotAdminGroupId(config.getBuildbotAdminGroupId());
         }
         return p;
     }
 
-    private AccountGroup.UUID getReviewerGroupId(String reviewerGroupName) {
-        Preconditions.checkNotNull(reviewerGroupName,
-                "ReviewerGroup must not be null");
+    private AccountGroup.UUID getGroup(String groupName) {
+        Preconditions.checkNotNull(groupName,
+                "Group name must not be null");
         try {
-            return findGroup(reviewerGroupName).getGroupUUID();
+            return findGroup(groupName).getGroupUUID();
         } catch (OrmException e) {
             throw new IllegalStateException(String.format(
-                    "Can not retrieve group: %s", reviewerGroupName));
+                    "Can not retrieve group: %s", groupName));
         } catch (NoSuchGroupException e) {
             throw new IllegalStateException(String.format(
-                    "Group doesn't exist: %s", reviewerGroupName));
+                    "Group doesn't exist: %s", groupName));
         }
     }
 

@@ -32,6 +32,7 @@ public interface ProjectControl {
 	void startGerritJob(Change change, PatchSet patchSet);
 	List<GerritJob> getGerritJobs();
 	GerritJob findJobByRevision(String revision);
+	GerritJob findJobByTicket(String ticket);
 	TbJobDescriptor launchTbJob(Platform platform, Set<String> branch, String box, boolean test);
 	TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String logurl);
 	void stop();

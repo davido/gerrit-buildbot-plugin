@@ -15,6 +15,8 @@ import org.libreoffice.ci.gerrit.buildbot.publisher.LogPublisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.gerrit.reviewdb.client.AccountGroup;
+import com.google.gerrit.server.IdentifiedUser;
 
 public class BuildbotConfig {
 
@@ -28,6 +30,7 @@ public class BuildbotConfig {
     private String externalLogViewerJob;
     private String externalLogViewerUrl;
     private LogPublisher publisher;
+    private AccountGroup.UUID buildbotAdminGroupId;
 
     public String getEmail() {
         return email;
@@ -117,6 +120,19 @@ public class BuildbotConfig {
 
     public void setPublisher(LogPublisher publisher) {
         this.publisher = publisher;
+    }
+
+
+    public AccountGroup.UUID getBuildbotAdminGroupId() {
+        return buildbotAdminGroupId;
+    }
+
+    public void setBuildbotAdminGroupId(AccountGroup.UUID buildbotAdminGroupId) {
+        this.buildbotAdminGroupId = buildbotAdminGroupId;
+    }
+
+    public boolean isIdentityBuildbotAdmin4Project(String project, IdentifiedUser user) {
+        return user.getEffectiveGroups().contains(findProject(project).getBuildbotAdminGroupId());
     }
 }
 

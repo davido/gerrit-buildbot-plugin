@@ -53,7 +53,9 @@ OPTIONS
 	`dropped`.
 
 `--id`
-:	Buildbot id. To get a task buildbot identifies itself against @PLUGIN@
+:	Buildbot id. Buildbot id. Optionaly. Per default TB-ID is the user name
+        of the gerrit user. Only authorised users can provide this option manually.
+        To get a task buildbot identifies itself against @PLUGIN@
 	plugin with `--id` option passed to `get` ssh command. Buildbot must
 	pass the same id to report the result with `put` ssh command, otherwise
 	the result is ignored.
@@ -68,13 +70,13 @@ EXAMPLES
 Report result `success` for specified ticket and pass gzipped log on stdin:
 
 ```
-  $ cat result.log.gz | ssh -p @SSH_PORT@ gerrit @PLUGIN@ put --ticket c0ff33123_LINUX --status success --id 1 --log -
+  $ cat result.log.gz | ssh -p @SSH_PORT@ gerrit @PLUGIN@ put --ticket c0ff33123_LINUX --status success --log -
 ```
 
 Report result `canceled` for specified ticket:
 
 ```
-  $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ put --ticket c0ff33123_LINUX --status canceled --id 1
+  $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ put --ticket c0ff33123_LINUX --status canceled
 ```
 
 SEE ALSO

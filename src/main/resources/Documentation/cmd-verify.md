@@ -3,7 +3,7 @@
 
 NAME
 ----
-@PLUGIN@ verify - Manually override verification sattus
+@PLUGIN@ verify - Manually override verification status
 
 SYNOPSIS
 --------
@@ -41,11 +41,11 @@ OPTIONS
 `--verified`
 :       Set the approval category to the value 'N'. The exact
         option names supported and the range of values permitted
-        differs per site, check the output of --help.
+        differs per site, check the output of `review` --help.
 
 EXAMPLES
 --------
-Override cerification status for specified patch set:
+Override verification status for specified patch set:
 
 ```
   $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ verify --project foo --verified 0 c0ff33123

@@ -33,6 +33,7 @@ import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.reviewdb.server.ReviewDb;
+import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.patch.PublishComments;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.gwtorm.server.ResultSet;
@@ -45,8 +46,8 @@ public final class PutCommand extends SshCommand {
     @Option(metaVar = "TICKET", name = "--ticket", aliases = { "-t" }, required = true, usage = "ticket of the job")
     private String ticket;
 
-    @Option(name = "--id", aliases={"-i"}, required = true, metaVar = "TB", usage = "id of the tinderbox")
-    private String boxId;
+    @Option(name = "--id", aliases={"-i"}, required = false, metaVar = "TB", usage = "id of the tinderbox")
+    private String box;
     
     @Option(metaVar = "STATUS", name = "--status", aliases = { "-s" }, required = true, usage = "success|failed|canceled|cancelled")
     private TaskStatus status; 
@@ -69,6 +70,8 @@ public final class PutCommand extends SshCommand {
     @Inject
     private ReviewDb db;
 
+    @Inject IdentifiedUser user;
+
     protected String getDescription() {
         return "Acknowledge executed task and report the result";
     }
@@ -84,7 +87,28 @@ public final class PutCommand extends SshCommand {
                 log.warn(tmp);
                 return;
             }
-
+            if (box != null) {
+                String project = control.findProjectByTicket(ticket);
+                if (project == null) {
+                    String tmp = String.format("Can not find task for ticket %s",
+                            ticket);
+                    stderr.print(tmp);
+                    stderr.write("\n");
+                    log.warn(tmp);
+                    return;
+                }
+                if (!config.isIdentityBuildbotAdmin4Project(project, user)) {
+                    String message = String.format(
+                            "only member of buildbot admin group allowed to pass --id option!",
+                            project);
+                    stderr.print(message);
+                    stderr.write("\n");
+                    return;
+                }
+            } else {
+                // default is to use username as TB-ID
+                box = user.getUserName();
+            }
             if (status.isSuccess() || status.isFailed()) {
                 if (Strings.isNullOrEmpty(urllog)) {
                     String tmp = String.format(
@@ -97,9 +121,9 @@ public final class PutCommand extends SshCommand {
             }
             if ("-".equals(urllog)) {
                 urllog = config.getPublisher().publishLog(config, ticket,
-                        boxId, status, in);
+                        box, status, in);
             }
-            TbJobResult result = control.setResultPossible(ticket, boxId,
+            TbJobResult result = control.setResultPossible(ticket, box,
                     status, urllog);
             if (result == null) {
                 String tmp = String.format("Can not find task for ticket %s",

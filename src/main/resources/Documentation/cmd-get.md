@@ -63,7 +63,9 @@ OPTIONS
 	configurable and can be set on project base.
 
 `--id`
-:	Buildbot id. To get a task buildbot identifies itself against @PLUGIN@
+:	Buildbot id. Optionaly. Per default TB-ID is the user name of the gerrit user.
+        Only authorised users can provide this option manually.
+        To get a task buildbot identifies itself against @PLUGIN@
 	plugin with `--id` option passed to `get` ssh command. Buildbot must
 	pass the same id to report the result with `put` ssh command, otherwise
 	the result is ignored.
@@ -83,7 +85,7 @@ EXAMPLES
 Get a task for building:
 
 ```
-  $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ get --project foo --platform linux --id 1
+  $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ get --project foo --platform linux
 ```
 
 SEE ALSO

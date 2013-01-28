@@ -35,6 +35,7 @@ import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.reviewdb.server.ReviewDb;
+import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.patch.PublishComments;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.sshd.SshCommand;
@@ -51,7 +52,7 @@ public final class GetCommand extends SshCommand {
     @Option(name = "--platform", aliases = { "-a" }, required = true, metaVar = "PLATFORM", usage = "name of the platform")
     private Platform platform;
 
-    @Option(name = "--id", aliases = { "-i" }, required = true, metaVar = "TB", usage = "id of the tinderbox")
+    @Option(name = "--id", aliases = { "-i" }, required = false, metaVar = "TB", usage = "id of the tinderbox")
     private String box;
 
     @Option(name = "--format", aliases = { "-f" }, required = false, metaVar = "FORMAT", usage = "output display format")
@@ -82,6 +83,8 @@ public final class GetCommand extends SshCommand {
     @Inject
     private ReviewDb db;
 
+    @Inject IdentifiedUser user;
+
     protected String getDescription() {
         return "Get a task from platform specific queue";
     }
@@ -98,6 +101,20 @@ public final class GetCommand extends SshCommand {
                 stderr.print(message);
                 stderr.write("\n");
                 return;
+            }
+            if (box != null) {
+                if (!config.isIdentityBuildbotAdmin4Project(projectControl
+                        .getProject().getName(), user)) {
+                    String message = String.format(
+                            "only member of buildbot admin group allowed to pass --id option!",
+                            projectControl.getProject().getName());
+                    stderr.print(message);
+                    stderr.write("\n");
+                    return;
+                }
+            } else {
+                // default is to use username as TB-ID
+                box = user.getUserName();
             }
             TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
                     .getProject().getName(), platform, branchSet, box, test);
