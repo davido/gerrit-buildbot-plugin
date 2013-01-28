@@ -24,6 +24,10 @@ trigger strategy, reviewerGroupName and branch.
 :	EMail of (optionally non interactive account) owner of buildbot. 
         Buildbot verification are published by this user. Mandatory.
 
+`user.buildbotAdminGroupName`
+:	Group name for buildbot admin group. Only member of this group can provide
+        optionally --id parameter for `put` and `get` commands. Mandatory.
+
 `user.forgeReviewerIdentity`
 :	Forge reviewer identity. With `put` command Buildbot reports verification
         status with buildbot own identity. If this option is set to `false`
@@ -72,6 +76,9 @@ project appears in the file.
 
 `project.NAME.branch`
 :       Branch name to restrict the build triggering to. Optionally.
+
+`project.NAME.buildbotAdminGroupName`
+:       Overwrite a global `buildbotAdminGroupName` on project base.
 
 Sample `buildbot.config`:
 

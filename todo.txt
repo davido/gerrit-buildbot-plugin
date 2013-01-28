@@ -10,25 +10,41 @@ Problems
 
 TODOs:
 ======
+* Add a new button 'Build' to the core gerrit patch view. That button should 
+schedule the job (and the button should be disabled if the job is already 
+scheduled. In a perfect word, we could have tooltip that show the state
+of the scheduling for that job when you mouse over a 'disabled' 'Schedule' button.
+
+[21:43:40] <mfick> If we added such a capability, I suspect we would make a way for plugins to register the button
+[21:43:54] <mfick> with a callbak
+[21:49:21] <mfick> _david_, I envision a plugin registering the button with: a name, text, a callback, and an ACL name
+
+* If a patch is 'submitted' while the verification tinbuild are pending then
+* we let already running tindebox finish, and still report the result
+  in the 'review' comment as usual, but leave the verify flags untouched
+* any platform that is not started yet is 'discarded' for that patch.
+  IOW the tasks that are not started yet are de-queued by 'Submit'.
+
 * Implement `--drop` option for schedule ssh command.
-* Put TB-ID (passed with `--id`) into review message.
+
 * Implement `Skipping pending build task` feature.
+
 * make platforms to be configurable per project base.
+
 * persist the job and task list in the data base.
+
 * the plug-in need to be restartable. That is when the
    plug in is brought back up after being down, it should resume where it
    left off. For example, a tinderbox should be able to ask for a task
    before a gerrit shutdown and then report the result after gerrit
    restart. This will make maintenance-driven restart less intrusive/costly.
+
 * Pipe line visualisation: with gerrit jobs and tasks per platform are get
   currently building and pending.
+
 * Enhance gerrit's core patch view with table containing tinderbox
   verification status on per platform base.
-* If a patch is 'submitted' while the verification tinbuild are pending then
-* we let already running tindebox finish, and still report the result
- in the 'review' comment as usual, but leave the verify flags untouched
-* any platform that is not started yet is 'discarded' for that patch.
- IOW the tasks that are not started yet are de-queued by 'Submit'.
+
 * have the buildbot collect the buildtime of each buildbot... and be able
   to calculate some states (average build time, max build time... ) so that
   we can eventually estimate the backlog. i.e estimate how long it will take
