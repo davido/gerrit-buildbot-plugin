@@ -115,7 +115,17 @@ public class StreamEventPipeline implements LifecycleListener {
                 }
                 BuildbotProject p = config.findProject(patchSetCreatedEvent.change.project);
                 if (TriggerStrategie.PATCHSET_CREATED != p.getTriggerStrategie()) {
-                    log.debug("skip event: non PATCHSET_CREATED trigger strategie for project: {} ", patchSetCreatedEvent.change.project);
+                    log.debug("skip event: non PATCHSET_CREATED trigger strategie for project: {} ", 
+                            patchSetCreatedEvent.change.project);
+                    synchronized (control) {
+                        GerritJob job = control.findJobByChange(
+                                patchSetCreatedEvent.change.project, 
+                                patchSetCreatedEvent.change.id);
+                        if (job == null) {
+                            return;
+                        }
+                        control.handleStaleJob(patchSetCreatedEvent.change.project, job);
+                    }
                     return;
                 }
                 log.debug("dispatch event branch: {}, ref: {}",

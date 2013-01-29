@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 
 public class GerritJob implements Runnable {
     String gerritProject;
+    String gerritChange;
     String gerritBranch;
     String gerritRef;
     String gerritRevision;
@@ -33,11 +34,13 @@ public class GerritJob implements Runnable {
             .synchronizedList(new ArrayList<BuildbotPlatformJob>());
     List<TbJobResult> tbResultList;
     ProjectControlImpl control;
+    private boolean stale;
 
-    public GerritJob(ProjectControlImpl control, String project,
+    public GerritJob(ProjectControlImpl control, String project, String change,
             String gerritBranch, String gerritRef, String gerritRevision) {
         this.control = control;
         this.gerritProject = project;
+        this.gerritChange = change;
         this.gerritBranch = gerritBranch;
         this.gerritRef = gerritRef;
         this.gerritRevision = gerritRevision;
@@ -53,6 +56,10 @@ public class GerritJob implements Runnable {
     public void start() {
         thread = new Thread(this, "name");
         thread.start();
+    }
+
+    public String getGerritChange() {
+        return gerritChange;
     }
 
     public String getGerritBranch() {
@@ -115,10 +122,12 @@ public class GerritJob implements Runnable {
 
     private void initPlatformJob(Map<Platform, TBBlockingQueue> tbQueueMap,
             Platform platform) {
-        BuildbotPlatformJob tbJob = new BuildbotPlatformJob(this, platform);
-        tinderBoxThreadList.add(tbJob);
-        tbQueueMap.get(platform).add(tbJob);
-        tbJob.start();
+        synchronized (tinderBoxThreadList) {
+            BuildbotPlatformJob tbJob = new BuildbotPlatformJob(this, platform);
+            tinderBoxThreadList.add(tbJob);
+            tbQueueMap.get(platform).add(tbJob);
+            tbJob.start();
+        }
     }
 
     public String getId() {
@@ -170,8 +179,7 @@ public class GerritJob implements Runnable {
                     }
                 }
             }
-            TbJobResult jobResult = task.createResult(log, status, boxId,
-                    discardedTasks);
+            TbJobResult jobResult = task.createResult(log, status, boxId, discardedTasks);
             // 2. if status is canceled, the reschedule a new task for the same
             // platform
             // reuse the same id and drop the old task from the list (replace
@@ -203,5 +211,33 @@ public class GerritJob implements Runnable {
 
     public String getGerritRevision() {
         return gerritRevision;
+    }
+
+    /**
+     * If a new patch for a change is 'submitted' while the verification tinbuild are pending then
+     * If no tasks for the job are running, then the whole job is dropped
+     * we let already running tindebox finish, and still report the result
+     * in the 'review' comment as usual, but leave the verify flags untouched
+     * any platform that is not started yet is 'discarded' for that patch.
+     * IOW the tasks that are not started yet are de-queued by 'Submit'.
+     **/
+    public void handleStale(Map<Platform, TBBlockingQueue> tbQueueMap) {
+        this.setStale(true);
+        synchronized (tinderBoxThreadList) {
+            for (BuildbotPlatformJob task : tinderBoxThreadList) {
+                if (task.isDiscardable()) {
+                    task.discard();
+                    tbQueueMap.get(task.getPlatform()).remove(task);
+                }
+            }
+        }
+    }
+
+    public boolean isStale() {
+        return stale;
+    }
+
+    private void setStale(boolean stale) {
+        this.stale = stale;
     }
 }

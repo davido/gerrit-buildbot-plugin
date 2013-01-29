@@ -89,16 +89,10 @@ public class BuildbotLogicControl {
         }
     }
 
-    public GerritJob findJobByRevision(String project, String revision) {
-        synchronized (projectMap) {
-            return projectMap.get(project).findJobByRevision(revision);
-        }
-    }
-
-    void startGerritJob(String project, String branch, String ref,
+    void startGerritJob(String project, String change, String branch, String ref,
             String revision) {
         synchronized (projectMap) {
-            projectMap.get(project).startGerritJob(project, branch, ref,
+            projectMap.get(project).startGerritJob(project, change, branch, ref,
                     revision);
         }
     }
@@ -139,6 +133,24 @@ public class BuildbotLogicControl {
                 }
             }
             return null;
+        }
+    }
+
+    public void handleStaleJob(String project, GerritJob job) {
+        synchronized (projectMap) {
+            projectMap.get(project).handleStaleJob(job);
+        }
+    }
+
+    public GerritJob findJobByRevision(String project, String revision) {
+        synchronized (projectMap) {
+            return projectMap.get(project).findJobByRevision(revision);
+        }
+    }
+
+    public GerritJob findJobByChange(String project, String change) {
+        synchronized (projectMap) {
+            return projectMap.get(project).findJobByChange(change);
         }
     }
 }

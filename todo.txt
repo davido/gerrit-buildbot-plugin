@@ -19,12 +19,6 @@ of the scheduling for that job when you mouse over a 'disabled' 'Schedule' butto
 [21:43:54] <mfick> with a callbak
 [21:49:21] <mfick> _david_, I envision a plugin registering the button with: a name, text, a callback, and an ACL name
 
-* If a patch is 'submitted' while the verification tinbuild are pending then
-* we let already running tindebox finish, and still report the result
-  in the 'review' comment as usual, but leave the verify flags untouched
-* any platform that is not started yet is 'discarded' for that patch.
-  IOW the tasks that are not started yet are de-queued by 'Submit'.
-
 * Implement `--drop` option for schedule ssh command.
 
 * Implement `Skipping pending build task` feature.

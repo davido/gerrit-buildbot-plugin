@@ -75,10 +75,10 @@ public class ProjectControlImpl implements ProjectControl {
         }
     }
 
-    public void startGerritJob(String project, String branch, String ref,
+    public void startGerritJob(String project, String change, String branch, String ref,
             String revision) {
         synchronized (gerritJobList) {
-            GerritJob job = new GerritJob(this, project, branch, ref, revision);
+            GerritJob job = new GerritJob(this, project, change, branch, ref, revision);
             startJob(job);
         }
     }
@@ -86,23 +86,31 @@ public class ProjectControlImpl implements ProjectControl {
     public void startGerritJob(PatchSetCreatedEvent event) {
         synchronized (gerritJobList) {
             if (log.isDebugEnabled()) {
-                log.debug("startGerritJob: {} {} {} {}", new String[] {
-                        event.change.project, event.change.branch,
-                        event.patchSet.ref, event.patchSet.revision });
+                log.debug("startGerritJob: {} {} {} {} {}", new String[] {
+                        event.change.project,
+                        event.change.id,
+                        event.change.branch,
+                        event.patchSet.ref,
+                        event.patchSet.revision });
             }
-            startGerritJob(event.change.project, event.change.branch,
-                    event.patchSet.ref, event.patchSet.revision);
+            startGerritJob(event.change.project, event.change.id,
+                    event.change.branch,
+                    event.patchSet.ref,
+                    event.patchSet.revision);
         }
     }
 
     public void startGerritJob(CommentAddedEvent event) {
         synchronized (gerritJobList) {
             if (log.isDebugEnabled()) {
-                log.debug("startGerritJob: {} {} {} {}", new String[] {
-                        event.change.project, event.change.branch,
-                        event.patchSet.ref, event.patchSet.revision });
+                log.debug("startGerritJob: {} {} {} {} {}", new String[] {
+                        event.change.project,
+                        event.change.id,
+                        event.change.branch,
+                        event.patchSet.ref,
+                        event.patchSet.revision });
             }
-            startGerritJob(event.change.project, event.change.branch,
+            startGerritJob(event.change.project, event.change.id, event.change.branch,
                     event.patchSet.ref, event.patchSet.revision);
         }
     }
@@ -110,24 +118,33 @@ public class ProjectControlImpl implements ProjectControl {
     public void startGerritJob(Change change, PatchSet patchSet) {
         synchronized (gerritJobList) {
             if (log.isDebugEnabled()) {
-                log.debug("CommentAddedEvent: {} {} {} {}", new String[] {
+                log.debug("CommentAddedEvent: {} {} {} {} {}", new String[] {
                         change.getProject().get(),
-                        change.getDest().getShortName(), patchSet.getRefName(),
+                        change.getKey().abbreviate(),
+                        change.getDest().getShortName(),
+                        patchSet.getRefName(),
                         patchSet.getRevision().get() });
             }
-            startGerritJob(change.getProject().get(), change.getDest()
+            startGerritJob(change.getProject().get(), change.getKey().toString(), change.getDest()
                     .getShortName(), patchSet.getRefName(), patchSet
                     .getRevision().get());
         }
     }
 
     private void startJob(GerritJob job) {
-        if (log.isDebugEnabled()) {
-            log.debug("start job {}", job.getId());
+        synchronized (gerritJobList) {
+            if (log.isDebugEnabled()) {
+                log.debug("start job {}", job.getId());
+            }
+            job.poulateTBPlatformQueueMap(tbQueueMap);
+            gerritJobList.add(job);
+            job.start();
         }
-        job.poulateTBPlatformQueueMap(tbQueueMap);
-        gerritJobList.add(job);
-        job.start();
+    }
+
+    @Override
+    public void handleStaleJob(GerritJob job) {
+        job.handleStale(tbQueueMap);
     }
 
     public TbJobResult setResultPossible(String ticket, String boxId,
@@ -219,6 +236,18 @@ public class ProjectControlImpl implements ProjectControl {
         synchronized (gerritJobList) {
             for (GerritJob job : gerritJobList) {
                 if (job.getGerritRevision().equals(revision)) {
+                    return job;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public GerritJob findJobByChange(String change) {
+        synchronized (gerritJobList) {
+            for (GerritJob job : gerritJobList) {
+                if (job.getGerritChange().equals(change)) {
                     return job;
                 }
             }

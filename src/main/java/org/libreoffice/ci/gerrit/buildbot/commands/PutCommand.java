@@ -161,21 +161,26 @@ public final class PutCommand extends SshCommand {
             // think positive ;-)
             StringBuilder builder = new StringBuilder(256);
             short combinedStatus = 1;
+            if (job.isStale()) {
+                builder.append("Stale patch set: ignore verification status\n\n");
+            }
             for (TbJobResult tbResult : job.getTbResultList()) {
-            	// ignore canceled tasks
-            	if (tbResult.ignoreJobStatus()) {
-            		continue;
-            	}
+                // ignore canceled tasks
+                if (tbResult.ignoreJobStatus()) {
+                    continue;
+                }
                 if (!tbResult.getStatus().isSuccess()) {
                     combinedStatus = -1;
                 }
                 builder.append(String.format("* Build %s on %s %s : %s\n",
-                        tbResult.getDecoratedId(),
-                        tbResult.getPlatform().name(),
-                        Strings.nullToEmpty(tbResult.getLog()),
-                        tbResult.getStatus().name()));
+                        tbResult.getDecoratedId(), tbResult.getPlatform()
+                                .name(),
+                        Strings.nullToEmpty(tbResult.getLog()), tbResult
+                                .getStatus().name()));
             }
-            aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));            
+            if (!job.isStale()) {
+                aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));
+            }
             getCommenter(aps, patchset, builder).call();
         } catch (Exception e) {
             e.printStackTrace();
