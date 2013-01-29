@@ -5,7 +5,19 @@ Version 2.0: 2013-04-20
 ===========
 
 merge buildbot-2.5 brach to master
-=======
+
+Version 1.13: 2013-01-30
+===========
+
+implement handling for stale patch sets
+---------------------------------------
+
+* If a new patch for a change is 'submitted' while the verification tinbuild are pending then
+* we let already running tindebox finish, and still report the result
+* in the 'review' comment as usual, but leave the verify flags untouched
+* any platform that is not started yet is 'discarded' for that patch.
+
+
 Version 1.12: 2013-01-29
 ===========
 
