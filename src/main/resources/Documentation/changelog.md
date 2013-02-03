@@ -6,6 +6,14 @@ Version 2.0: 2013-04-20
 
 merge buildbot-2.5 brach to master
 
+Version 1.14: 2013-02-03
+===========
+
+core
+-----------
+
+* Adjust platform names to Windows, Linux and MacOSX.
+
 Version 1.13: 2013-01-30
 ===========
 
