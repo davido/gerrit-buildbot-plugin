@@ -11,6 +11,6 @@ package org.libreoffice.ci.gerrit.buildbot.model;
 
 public enum Platform {
 
-	WINDOWS, LINUX, MAC
+    Windows, Linux, MacOSX
 
 }

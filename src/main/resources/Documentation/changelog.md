@@ -1,6 +1,14 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.14: 2013-02-03
+===========
+
+core
+-----------
+
+* Adjust platform names to Windows, Linux and MacOSX.
+
 Version 1.13: 2013-01-30
 ===========
 
