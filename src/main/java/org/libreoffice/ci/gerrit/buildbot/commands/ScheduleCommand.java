@@ -22,7 +22,6 @@ import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gerrit.common.data.ApprovalTypes;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.Change;
@@ -44,9 +43,6 @@ public final class ScheduleCommand extends SshCommand {
 
 	@Inject
 	BuildbotConfig config;
-
-	@Inject
-	private ApprovalTypes approvalTypes;
 
 	@Inject
 	private ReviewDb db;

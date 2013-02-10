@@ -1,6 +1,43 @@
 @PLUGIN@ changelog
 ==================
 
+Version 1.15: 2013-02-13
+===========
+
+ssh commands
+------------
+
+get
+:
+
+* don't forge reviewer identity for start build notification.
+
+put
+:
+
+* don't forge reviewer identity for simple votes.
+  Through the reporting under its own identity we buy us a fancy feature:
+  each TB shows up in the reviewer list as an extra row on the change page.
+* vote with score -1/+1 for single job
+* vote +2 for combined report
+* no combined vote in case of failure. This is due to not to block the patch,
+  so the dev can still manually override with +2 and submit the patch.
+
+configuration
+-------------
+
+modify the database
+:
+
+* insert into approval_category_values values('Verified', 'VRIF', 2);
+* insert into approval_category_values values('Fails', 'VRIF', -2);
+
+adjust ACL in gerrit
+:
+
+* in gerrit 'All-Project' page add buildbot ACL +2 on 'VRIF' category (note it already has +1)
+* in gerrit 'All-Project' page add commiters ACL +2 on 'VRIF' category (note it already has +1)
+
 Version 1.14: 2013-02-03
 ===========
 
@@ -20,7 +57,6 @@ implement handling for stale patch sets
 * in the 'review' comment as usual, but leave the verify flags untouched
 * any platform that is not started yet is 'discarded' for that patch.
 
-
 Version 1.12: 2013-01-29
 ===========
 
@@ -34,7 +70,6 @@ ssh commands
 
 * get `--id` is optionally. Default is user name. Only member of
   `buildbotAdminGroupName` can provide `--id` option.
-
 * put `--id` is optionally. Default is user name. Only member of
   `buildbotAdminGroupName` can provide `--id` option.
 
@@ -54,7 +89,7 @@ test-log-channel
 
 * New ssh command to test that the connection to extern log file channel was estabished successfully.
 
-
+	
 Version 1.10: 2013-01-27
 ===========
 
@@ -81,7 +116,7 @@ Example buildbot.config
 core
 ----
 
-bug fixed: race condition reporting task with status `cancelled` leads to discarding the whole job instead of replacing the task with the new one in status `INIT` and preserving the job. Test case for that is added.
+* bug fixed: race condition reporting task with status `cancelled` leads to discarding the whole job instead of replacing the task with the new one in status `INIT` and preserving the job. Test case for that is added.
 
 
 Version 1.9: 2013-01-26
@@ -105,7 +140,7 @@ get
 core
 ----
 
-bug fixed: race condition reporting task with status `cancelled` leads to discarding the whole job instead of replacing the task with the new one in status `INIT` and preserving the job. Test case for that is added.
+* bug fixed: race condition reporting task with status `cancelled` leads to discarding the whole job instead of replacing the task with the new one in status `INIT` and preserving the job. Test case for that is added.
 
 
 Version 1.8: 2013-01-25
@@ -114,7 +149,7 @@ Version 1.8: 2013-01-25
 core
 ----
 
-bug fixed: When a tb reported `failed` status back -- discarding pending tasks -- the next `get` command still engaged with the purged tasks. The try to report with `put` for purged task failed with no such task error. Test case for that is added.
+* bug fixed: When a tb reported `failed` status back -- discarding pending tasks -- the next `get` command still engaged with the purged tasks. The try to report with `put` for purged task failed with no such task error. Test case for that is added.
 
 test
 ----

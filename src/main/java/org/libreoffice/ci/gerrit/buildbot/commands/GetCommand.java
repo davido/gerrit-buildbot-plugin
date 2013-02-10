@@ -9,7 +9,6 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
@@ -153,8 +152,7 @@ public final class GetCommand extends SshCommand {
         ApprovalCategory verified = null;
         for (ApprovalType type : approvalTypes.getApprovalTypes()) {
             final ApprovalCategory category = type.getCategory();
-            // VRIF
-            if ("CRVW".equals(category.getId().get())) {
+            if ("VRIF".equals(category.getId().get())) {
                 verified = category;
                 break;
             }
@@ -175,25 +173,12 @@ public final class GetCommand extends SshCommand {
                             .getTinderboxId(),
                     time(tbPlatformJob.getStartTime(), 0)));
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
-            getCommenter(aps, patchset, builder).call();
+            publishCommentsFactory.create(
+                patchset.getId(), builder.toString(), aps, true).call();
         } catch (Exception e) {
             e.printStackTrace();
             die(e);
         }
-    }
-
-    private PublishComments getCommenter(Set<ApprovalCategoryValue.Id> aps,
-            PatchSet patchset, StringBuilder builder)
-            throws NoSuchFieldException, IllegalAccessException {
-        PublishComments commenter = publishCommentsFactory.create(
-                patchset.getId(), builder.toString(), aps, true);
-        if (config.isForgeReviewerIdentity()) {
-            // Replace current user with buildbot user
-            Field field = commenter.getClass().getDeclaredField("user");
-            field.setAccessible(true);
-            field.set(commenter, control.getBuildbot());
-        }
-        return commenter;
     }
 
     private static String time(final long now, final long delay) {

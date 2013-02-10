@@ -1,5 +1,5 @@
-Buildbot Gerrit Plugin
-======================
+@PLUGIN@ overview
+=================
 
 Buildbot Gerrit Plugin (BGP) is a multi project and multi platform queue manager
 for gerrit patch verification.
@@ -12,34 +12,36 @@ In this case `verified` status is reported back to gerrit.
 In addition log publication is provided by delegating the log to jenkins
 instance.
 
+![Gerrit Buildbot Architecture](images/buildbot-architecture.png)
+
 Workflow
 --------
 
-1. During BGP activation the configuration file buildbot.config is read and
-   gerrit-stream event listener is installed.
-   Depending on trigger strategie for specific project, build is triggered.
-2. tinderbox that configured gerrit verification
-   (see tb' script) periodically calls BGP `get` ssh command and pick gerrit
-   patch for verification. Note that because of blocking
-   queue only one tinderbox per gerrit patch and per platform get engaged.
-   When a tinderbox assigned a test build this event is repported as a review
-   message.
-3. tinderbox build the recieved gerrit task and report the outcome and the
-   the log file with BGP `put` ssh command. When a tinderbox outcome is known,
-   report that in a review message (success, failed, cancelled).
-   If --state=canceled is reported, then the task is rescheduled again in the 
-   build queue.
-4. Once all tasks for a job are ready, the combined verify result is reported
-   back to gerrit.
+* During BGP activation the configuration file buildbot.config is read and
+  gerrit-stream event listener is installed.
+  Depending on trigger strategie for specific project, build is triggered.
+* tinderbox that configured gerrit verification
+  periodically calls BGP `get` ssh command and pick gerrit
+  patch for verification. Note that because of blocking
+  queue only one tinderbox per gerrit patch and per platform get engaged.
+  When a tinderbox assigned a test build this event is repported as a review
+  message.
+* tinderbox build the recieved gerrit task and report the outcome and the
+  the log file with BGP `put` ssh command. When a tinderbox outcome is known,
+  report that in a review message (success, failed, cancelled).
+  If --state=canceled is reported, then the task is rescheduled again in the 
+  build queue.
+* Once all tasks for a job are ready, the combined verify result is reported
+  back to gerrit.
 
-Discarding pending tasks 
+Discarding pending tasks
 ------------------------
 
 Once one platform reports failure, all pending tasks for other platforms are
 discarded from the queue.
 
-Handling stale patch sets
--------------------------
+Handle stale patch sets
+-----------------------
 
 When during patch verification a new patch set is submittedto gerrit, then all
 pending tasks are discarded, and the running tasks only report single status
@@ -53,7 +55,7 @@ iow so called "forge reviewer identity" feature is activated per default.
 It can be overriden (setting configure option `user.forgeReviewerIdentity`
 to `false`) to report a review with caller's own identity.
 
-Mutliple branches support
+Mutliple branch support
 -------------------------
 
 Multiple branches per project are supported. A branch must be configured in
@@ -76,16 +78,23 @@ Now `Linux` platform is ready and is reported by `put`command: when `Windows` ta
 ist still pending, then it is skipped: the task is dropped from `Windows` queue and
 combined status `+1` is reported back to gerrit.
 
-Contribution:
--------------
+SEE ALSO
+--------
 
-This is gerrit plugin. Submit patches for review to this gerrit instance:
-https://review.idaia.de.
+* [config](config-buildbot.html)
+* [get](cmd-get.html)
+* [put](cmd-put.html)
+* [schedule](cmd-schedule.html)
+* [show](cmd-show.html)
 
-Buildbot 1.X (based on gerrit 2.5)
-------------------------------------
-branch buildbot-2.5-plugin
+AUTHOR
+------
+David Ostrovsky
 
-Buildbot 2.X (based on gerrit 2.6)
-------------------------------------
-branch master
+RESOURCES
+---------
+<https://github.com/davido/gerrit-buildbot-plugin>
+
+Buildbot
+--------
+Part of [Gerrit Buildbot Plugin](index.html)

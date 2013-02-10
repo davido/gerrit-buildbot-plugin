@@ -21,7 +21,7 @@ limitations under the License.
   <groupId>org.libreoffice.ci</groupId>
   <artifactId>buildbot</artifactId>
   <packaging>jar</packaging>
-  <version>1.14</version>
+  <version>1.15</version>
 
   <properties>
     <Gerrit-ApiType>plugin</Gerrit-ApiType>

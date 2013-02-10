@@ -143,11 +143,11 @@ public final class PutCommand extends SshCommand {
     }
 
     public void notifyGerritJobFinished(GerritJob job) {
-        ApprovalCategory verified = null;
+        ApprovalType verifiedType = null;
         for (ApprovalType type : approvalTypes.getApprovalTypes()) {
             final ApprovalCategory category = type.getCategory();
             if ("VRIF".equals(category.getId().get())) {
-                verified = category;
+                verifiedType = type;
                 break;
             }
         }
@@ -158,19 +158,19 @@ public final class PutCommand extends SshCommand {
             ResultSet<PatchSet> result = db.patchSets().byRevision(
                     new RevId(job.getGerritRevision()));
             patchset = result.iterator().next();
-            // think positive ;-)
+            short combinedStatus = verifiedType.getMax().getValue();
             StringBuilder builder = new StringBuilder(256);
-            short combinedStatus = 1;
-            if (job.isStale()) {
-                builder.append("Stale patch set: ignore verification status\n\n");
-            }
             for (TbJobResult tbResult : job.getTbResultList()) {
                 // ignore canceled tasks
                 if (tbResult.ignoreJobStatus()) {
                     continue;
                 }
-                if (!tbResult.getStatus().isSuccess()) {
-                    combinedStatus = -1;
+                if (!tbResult.getStatus().isSuccess() || job.isStale()) {
+                    // Later we want this to be configurable
+                    // currently only report success and ignore failure
+                    // Note we reported already -1 on per platform task base
+                    log.warn("notifyGerritJobFinished return");
+                    return;
                 }
                 builder.append(String.format("* Build %s on %s %s : %s\n",
                         tbResult.getDecoratedId(), tbResult.getPlatform()
@@ -178,9 +178,7 @@ public final class PutCommand extends SshCommand {
                         Strings.nullToEmpty(tbResult.getLog()), tbResult
                                 .getStatus().name()));
             }
-            if (!job.isStale()) {
-                aps.add(new ApprovalCategoryValue.Id(verified.getId(), combinedStatus));
-            }
+            aps.add(new ApprovalCategoryValue.Id(verifiedType.getCategory().getId(), combinedStatus));
             getCommenter(aps, patchset, builder).call();
         } catch (Exception e) {
             e.printStackTrace();
@@ -203,12 +201,11 @@ public final class PutCommand extends SshCommand {
     }
 
     void notifyGerritBuildbotPlatformJobFinished(TbJobResult tbJobResult) {
-        ApprovalCategory verified = null;
+        ApprovalType verifiedType = null;
         for (ApprovalType type : approvalTypes.getApprovalTypes()) {
             final ApprovalCategory category = type.getCategory();
-            // VRIF
-            if ("CRVW".equals(category.getId().get())) {
-                verified = category;
+            if ("VRIF".equals(category.getId().get())) {
+                verifiedType = type;
                 break;
             }
         }
@@ -220,17 +217,23 @@ public final class PutCommand extends SshCommand {
                     new RevId(tbJobResult.getTbPlatformJob().getParent().getGerritRevision()));
             patchset = result.iterator().next();
             StringBuilder builder = new StringBuilder(256);
-            // we don't know what other guys say...
+            // think neutral
             short status = 0;
-            builder.append(String.format("Build %s on %s by TB %s at %s %s : %s",
+            if (tbJobResult.getStatus().isSuccess()) {
+                status = 1;
+            } else if (tbJobResult.getStatus().isFailed()) {
+                status = -1;
+            }
+            builder.append(String.format("Build %s on %s by %s at %s %s : %s",
                     tbJobResult.getDecoratedId(),
                     tbJobResult.getPlatform().name(),
                     tbJobResult.getTinderboxId(),
                     time(tbJobResult.getEndTime(), 0),
                     Strings.nullToEmpty(tbJobResult.getLog()),
                     tbJobResult.getStatus().name()));
-            aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
-            getCommenter(aps, patchset, builder).call();
+            aps.add(new ApprovalCategoryValue.Id(verifiedType.getCategory().getId(), status));
+            publishCommentsFactory.create(
+                patchset.getId(), builder.toString(), aps, true).call();
         } catch (Exception e) {
             e.printStackTrace();
             die(e);
