@@ -43,6 +43,14 @@ SEE ALSO
 * [get](cmd-get.html)
 * [put](cmd-put.html)
 
+AUTHOR
+------
+David Ostrovsky
+
+RESOURCES
+---------
+<https://github.com/davido/gerrit-buildbot-plugin>
+
 Buildbot
 --------
 Part of [Gerrit Buildbot Plugin](index.html)

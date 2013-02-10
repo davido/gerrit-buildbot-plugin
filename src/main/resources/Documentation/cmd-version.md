@@ -27,7 +27,6 @@ SCRIPTING
 ---------
 This command is intended to be used in scripts.
 
-
 EXAMPLE
 -------
 
@@ -42,6 +41,14 @@ SEE ALSO
 * [get](cmd-get.html)
 * [put](cmd-put.html)
 * [show](cmd-show.html)
+
+AUTHOR
+------
+David Ostrovsky
+
+RESOURCES
+---------
+<https://github.com/davido/gerrit-buildbot-plugin>
 
 Buildbot
 --------

@@ -85,6 +85,14 @@ SEE ALSO
 * [get](cmd-get.html)
 * [schedule](cmd-schedule.html)
 
+AUTHOR
+------
+David Ostrovsky
+
+RESOURCES
+---------
+<https://github.com/davido/gerrit-buildbot-plugin>
+
 Buildbot
 --------
 Part of [Gerrit Buildbot Plugin](index.html)

@@ -95,14 +95,3 @@ Contribution:
 =============
 This is a gerrit plugin. Please upload patches for review to this gerrit 
 instance: https://review.idaia.de.
-
-Buildbot 1.X (based on gerrit 2.5.Y)
-------------------------------------
-Push to the branch buildbot-2.5-plugin
-
-Buildbot 2.X (based on gerrit 2.6.Y)
-------------------------------------
-Push to the master
-
-
-
