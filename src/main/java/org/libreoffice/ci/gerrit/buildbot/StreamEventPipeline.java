@@ -8,7 +8,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
-import org.libreoffice.ci.gerrit.buildbot.config.TriggerStrategie;
+import org.libreoffice.ci.gerrit.buildbot.config.TriggerStrategy;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.slf4j.Logger;
@@ -114,8 +114,8 @@ public class StreamEventPipeline implements LifecycleListener {
                     return;
                 }
                 BuildbotProject p = config.findProject(patchSetCreatedEvent.change.project);
-                if (TriggerStrategie.PATCHSET_CREATED != p.getTriggerStrategie()) {
-                    log.debug("skip event: non PATCHSET_CREATED trigger strategie for project: {} ", patchSetCreatedEvent.change.project);
+                if (TriggerStrategy.PATCHSET_CREATED != p.getTriggerStrategy()) {
+                    log.debug("skip event: non PATCHSET_CREATED trigger strategy for project: {} ", patchSetCreatedEvent.change.project);
                     return;
                 }
                 log.debug("dispatch event branch: {}, ref: {}",
@@ -129,8 +129,8 @@ public class StreamEventPipeline implements LifecycleListener {
                     return;
                 }
                 BuildbotProject p = config.findProject(commentAddedEvent.change.project);
-                if (TriggerStrategie.POSITIVE_REVIEW != p.getTriggerStrategie()) {
-                    log.debug("skip event: non POSITIVE_REVIEW trigger strategie for project: {} ", commentAddedEvent.change.project);
+                if (TriggerStrategy.POSITIVE_REVIEW != p.getTriggerStrategy()) {
+                    log.debug("skip event: non POSITIVE_REVIEW trigger strategy for project: {} ", commentAddedEvent.change.project);
                     return;
                 }
                 log.debug("investigating commentAddedEvent branch: {}, ref: {}", 

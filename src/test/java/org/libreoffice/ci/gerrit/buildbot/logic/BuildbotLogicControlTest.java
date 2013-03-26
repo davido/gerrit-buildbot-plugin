@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
-import org.libreoffice.ci.gerrit.buildbot.config.TriggerStrategie;
+import org.libreoffice.ci.gerrit.buildbot.config.TriggerStrategy;
 import org.libreoffice.ci.gerrit.buildbot.model.Platform;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
@@ -30,7 +30,7 @@ public class BuildbotLogicControlTest extends TestCase {
         config.setForgeReviewerIdentity(true);
         ImmutableList.Builder<BuildbotProject> projects = ImmutableList.builder();
         BuildbotProject project = new BuildbotProject(PROJECT);
-        project.setTriggerStrategie(TriggerStrategie.MANUALLY);
+        project.setTriggerStrategy(TriggerStrategy.MANUALLY);
         projects.add(project);
         config.setProjects(projects.build());
         control = new BuildbotLogicControl(config);

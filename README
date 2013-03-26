@@ -26,7 +26,7 @@ Workflow description
 ====================
 1. During BGP activation the configuration file buildbot.config is read and
    gerrit-stream event listener is installed.
-Depending on trigger strategie for specific project, build is triggered, if
+Depending on trigger strategy for specific project, build is triggered, if
 1a. User submit a gerrit patch, PatchSetCreatedEvent is triggered by gerrit and
    consumed by BGP or
 1b. The patch get aproved with gerrit `review` ssh command (or through web UI).

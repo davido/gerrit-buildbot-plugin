@@ -12,7 +12,7 @@
    Projects=>List=>All-Projects=>Access Edit, add Permission 'View Queue'
    under Global Capabilities section and add the Group from 2. Save changes.
 
-4. If 'positive_review' trigger strategie is used, add a new gerrit
+4. If 'positive_review' trigger strategy is used, add a new gerrit
    group. Members of this group trigger build job, if they approve patch sets.
    This group is used in buildbot.config under 'reviewerGroupName'.
    Example: 'Reviewers'

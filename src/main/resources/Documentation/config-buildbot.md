@@ -18,7 +18,7 @@ before it will use the new values.
 
 The file is composed of one `user` and `log` section and one or more `project` 
 sections. Each project section provides configuration settings for one or more 
-trigger strategie, reviewerGroupName and branch.
+trigger strategy, reviewerGroupName and branch.
 
 `user.mail`
 :	EMail of (optionally non interactive account) owner of buildbot. 
@@ -40,7 +40,7 @@ must be unique to distinguish the different sections if more than one
 project appears in the file.
 
 `project.NAME.trigger`
-:	Trigger Strategie for the project. 3 Strategies are supported:
+:	Trigger Strategy for the project. 3 Strategies are supported:
 * `patchset_created`: build job is triggered unconditionally when patch set is created
 * `manually`: build job can be only triggered by `schedule` ssh command.
 * `positive_review`: build is triggered when the follow conditions are met, see below.
@@ -55,7 +55,7 @@ project appears in the file.
 * no build job is pending for this patch set
 
 `project.NAME.reviewerGroupName`
-:       Group name for `positive_review` trigger strategie. For this strategie this 
+:       Group name for `positive_review` trigger strategy. For this strategy this 
         option is mandatory. For all other strategies this option is ignored.
 
 `project.NAME.branch`

@@ -10,7 +10,7 @@ import com.google.gerrit.reviewdb.client.AccountGroup;
 public class BuildbotProject implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String name;
-	private TriggerStrategie triggerStrategie;
+	private TriggerStrategy triggerStrategy;
 	private AccountGroup.UUID reviewerGroupId;
 	private List<String> branches = Lists.newArrayList();
 
@@ -22,12 +22,12 @@ public class BuildbotProject implements Serializable {
 		return name;
 	}
 
-	public void setTriggerStrategie(TriggerStrategie triggerStrategie) {
-		this.triggerStrategie = triggerStrategie;
+	public void setTriggerStrategy(TriggerStrategy triggerStrategy) {
+		this.triggerStrategy = triggerStrategy;
 	}
 
-	public TriggerStrategie getTriggerStrategie() {
-		return this.triggerStrategie;
+	public TriggerStrategy getTriggerStrategy() {
+		return this.triggerStrategy;
 	}
 
 	public List<String> getBranches() {

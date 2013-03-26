@@ -104,19 +104,19 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
 	private BuildbotProject parseProject(FileBasedConfig cfg, String name) {
 		BuildbotProject p = new BuildbotProject(name);
 		String[] branches = cfg.getStringList(SECTION_PROJECT, name, KEY_BRANCH);
-		String strStrategie = cfg.getString(SECTION_PROJECT, name, KEY_TRIGGER);
+		String strStrategy = cfg.getString(SECTION_PROJECT, name, KEY_TRIGGER);
 
-		Preconditions.checkNotNull(strStrategie, "strategie must not be null");
+		Preconditions.checkNotNull(strStrategy, "strategy must not be null");
 
 		p.setBranches(branches);
 
-		TriggerStrategie triggerStrategie = TriggerStrategie
-				.valueOf(strStrategie.toUpperCase());
-		Preconditions.checkNotNull(triggerStrategie,
-				String.format("unknown strategie %s", strStrategie));
+		TriggerStrategy triggerStrategy = TriggerStrategy
+				.valueOf(strStrategy.toUpperCase());
+		Preconditions.checkNotNull(triggerStrategy,
+				String.format("unknown strategy %s", strStrategy));
 
-		p.setTriggerStrategie(triggerStrategie);
-		if (triggerStrategie == TriggerStrategie.POSITIVE_REVIEW) {
+		p.setTriggerStrategy(triggerStrategy);
+		if (triggerStrategy == TriggerStrategy.POSITIVE_REVIEW) {
 			String reviewerGroupName = cfg.getString(SECTION_PROJECT, name,
 					KEY_REVIEWER_GROUP_NAME);
 			Preconditions.checkNotNull(reviewerGroupName,
