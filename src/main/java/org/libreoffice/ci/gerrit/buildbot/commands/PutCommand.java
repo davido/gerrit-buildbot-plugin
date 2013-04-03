@@ -156,7 +156,7 @@ public final class PutCommand extends BuildbotSshCommand {
 		}
 		try {
 			approveOne(ps.getId(), builder.toString(),
-					verified.getLabelName(), combinedStatus);
+					"Verified", combinedStatus);
 		} catch (Exception e) {
         	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
         	writeError(tmp);
@@ -176,7 +176,7 @@ public final class PutCommand extends BuildbotSshCommand {
 						: tbJobResult.getLog(), tbJobResult.getStatus()
 						.name());
 		try {
-			approveOne(ps.getId(), msg, reviewed.getLabelName(), status);
+			approveOne(ps.getId(), msg, "Code-Review", status);
 		} catch (Exception e) {
         	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
         	writeError(tmp);

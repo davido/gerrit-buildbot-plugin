@@ -7,52 +7,47 @@ for patch verification.
 It coordinates the decentral located tinderboxes without having a continued
 network connection to them by maintaining project and platform specific working
 queue of tasks for each gerrit patch. A patch set considered to be verified
-(+1) if and only if all tinderbox tasks are reported success back.
-In this case `verified` status +1 is reported back to gerrit.
-In addition log publication is provided by log servlet.
+if and only if all tinderbox tasks are reported success back.
+In this case `verified` status is reported back to gerrit.
+In addition log publication is provided by delegating the log to jenkins
+instance.
 
-There are a number of build trigger strategies:
-MANUALLY: build is triggered by `schedule`command
-PATCHSET_CREATED: build is triggered immediately after new patch set is uploaded
-POSITIVE_REVIEW: proposed patch get build if and only if:
-* it is not merged
-* it has no review < 0,
-* it has no verify < 0,
-* it has no verify > 0,
-* it has at least 1 review > 0 from a user that belong to the `Reviewer` Group
-* no build job is pending for this patch set
+Workflow
+--------
 
-Workflow description
-====================
 1. During BGP activation the configuration file buildbot.config is read and
    gerrit-stream event listener is installed.
-Depending on trigger strategy for specific project, a build is triggered, if
-1a. User submits a gerrit patch, PatchSetCreatedEvent is triggered by gerrit and
-   consumed by BGP or
-1b. The patch gets aproved with gerrit `review` ssh command (or through web UI).
-   BGP consumes gerrit's CommentAddedEvent, checks if for the project, that event
-   is triggered for, BGP is activated and check Norbert's rule:
-2. When the build is triggered, the follow actions are taken:
-2a.  create a Gerrit Job instance
-2b.  populate platform specific queue with build task per platform.
-3. tinderboxes that are configured for gerrit verification
-   (see tinbuild2 script in LO repo) periodically calls BGP `get` ssh
-   command and get gerrit patch for verification. Note that because of blocking
-   queue only one tinderbox per platform and per gerrit job gets engaged.
-   When a tinderbox gets assigned a test build, BGP reports that in a review 
+   Depending on trigger strategie for specific project, build is triggered.
+2. tinderbox that configured gerrit verification
+   (see tb' script) periodically calls BGP `get` ssh command and pick gerrit
+   patch for verification. Note that because of blocking
+   queue only one tinderbox per gerrit patch and per platform get engaged.
+   When a tinderbox assigned a test build this event is repported as a review
    message.
-4. The tinderbox builds the recieved gerrit task and reports the outcome and the
+3. tinderbox build the recieved gerrit task and report the outcome and the
    the log file with BGP `put` ssh command. When a tinderbox outcome is known,
-   report that in a review message (success, failed, canceled)
-   Note: these review message do not impact verify status. They just
-   provide progress information.
+   report that in a review message (success, failed, cancelled).
    If --state=canceled is reported, then the task is rescheduled again in the 
    build queue.
-5. Once all tasks for a job are ready, the combined verify result is reported
-   back to gerrit through BGP.
+4. Once all tasks for a job are ready, the combined verify result is reported
+   back to gerrit.
 
 Aditional features
 ==================
+
+Discarding pending tasks
+------------------------
+
+Once one platform reports failure, all pending tasks for other platforms are
+discarded from the queue.
+
+Handling stale patch sets
+-------------------------
+
+When during patch verification a new patch set is submittedto gerrit, then all
+pending tasks are discarded, and the running tasks only report single status
+to gerrit, no combined status is set in that case.
+
 
 Forge reviewer Identity
 -----------------------
@@ -60,7 +55,7 @@ Forge reviewer Identity
 Per default a review is reported back to gerrit with Buildbot's own identity,
 i. e. so called "forge reviewer identity" feature is activated per default.
 It can be overriden (setting configure option `user.forgeReviewerIdentity`
-to `false`) to report a review wih caller's own identity.
+to `false`) to report a review with caller's own identity.
 
 Mutliple branches support
 -------------------------
@@ -68,7 +63,7 @@ Mutliple branches support
 Multiple branches per project are supported. A branch must be configured in
 `project.NAME.branch` to be considered for bulld scheduling.
 
-Skipping pending build task
+Skipping pending build task (not implemented)
 ---------------------------
 
 With per project and per branch options `project.PROJECT_NAME.branch.BRANCH_NAME.policy`
@@ -84,6 +79,17 @@ The build on `Linux` platform is still runnning, and the `Windows` platform is p
 Now the `Linux` platform is ready and is reported by `put` command: if the `Windows` task
 is still pending, then it is skipped: the task is dropped from the `Windows` queue and
 the combined status `+1` is reported back to gerrit.
+
+Idle timeout (not implemented)
+------------------------------
+If task is not picked up for building within defined time, the task for this platform is
+cancelled.
+
+Engaged timeout (not implemented)
+---------------------------------
+If task is not get reported within defined time, the task is moved again in init state,
+and can be picked up again for building. If the original tb reports the status after it,
+then it is discarded.
 
 Contribution:
 =============

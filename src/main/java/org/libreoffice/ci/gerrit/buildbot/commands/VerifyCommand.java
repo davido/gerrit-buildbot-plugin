@@ -21,15 +21,16 @@ import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gerrit.common.data.ApprovalType;
 import com.google.gerrit.common.data.GlobalCapability;
+import com.google.gerrit.common.data.LabelType;
+import com.google.gerrit.common.data.LabelValue;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
-import com.google.gerrit.reviewdb.client.ApprovalCategory;
-import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.server.IdentifiedUser;
+import com.google.gerrit.server.config.AllProjectsName;
+import com.google.gerrit.server.project.NoSuchProjectException;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.util.cli.CmdLineParser;
 import com.google.gwtorm.server.OrmException;
@@ -40,9 +41,15 @@ import com.google.inject.Inject;
 public final class VerifyCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(VerifyCommand.class);
 
-	@Inject
-	IdentifiedUser user;
-	
+    @Inject
+    IdentifiedUser user;
+
+    @Inject
+    private ProjectControl.Factory projectControlFactory;
+
+    @Inject
+    private AllProjectsName allProjects;
+
 	private final Set<PatchSet.Id> patchSetIds = new HashSet<PatchSet.Id>();
 
 	private List<ApproveOption> optionList;
@@ -210,6 +217,7 @@ public final class VerifyCommand extends BuildbotSshCommand {
 	protected void parseCommandLine() throws UnloggedFailure {
 		optionList = new ArrayList<ApproveOption>();
 
+		/*
 		for (ApprovalType type : approvalTypes.getApprovalTypes()) {
 			String usage = "";
 			final ApprovalCategory category = type.getCategory();
@@ -226,6 +234,32 @@ public final class VerifyCommand extends BuildbotSshCommand {
 					+ category.getName().toLowerCase().replace(' ', '-');
 			optionList.add(new ApproveOption(name, usage, type));
 		}
+		*/
+		
+	    ProjectControl allProjectsControl;
+	    try {
+	      allProjectsControl = projectControlFactory.controlFor(allProjects);
+	    } catch (NoSuchProjectException e) {
+	      throw new UnloggedFailure("missing " + allProjects.get());
+	    }
+
+        for (LabelType type : allProjectsControl.getLabelTypes()
+                .getLabelTypes()) {
+
+            if (!type.getName().equals("Verified")) {
+                continue;
+            }
+
+            String usage = "";
+            usage = "score for " + type.getName() + "\n";
+
+            for (LabelValue v : type.getValues()) {
+                usage += v.format() + "\n";
+            }
+
+            final String name = "--" + type.getName().toLowerCase();
+            optionList.add(new ApproveOption(name, usage, type));
+        }
 
 		super.parseCommandLine();
 	}

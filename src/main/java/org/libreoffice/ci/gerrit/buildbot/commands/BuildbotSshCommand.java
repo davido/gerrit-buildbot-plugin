@@ -11,11 +11,8 @@ import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.gerrit.common.data.ApprovalType;
-import com.google.gerrit.common.data.ApprovalTypes;
 import com.google.gerrit.extensions.restapi.AuthException;
 import com.google.gerrit.extensions.restapi.BadRequestException;
-import com.google.gerrit.reviewdb.client.ApprovalCategory;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.server.ReviewDb;
 import com.google.gerrit.server.change.ChangeResource;
@@ -38,9 +35,6 @@ public abstract class BuildbotSshCommand extends SshCommand {
 	protected BuildbotConfig config;
 
 	@Inject
-	protected ApprovalTypes approvalTypes;
-
-	@Inject
 	protected ReviewDb db;
 
 	@Inject
@@ -48,21 +42,9 @@ public abstract class BuildbotSshCommand extends SshCommand {
 
 	@Inject
 	protected ChangeControl.Factory changeControlFactory;
-
-    protected ApprovalCategory verified;
-    protected ApprovalCategory reviewed;
     
 	@Override
     protected final void run() throws UnloggedFailure, OrmException, Failure {
-		// categories
-	    for (ApprovalType type : approvalTypes.getApprovalTypes()) {
-	        final ApprovalCategory category = type.getCategory();
-	        if ("VRIF".equals(category.getId().get())) {
-	            verified = category;
-	        } else if ("CRVW".equals(category.getId().get())) {
-	            reviewed = category;
-	        }
-	    }
 	    doRun();
 	}
 

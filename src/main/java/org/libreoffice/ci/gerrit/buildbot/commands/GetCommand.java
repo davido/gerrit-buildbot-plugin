@@ -115,7 +115,7 @@ public final class GetCommand extends BuildbotSshCommand {
                 time(tbPlatformJob.getStartTime(), 0),
                 tbPlatformJob.getTinderboxId());            
         try {
-            approveOne(ps.getId(), changeComment, reviewed.getLabelName(), status);
+            approveOne(ps.getId(), changeComment, "Code-Review", status);
         } catch (Exception e) {
         	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
         	writeError(tmp);

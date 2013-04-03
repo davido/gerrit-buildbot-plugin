@@ -16,11 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.common.ChangeHooks;
 import com.google.gerrit.common.ChangeListener;
-import com.google.gerrit.common.data.ApprovalType;
-import com.google.gerrit.common.data.ApprovalTypes;
 import com.google.gerrit.extensions.events.LifecycleListener;
 import com.google.gerrit.reviewdb.client.Account;
-import com.google.gerrit.reviewdb.client.ApprovalCategory;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.PatchSetApproval;
@@ -51,9 +48,6 @@ public class StreamEventPipeline implements LifecycleListener {
     SchemaFactory<ReviewDb> schema;
 
     @Inject
-    private ApprovalTypes approvalTypes;
-
-    @Inject
     private IdentifiedUser.GenericFactory identifiedUserFactory;
 
     @Inject
@@ -67,10 +61,6 @@ public class StreamEventPipeline implements LifecycleListener {
     
     @Inject
     BuildbotLogicControl control;
-
-    private ApprovalCategory verified;
-
-    private ApprovalCategory reviewed;
 
     @Override
     public void stop() {
@@ -89,16 +79,6 @@ public class StreamEventPipeline implements LifecycleListener {
         buildbot = identifiedUserFactory.create(id);
         control.setBuildbot(buildbot);
         hooks.addChangeListener(listener, buildbot);
-
-        // categories
-        for (ApprovalType type : approvalTypes.getApprovalTypes()) {
-            final ApprovalCategory category = type.getCategory();
-            if ("VRIF".equals(category.getId().get())) {
-                verified = category;
-            } else if ("CRVW".equals(category.getId().get())) {
-                reviewed = category;
-            }
-        }
         control.start();
     }
 
@@ -264,14 +244,14 @@ public class StreamEventPipeline implements LifecycleListener {
                 log.debug("user {} is member of Reviewer group", eventAuthor.getUserName());
             }
 
-            if (verified.getId().get().toString().equals(attr.getCategoryId().toString())) {
+            if ("Verified".equals(attr.getLabel())) {
                 short v = Short.valueOf(attr.getValue()).shortValue();
                 if (v > 0) {
                     r.positiveVerify = true;
                 } else if (v < 0) {
                     r.negativeVerify = true;
                 }
-            } else if (reviewed.getId().get().toString().equals(attr.getCategoryId().toString())) {
+            } else if ("Code-Review".equals(attr.getLabel())) {
                 short v = Short.valueOf(attr.getValue()).shortValue();
                 if (v > 0) {
                     r.positiveReview = true;

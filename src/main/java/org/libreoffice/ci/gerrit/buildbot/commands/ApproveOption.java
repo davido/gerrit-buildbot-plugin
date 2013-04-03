@@ -14,8 +14,7 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import com.google.gerrit.common.data.ApprovalType;
-import com.google.gerrit.reviewdb.client.ApprovalCategoryValue;
+import java.lang.annotation.Annotation;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -25,113 +24,114 @@ import org.kohsuke.args4j.spi.OneArgumentOptionHandler;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Setter;
 
-import java.lang.annotation.Annotation;
+import com.google.gerrit.common.data.LabelType;
+import com.google.gerrit.common.data.LabelValue;
 
 final class ApproveOption implements Option, Setter<Short> {
-  private final String name;
-  private final String usage;
-  private final ApprovalType type;
+    private final String name;
+    private final String usage;
+    private final LabelType type;
 
-  private Short value;
+    private Short value;
 
-  ApproveOption(final String name, final String usage, final ApprovalType type) {
-    this.name = name;
-    this.usage = usage;
-    this.type = type;
-  }
-
-  @Override
-  public String[] aliases() {
-    return new String[0];
-  }
-
-  @Override
-  public Class<? extends OptionHandler<Short>> handler() {
-    return Handler.class;
-  }
-
-  @Override
-  public String metaVar() {
-    return "N";
-  }
-
-  @Override
-  public boolean multiValued() {
-    return false;
-  }
-
-  @Override
-  public String name() {
-    return name;
-  }
-
-  @Override
-  public boolean required() {
-    return false;
-  }
-
-  @Override
-  public String usage() {
-    return usage;
-  }
-
-  public Short value() {
-    return value;
-  }
-
-  @Override
-  public Class<? extends Annotation> annotationType() {
-    return null;
-  }
-
-  @Override
-  public void addValue(final Short val) {
-    this.value = val;
-  }
-
-  @Override
-  public Class<Short> getType() {
-    return Short.class;
-  }
-
-  @Override
-  public boolean isMultiValued() {
-    return false;
-  }
-
-  String getLabelName() {
-    return type.getCategory().getLabelName();
-  }
-
-  public static class Handler extends OneArgumentOptionHandler<Short> {
-    private final ApproveOption cmdOption;
-
-    public Handler(final CmdLineParser parser, final OptionDef option,
-        final Setter<Short> setter) {
-      super(parser, option, setter);
-      this.cmdOption = (ApproveOption) setter;
+    ApproveOption(final String name, final String usage, final LabelType type) {
+        this.name = name;
+        this.usage = usage;
+        this.type = type;
     }
 
     @Override
-    protected Short parse(final String token) throws NumberFormatException,
-        CmdLineException {
-      String argument = token;
-      if (argument.startsWith("+")) {
-        argument = argument.substring(1);
-      }
-
-      final short value = Short.parseShort(argument);
-      final ApprovalCategoryValue min = cmdOption.type.getMin();
-      final ApprovalCategoryValue max = cmdOption.type.getMax();
-
-      if (value < min.getValue() || value > max.getValue()) {
-        final String name = cmdOption.name();
-        final String e =
-            "\"" + token + "\" must be in range " + min.formatValue() + ".."
-                + max.formatValue() + " for \"" + name + "\"";
-        throw new CmdLineException(owner, e);
-      }
-      return value;
+    public String[] aliases() {
+        return new String[0];
     }
-  }
+
+    @Override
+    public Class<? extends OptionHandler<Short>> handler() {
+        return Handler.class;
+    }
+
+    @Override
+    public String metaVar() {
+        return "N";
+    }
+
+    @Override
+    public boolean multiValued() {
+        return false;
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public boolean required() {
+        return false;
+    }
+
+    @Override
+    public String usage() {
+        return usage;
+    }
+
+    public Short value() {
+        return value;
+    }
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return null;
+    }
+
+    @Override
+    public void addValue(final Short val) {
+        this.value = val;
+    }
+
+    @Override
+    public Class<Short> getType() {
+        return Short.class;
+    }
+
+    @Override
+    public boolean isMultiValued() {
+        return false;
+    }
+
+    String getLabelName() {
+        return type.getName();
+    }
+
+    public static class Handler extends OneArgumentOptionHandler<Short> {
+        private final ApproveOption cmdOption;
+
+        public Handler(final CmdLineParser parser, final OptionDef option,
+                final Setter<Short> setter) {
+            super(parser, option, setter);
+            this.cmdOption = (ApproveOption) setter;
+        }
+
+        @Override
+        protected Short parse(final String token) throws NumberFormatException,
+                CmdLineException {
+            String argument = token;
+            if (argument.startsWith("+")) {
+                argument = argument.substring(1);
+            }
+
+            final short value = Short.parseShort(argument);
+            final LabelValue min = cmdOption.type.getMin();
+            final LabelValue max = cmdOption.type.getMax();
+
+            if (value < min.getValue() || value > max.getValue()) {
+                final String name = cmdOption.name();
+                final String e = "\"" + token + "\" must be in range "
+                        + min.formatValue() + ".." + max.formatValue()
+                        + " for \"" + name + "\"";
+                throw new CmdLineException(owner, e);
+            }
+            return value;
+        }
+    }
 }
