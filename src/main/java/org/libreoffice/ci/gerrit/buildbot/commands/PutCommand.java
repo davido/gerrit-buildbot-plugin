@@ -160,6 +160,7 @@ public final class PutCommand extends SshCommand {
             patchset = result.iterator().next();
             short combinedStatus = verifiedType.getMax().getValue();
             StringBuilder builder = new StringBuilder(256);
+            builder.append(String.format("Build %s:\n", job.getId()));
             for (TbJobResult tbResult : job.getTbResultList()) {
                 // ignore canceled tasks
                 if (tbResult.ignoreJobStatus()) {
@@ -172,11 +173,12 @@ public final class PutCommand extends SshCommand {
                     log.warn("notifyGerritJobFinished return");
                     return;
                 }
-                builder.append(String.format("* Build %s on %s %s : %s\n",
-                        tbResult.getDecoratedId(), tbResult.getPlatform()
+                builder.append(String.format("* on %s %s : %s\n",
+                        tbResult.getPlatform()
                                 .name(),
-                        Strings.nullToEmpty(tbResult.getLog()), tbResult
-                                .getStatus().name()));
+                        tbResult
+                                .getStatus().name(),
+                        Strings.nullToEmpty(tbResult.getLog())));
             }
             aps.add(new ApprovalCategoryValue.Id(verifiedType.getCategory().getId(), combinedStatus));
             getCommenter(aps, patchset, builder).call();
@@ -224,13 +226,13 @@ public final class PutCommand extends SshCommand {
             } else if (tbJobResult.getStatus().isFailed()) {
                 status = -1;
             }
-            builder.append(String.format("Build %s on %s by %s at %s %s : %s",
-                    tbJobResult.getDecoratedId(),
+            builder.append(String.format("%s %s (%s)\n\nBuild on %s at %s: %s",
                     tbJobResult.getPlatform().name(),
+                    tbJobResult.getStatus().name(),
+                    tbJobResult.getDecoratedId(),
                     tbJobResult.getTinderboxId(),
                     time(tbJobResult.getEndTime(), 0),
-                    Strings.nullToEmpty(tbJobResult.getLog()),
-                    tbJobResult.getStatus().name()));
+                    Strings.nullToEmpty(tbJobResult.getLog())));
             aps.add(new ApprovalCategoryValue.Id(verifiedType.getCategory().getId(), status));
             publishCommentsFactory.create(
                 patchset.getId(), builder.toString(), aps, true).call();
