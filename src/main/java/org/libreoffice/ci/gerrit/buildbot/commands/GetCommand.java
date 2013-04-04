@@ -167,9 +167,9 @@ public final class GetCommand extends SshCommand {
             StringBuilder builder = new StringBuilder(256);
             short status = 0;
             builder.append(String.format(
-                    "Build %s on %s started by TB %s at %s\n\n", tbPlatformJob
-                            .getTicket().getId(), tbPlatformJob
+                    "%s build started for %s on %s at %s\n\n", tbPlatformJob
                             .getPlatformString(), tbPlatformJob
+                            .getTicket().getId(), tbPlatformJob
                             .getTinderboxId(),
                     time(tbPlatformJob.getStartTime(), 0)));
             aps.add(new ApprovalCategoryValue.Id(verified.getId(), status));
