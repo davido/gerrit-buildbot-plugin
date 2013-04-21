@@ -4,7 +4,7 @@
 Version 2.0: 2013-04-20
 ===========
 
-merge buildbot-2.5 brach to master
+merge buildbot-2.5 branch to master
 
 Version 1.15: 2013-02-13
 ===========

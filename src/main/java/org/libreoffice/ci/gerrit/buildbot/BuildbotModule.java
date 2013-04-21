@@ -19,6 +19,8 @@ import org.libreoffice.ci.gerrit.buildbot.publisher.BuildbotLogPublisher;
 import org.libreoffice.ci.gerrit.buildbot.publisher.JenkinsLogPublisher;
 
 import com.google.gerrit.extensions.events.LifecycleListener;
+import com.google.gerrit.server.config.AllProjectsName;
+import com.google.gerrit.server.config.AllProjectsNameProvider;
 import com.google.inject.AbstractModule;
 import com.google.inject.internal.UniqueAnnotations;
 
@@ -28,6 +30,7 @@ class BuildbotModule extends AbstractModule {
     protected void configure() {
         bind(BuildbotConfig.class).toProvider(BuildbotConfigProvider.class).in(SINGLETON);
         bind(BuildbotLogicControl.class).toProvider(BuildbotLogicControlProvider.class).in(SINGLETON);
+        bind(AllProjectsName.class).toProvider(AllProjectsNameProvider.class);
         bind(BuildbotLogPublisher.class).in(SINGLETON);
         bind(JenkinsLogPublisher.class).in(SINGLETON);
         bind(StreamEventPipeline.class).in(SINGLETON);
