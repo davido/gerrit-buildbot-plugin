@@ -7,6 +7,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
@@ -149,6 +150,7 @@ public class BuildbotLogicControlTest {
     }
 
     @Test
+    @Ignore
     public void testManyJobs() {
         String prefix = "a1bcdefghi";
         Set<String> branchSet = Sets.newHashSet();
