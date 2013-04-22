@@ -32,12 +32,14 @@ import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.config.AllProjectsName;
 import com.google.gerrit.server.project.NoSuchProjectException;
 import com.google.gerrit.server.project.ProjectControl;
+import com.google.gerrit.sshd.CommandMetaData;
 import com.google.gerrit.util.cli.CmdLineParser;
 import com.google.gwtorm.server.OrmException;
 import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@CommandMetaData(name="verify", descr="Manually reset the build outcome")
 public final class VerifyCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(VerifyCommand.class);
 
@@ -76,10 +78,6 @@ public final class VerifyCommand extends BuildbotSshCommand {
 			throw new IllegalArgumentException("database error", e);
 		}
 	}
-
-	protected String getDescription() {
-        return "Manually trigger a build for specified patch sets";
-    }
 
 	@Override
 	public void doRun() throws UnloggedFailure, OrmException {

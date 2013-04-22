@@ -32,7 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
-@CommandMetaData(name="get", descr="Acknowledge executed task and report the result")
+@CommandMetaData(name="put", descr="Acknowledge executed task and report the result")
 public final class PutCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(PutCommand.class);
 

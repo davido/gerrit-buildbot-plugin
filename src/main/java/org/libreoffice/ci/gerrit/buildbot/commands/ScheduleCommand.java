@@ -29,12 +29,14 @@ import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.reviewdb.server.ReviewDb;
 import com.google.gerrit.server.project.ProjectControl;
+import com.google.gerrit.sshd.CommandMetaData;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.gwtorm.server.OrmException;
 import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@CommandMetaData(name="schedule", descr="Manually trigger a build for specified patch sets")
 public final class ScheduleCommand extends SshCommand {
 	static final Logger log = LoggerFactory.getLogger(ScheduleCommand.class);
 
@@ -62,10 +64,6 @@ public final class ScheduleCommand extends SshCommand {
 			throw new IllegalArgumentException("database error", e);
 		}
 	}
-
-	protected String getDescription() {
-        return "Manually trigger a build for specified patch sets";
-    }
 
 	@Override
 	public void run() throws UnloggedFailure, Failure, Exception {

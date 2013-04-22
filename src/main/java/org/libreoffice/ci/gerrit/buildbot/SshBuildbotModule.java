@@ -23,13 +23,13 @@ public class SshBuildbotModule extends PluginCommandModule {
 	
 	@Override
 	protected void configureCommands() {
-		command("show").to(ShowCommand.class);
-		command("get").to(GetCommand.class);
-		command("put").to(PutCommand.class);
-		command("schedule").to(ScheduleCommand.class);
-		command("test-log-channel").to(TestLogChannelCommand.class);
-		command("verify").to(VerifyCommand.class);
-		command("version").to(VersionCommand.class);
+		command(ShowCommand.class);
+		command(GetCommand.class);
+		command(PutCommand.class);
+		command(ScheduleCommand.class);
+		command(TestLogChannelCommand.class);
+		command(VerifyCommand.class);
+		command(VersionCommand.class);
 	}
 
 }

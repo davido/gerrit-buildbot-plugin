@@ -15,19 +15,17 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
+import com.google.gerrit.sshd.CommandMetaData;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.inject.Inject;
 
 @RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@CommandMetaData(name="test-log-channel", descr="Test extern log channel")
 public final class TestLogChannelCommand extends SshCommand {
     static final Logger log = LoggerFactory.getLogger(TestLogChannelCommand.class);
 
     @Inject
     BuildbotConfig config;
-
-    protected String getDescription() {
-        return "Test extern log channel";
-    }
 
     @Override
     public void run() throws UnloggedFailure, Failure, Exception {
