@@ -9,6 +9,7 @@
 
 package org.libreoffice.ci.gerrit.buildbot;
 
+import static com.google.gerrit.server.change.RevisionResource.REVISION_KIND;
 import static com.google.inject.Scopes.SINGLETON;
 
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
@@ -17,8 +18,10 @@ import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControlProvider;
 import org.libreoffice.ci.gerrit.buildbot.publisher.BuildbotLogPublisher;
 import org.libreoffice.ci.gerrit.buildbot.publisher.JenkinsLogPublisher;
+import org.libreoffice.ci.gerrit.buildbot.webui.UiScheduleCommand;
 
 import com.google.gerrit.extensions.events.LifecycleListener;
+import com.google.gerrit.extensions.restapi.RestApiModule;
 import com.google.gerrit.server.config.AllProjectsName;
 import com.google.gerrit.server.config.AllProjectsNameProvider;
 import com.google.inject.AbstractModule;
@@ -26,15 +29,23 @@ import com.google.inject.internal.UniqueAnnotations;
 
 class BuildbotModule extends AbstractModule {
 
-    @Override
-    protected void configure() {
-        bind(BuildbotConfig.class).toProvider(BuildbotConfigProvider.class).in(SINGLETON);
-        bind(BuildbotLogicControl.class).toProvider(BuildbotLogicControlProvider.class).in(SINGLETON);
-        bind(AllProjectsName.class).toProvider(AllProjectsNameProvider.class);
-        bind(BuildbotLogPublisher.class).in(SINGLETON);
-        bind(JenkinsLogPublisher.class).in(SINGLETON);
-        bind(StreamEventPipeline.class).in(SINGLETON);
-        bind(LifecycleListener.class).annotatedWith(UniqueAnnotations.create())
-        .to(StreamEventPipeline.class);
-    }
+	@Override
+	protected void configure() {
+		bind(BuildbotConfig.class).toProvider(BuildbotConfigProvider.class).in(
+				SINGLETON);
+		bind(BuildbotLogicControl.class).toProvider(
+				BuildbotLogicControlProvider.class).in(SINGLETON);
+		bind(AllProjectsName.class).toProvider(AllProjectsNameProvider.class);
+		bind(BuildbotLogPublisher.class).in(SINGLETON);
+		bind(JenkinsLogPublisher.class).in(SINGLETON);
+		bind(StreamEventPipeline.class).in(SINGLETON);
+		bind(LifecycleListener.class).annotatedWith(UniqueAnnotations.create())
+				.to(StreamEventPipeline.class);
+		install(new RestApiModule() {
+			@Override
+			protected void configure() {
+				post(REVISION_KIND, "schedule").to(UiScheduleCommand.class);
+			}
+		});
+	}
 }
