@@ -12,7 +12,7 @@ ssh -p @SSH_PORT@ gerrit @PLUGIN@ schedule
   [--project <PROJECT> | -p <PROJECT>]
   [--ticket <SHA-1>_<PLATFORM> | -t <SHA-1>_<PLATFORM>]
   [--drop | -d ]
-  [--force | -f] 
+  [--force | -f]
   [--all | -a]
   [{COMMIT | CHANGEID,PATCHSET}...]
 ```
@@ -53,7 +53,7 @@ OPTIONS
 	SHA-1 in order to take effect.
 
 `--ticket`
-:	Ticket to drop items for. When `--ticket` in the form <SHA-1> is 
+:	Ticket to drop items for. When `--ticket` in the form <SHA-1> is
 	specified then the build job for this SHA-1 is dropped from the queue.
 	When `--ticket` in the form <SHA-1>_<platform> is specified, then the
 	corresponding task is dropped from the queue.
@@ -69,21 +69,21 @@ OPTIONS
 
 `--force`
 :	Option which allows @PLUGIN@ to clear items from the queue, even when
-	some tasks have running state. This option must be supplied together 
-	wird `--drop` option to have effect. 
+	some tasks have running state. This option must be supplied together
+	wird `--drop` option to have effect.
 
 EXAMPLES
 --------
 Trigger a build for specified patch set:
 
 ```
-  $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ schedule --project foo c0ff33123
+  $ ssh -p @SSH_PORT@ loggerrit @PLUGIN@ schedule --project core [git commit sha1 hash]
 ```
 
 Drop the job from the queue:
 
 ```
-  $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ schedule --drop --ticket c0ff33123
+  $ ssh -p @SSH_PORT@ loggerrit @PLUGIN@ schedule --drop --ticket [git commit sha1 hash]
 ```
 
 SEE ALSO
