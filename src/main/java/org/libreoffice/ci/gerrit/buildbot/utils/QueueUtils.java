@@ -10,7 +10,7 @@ import org.libreoffice.ci.gerrit.buildbot.commands.TaskType;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.Ticket;
 
@@ -53,10 +53,10 @@ public class QueueUtils {
             stdout.print("Verbose\n");
             stdout.print("----------------------------------------------"
                     + "--------------------------------\n");
-            Map<Platform, TBBlockingQueue> map = 
+            Map<Os, TBBlockingQueue> map = 
                     control.getTBQueueMap(project);
             synchronized (map) {
-                for (Platform p : Platform.values()) {
+                for (Os p : Os.values()) {
                     TBBlockingQueue queue = map.get(p);
                     stdout.print("Queue for platform: " + p.name() + "\n"); 
                     numberOfPendingTasks += queue.dumpTasks(stdout);

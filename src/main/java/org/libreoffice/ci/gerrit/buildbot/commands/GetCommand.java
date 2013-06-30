@@ -15,7 +15,7 @@ import java.util.Set;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
-import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +39,11 @@ public final class GetCommand extends BuildbotSshCommand {
     @Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the task should be polled")
     private ProjectControl projectControl;
 
-    @Option(name = "--platform", aliases = { "-a" }, required = true, metaVar = "PLATFORM", usage = "name of the platform")
+    @Option(name = "--platform", aliases = { "-a" }, required = false, metaVar = "PLATFORM", usage = "name of the platform (deprecated, use --os instead)")
     private Platform platform;
+    
+    @Option(name = "--os", aliases = { "-o" }, required = false, metaVar = "OS", usage = "name of the operating system")
+    private Os os;
 
     @Option(name = "--id", aliases = { "-i" }, required = false, metaVar = "TB", usage = "id of the tinderbox")
     private String box;
@@ -72,6 +75,14 @@ public final class GetCommand extends BuildbotSshCommand {
                 stderr.write("\n");
                 return;
             }
+            if (os == null && platform == null) {
+                stderr.print("os or platorm parameter must be not empty!");
+                stderr.write("\n");
+                return;
+            }
+            if (platform != null) {
+                os = platform.toOs();
+            }
             if (box != null) {
                 if (!config.isIdentityBuildbotAdmin4Project(projectControl
                         .getProject().getName(), user)) {
@@ -87,7 +98,7 @@ public final class GetCommand extends BuildbotSshCommand {
                 box = user.getUserName();
             }
     		TbJobDescriptor jobDescriptor = control.launchTbJob(projectControl
-    				.getProject().getName(), platform, branchSet, box, test);
+    				.getProject().getName(), os, branchSet, box, test);
             if (jobDescriptor == null) {
                 if (format != null && format == FormatType.BASH) {
                     stdout.print(String.format("GERRIT_TASK_TICKET=\nGERRIT_TASK_BRANCH=\nGERRIT_TASK_REF=\n"));

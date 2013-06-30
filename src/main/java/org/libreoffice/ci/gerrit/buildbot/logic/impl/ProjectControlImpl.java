@@ -20,7 +20,7 @@ import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.logic.ProjectControl;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
@@ -35,7 +35,7 @@ import com.google.gerrit.server.events.PatchSetCreatedEvent;
 public class ProjectControlImpl implements ProjectControl {
 
     static final Logger log = LoggerFactory.getLogger(ProjectControl.class);
-    private final Map<Platform, TBBlockingQueue> tbQueueMap = new ConcurrentHashMap<Platform, TBBlockingQueue>();
+    private final Map<Os, TBBlockingQueue> tbQueueMap = new ConcurrentHashMap<Os, TBBlockingQueue>();
     private final List<GerritJob> gerritJobList = Collections
             .synchronizedList(new ArrayList<GerritJob>());
 
@@ -45,9 +45,9 @@ public class ProjectControlImpl implements ProjectControl {
     @Override
     public void start() {
         log.debug("started");
-        for (int i = 0; i < Platform.values().length; i++) {
-            tbQueueMap.put(Platform.values()[i],
-                    new TBBlockingQueue(Platform.values()[i]));
+        for (int i = 0; i < Os.values().length; i++) {
+            tbQueueMap.put(Os.values()[i],
+                    new TBBlockingQueue(Os.values()[i]));
         }
     }
 
@@ -65,7 +65,7 @@ public class ProjectControlImpl implements ProjectControl {
         }
     }
 
-    private TBBlockingQueue getQueue(Platform p) {
+    private TBBlockingQueue getQueue(Os p) {
         return tbQueueMap.get(p);
     }
 
@@ -174,7 +174,7 @@ public class ProjectControlImpl implements ProjectControl {
             }
             if (log.isDebugEnabled()) {
                 // dump queues
-                for (Platform p : Platform.values()) {
+                for (Os p : Os.values()) {
                     TBBlockingQueue platformQueue = getQueue(p);
                     if (!platformQueue.isEmpty()) {
                         Set<String> emptyBranchSet = Collections.emptySet();
@@ -189,7 +189,7 @@ public class ProjectControlImpl implements ProjectControl {
         }
     }
 
-    public TbJobDescriptor launchTbJob(Platform platform,
+    public TbJobDescriptor launchTbJob(Os platform,
             Set<String> branchSet, String box, boolean test) {
         synchronized (gerritJobList) {
             if (log.isDebugEnabled()) {
@@ -268,7 +268,7 @@ public class ProjectControlImpl implements ProjectControl {
         return null;
     }
 
-    public Map<Platform, TBBlockingQueue> getTbQueueMap() {
+    public Map<Os, TBBlockingQueue> getTbQueueMap() {
         return tbQueueMap;
     }
 }

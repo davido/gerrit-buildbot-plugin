@@ -10,7 +10,7 @@ import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
 import org.libreoffice.ci.gerrit.buildbot.logic.impl.ProjectControlImpl;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
@@ -54,7 +54,7 @@ public class BuildbotLogicControl {
         }
     }
 
-    public TbJobDescriptor launchTbJob(String project, Platform platform,
+    public TbJobDescriptor launchTbJob(String project, Os platform,
             Set<String> branch, String box, boolean test) {
         synchronized (projectMap) {
             return projectMap.get(project).launchTbJob(platform, branch, box,
@@ -83,7 +83,7 @@ public class BuildbotLogicControl {
         }
     }
 
-    public Map<Platform, TBBlockingQueue> getTBQueueMap(String project) {
+    public Map<Os, TBBlockingQueue> getTBQueueMap(String project) {
         synchronized (projectMap) {
             return projectMap.get(project).getTbQueueMap();
         }

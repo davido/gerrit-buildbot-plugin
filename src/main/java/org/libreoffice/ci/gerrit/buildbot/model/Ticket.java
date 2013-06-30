@@ -11,10 +11,10 @@ package org.libreoffice.ci.gerrit.buildbot.model;
 
 public class Ticket {
 	String id;
-	Platform tbPlatform;
+	Os tbPlatform;
 	long startTime;
 
-	public Ticket(String id, Platform tbPlatform) {
+	public Ticket(String id, Os tbPlatform) {
 		this.id = id;
 		this.tbPlatform = tbPlatform;
 		startTime = System.currentTimeMillis();

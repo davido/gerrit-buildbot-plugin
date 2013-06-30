@@ -14,7 +14,7 @@ import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
 import org.libreoffice.ci.gerrit.buildbot.config.TriggerStrategy;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 import org.libreoffice.ci.gerrit.buildbot.utils.QueueUtils;
@@ -55,18 +55,18 @@ public class BuildbotLogicControlTest {
     public void testCompleteJob() {
         control.startGerritJob(PROJECT, "4711", "master", "4712", "abcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, TB1, false);
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Os.Linux, branchSet, TB1, false);
         Assert.assertNotNull(job);
         TbJobResult result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
         Assert.assertNotNull(result);
-        job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, TB1, false);
+        job = control.launchTbJob(PROJECT, Os.Linux, branchSet, TB1, false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.Windows, branchSet, TB1, false);
+        job = control.launchTbJob(PROJECT, Os.Windows, branchSet, TB1, false);
         Assert.assertNotNull(job);
         result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
-        job = control.launchTbJob(PROJECT, Platform.Windows, branchSet, TB1, false);
+        job = control.launchTbJob(PROJECT, Os.Windows, branchSet, TB1, false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.MacOSX, branchSet, TB1, false);
+        job = control.launchTbJob(PROJECT, Os.MacOSX, branchSet, TB1, false);
         Assert.assertNotNull(job);
         Assert.assertFalse(result.getTbPlatformJob().getParent().allJobsReady());
         result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
@@ -78,7 +78,7 @@ public class BuildbotLogicControlTest {
     public void testBoxMismatch() {
         control.startGerritJob(PROJECT, "4711", "master", "4712", "abcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, TB1, true);
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Os.Linux, branchSet, TB1, true);
         Assert.assertNotNull(job);
         TbJobResult result = control.setResultPossible(job.getTicket(), TB2, TaskStatus.SUCCESS, URL);
         Assert.assertNull(result);
@@ -89,7 +89,7 @@ public class BuildbotLogicControlTest {
     public void testFindProjectByTicket() {
         control.startGerritJob(PROJECT, "4711", "master", "4712", "abcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, TB1, false);
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Os.Linux, branchSet, TB1, false);
         Assert.assertEquals(PROJECT, control.findProjectByTicket(job.getTicket()));
     }
 
@@ -97,16 +97,16 @@ public class BuildbotLogicControlTest {
     public void test2DiscardedTasks() {
         control.startGerritJob(PROJECT, "master", "4711", "4712", "abcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, "42", false);
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Os.Linux, branchSet, "42", false);
         Assert.assertNotNull(job);
         TbJobResult result = control.setResultPossible(job.getTicket(), "42", TaskStatus.FAILED, "url");
         Assert.assertNotNull(result);
         Assert.assertTrue(result.getTbPlatformJob().getParent().allJobsReady());
-        job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, "42", false);
+        job = control.launchTbJob(PROJECT, Os.Linux, branchSet, "42", false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.Windows, branchSet, "42", false);
+        job = control.launchTbJob(PROJECT, Os.Windows, branchSet, "42", false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.MacOSX, branchSet, "42", false);
+        job = control.launchTbJob(PROJECT, Os.MacOSX, branchSet, "42", false);
         Assert.assertNull(job);
         dumpQueue();
     }
@@ -115,14 +115,14 @@ public class BuildbotLogicControlTest {
     public void test1CanceledTasks() {
         control.startGerritJob(PROJECT, "4711", "master", "4712", "a1bcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, "42", false);
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Os.Linux, branchSet, "42", false);
         Assert.assertNotNull(job);
         TbJobResult result = control.setResultPossible(job.getTicket(), "42", TaskStatus.SUCCESS, "url");
         Assert.assertNotNull(result);
-        job = control.launchTbJob(PROJECT, Platform.Windows, branchSet, TB1, false);
+        job = control.launchTbJob(PROJECT, Os.Windows, branchSet, TB1, false);
         Assert.assertNotNull(job);
         result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.SUCCESS, URL);
-        job = control.launchTbJob(PROJECT, Platform.MacOSX, branchSet, TB1, false);
+        job = control.launchTbJob(PROJECT, Os.MacOSX, branchSet, TB1, false);
         Assert.assertNotNull(job);
         result = control.setResultPossible(job.getTicket(), TB1, TaskStatus.CANCELED, URL);
         Assert.assertNotNull(result);
@@ -134,17 +134,17 @@ public class BuildbotLogicControlTest {
     public void testPeekTasks() {
         control.startGerritJob(PROJECT, "4711", "master", "4712", "a1bcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, "42", true);
+        TbJobDescriptor job = control.launchTbJob(PROJECT, Os.Linux, branchSet, "42", true);
         Assert.assertNotNull(job);
-        job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, "42", true);
+        job = control.launchTbJob(PROJECT, Os.Linux, branchSet, "42", true);
         Assert.assertNotNull(job);
-        job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, "42", false);
+        job = control.launchTbJob(PROJECT, Os.Linux, branchSet, "42", false);
         Assert.assertNotNull(job);
-        job = control.launchTbJob(PROJECT, Platform.Linux, branchSet, "42", false);
+        job = control.launchTbJob(PROJECT, Os.Linux, branchSet, "42", false);
         Assert.assertNull(job);
-        job = control.launchTbJob(PROJECT, Platform.Windows, branchSet, TB1, true);
+        job = control.launchTbJob(PROJECT, Os.Windows, branchSet, TB1, true);
         Assert.assertNotNull(job);
-        job = control.launchTbJob(PROJECT, Platform.MacOSX, branchSet, TB1, false);
+        job = control.launchTbJob(PROJECT, Os.MacOSX, branchSet, TB1, false);
         Assert.assertNotNull(job);
         dumpQueue();
     }
@@ -158,7 +158,7 @@ public class BuildbotLogicControlTest {
             control.startGerritJob(PROJECT, "4711", "master", "4712", prefix + i);
         }
         for (int i = 0; i < 50; i++) {
-            for (Platform p : Platform.values()) {
+            for (Os p : Os.values()) {
                 TbJobDescriptor job = control.launchTbJob(PROJECT, p, branchSet, "42", false);
                 Assert.assertNotNull(job);
             }
@@ -170,7 +170,7 @@ public class BuildbotLogicControlTest {
     public void testStaleJob() {
         control.startGerritJob(PROJECT, "4711", "master", "4712", "a1bcdefghijklmnopqrstuvwxyz");
         Set<String> branchSet = Sets.newHashSet();
-        TbJobDescriptor descr = control.launchTbJob(PROJECT, Platform.Linux, branchSet, TB1, false);
+        TbJobDescriptor descr = control.launchTbJob(PROJECT, Os.Linux, branchSet, TB1, false);
         Assert.assertNotNull(descr);
         GerritJob job = control.findJobByChange(PROJECT, "4711");
         Assert.assertNotNull(job);

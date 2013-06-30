@@ -21,10 +21,10 @@ public class TBBlockingQueue implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    Platform platform;
+    Os platform;
     private final LinkedList<BuildbotPlatformJob> queue = Lists.newLinkedList();
 
-    public TBBlockingQueue(Platform platform) {
+    public TBBlockingQueue(Os platform) {
         this.platform = platform;
     }
 

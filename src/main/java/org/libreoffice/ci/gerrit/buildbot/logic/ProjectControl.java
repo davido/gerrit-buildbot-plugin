@@ -15,7 +15,7 @@ import java.util.Set;
 
 import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
-import org.libreoffice.ci.gerrit.buildbot.model.Platform;
+import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TBBlockingQueue;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
@@ -34,10 +34,10 @@ public interface ProjectControl {
 	GerritJob findJobByRevision(String revision);
 	GerritJob findJobByTicket(String ticket);
 	GerritJob findJobByChange(String change);
-	TbJobDescriptor launchTbJob(Platform platform, Set<String> branch, String box, boolean test);
+	TbJobDescriptor launchTbJob(Os platform, Set<String> branch, String box, boolean test);
 	TbJobResult setResultPossible(String ticket, String boxId, TaskStatus status, String logurl);
 	void stop();
 	void start();
-	Map<Platform, TBBlockingQueue> getTbQueueMap();
+	Map<Os, TBBlockingQueue> getTbQueueMap();
     void handleStaleJob(GerritJob job);
 }

@@ -23,13 +23,13 @@ public class BuildbotPlatformJob implements Runnable {
 	AtomicBoolean ready;
 	GerritJob parent;
 	Thread thread;
-	Platform platform;
+	Os platform;
 	TbJobResult result;
 	long startTime;
 	// TB id
 	private String box;
 
-	public BuildbotPlatformJob(GerritJob parent, Platform platform) {
+	public BuildbotPlatformJob(GerritJob parent, Os platform) {
 		this.platform = platform;
 		started = new AtomicBoolean();
 		ready = new AtomicBoolean();
@@ -70,12 +70,12 @@ public class BuildbotPlatformJob implements Runnable {
 
 	}
 
-	public String testBuildOnly(Platform tbPlatform) {
+	public String testBuildOnly(Os tbPlatform) {
 	    ticket = new Ticket(parent.getId(), tbPlatform);
 	    return ticket.toString();
 	}
 
-	public String createAndSetTicket(Platform tbPlatform, String box) {
+	public String createAndSetTicket(Os tbPlatform, String box) {
 		ticket = new Ticket(parent.getId(), tbPlatform);
 		this.box = box;
 		started.set(true);
@@ -165,7 +165,7 @@ public class BuildbotPlatformJob implements Runnable {
 		return startTime;
 	}
 	
-	public Platform getPlatform() {
+	public Os getPlatform() {
 		return platform;
 	}
 

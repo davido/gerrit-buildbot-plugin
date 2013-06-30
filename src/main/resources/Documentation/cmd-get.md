@@ -11,6 +11,7 @@ SYNOPSIS
 ssh -p @SSH_PORT@ gerrit @PLUGIN@ get
   --project <NAME> | -p <NAME>
   --platform <NAME> | -a <NAME>
+  --os <NAME> | -o <NAME>
   --id <BUILDBOT> | -i <BUILDBOT>
   [--format <TEXT | BASH> | -f <TEXT | BASH>]
   [--test] | [-t]
@@ -20,7 +21,7 @@ ssh -p @SSH_PORT@ gerrit @PLUGIN@ get
 DESCRIPTION
 -----------
 To get a task for building builbot connect to @PLUGIN@ plugin and
-poll a task from a platform specific queue. Once the task is polled, it
+poll a task from a OS specific queue. Once the task is polled, it
 is removed from the queue and a new thread is started. This thread wait
 until the task is reported as success, failed or canceled with `put` ssh
 command. The task can also be dropped or rescheduled with `schedule` ssh
@@ -57,9 +58,12 @@ OPTIONS
 :	Name of the project to trigger a build for. The project must be
 	configured in `$gerrit_site/etc/buildbot.config` file.
 
-`--platform`
-:	Platform to get task for. Currently platforms are hard coded and must
-	be one from `windows`, `linux` or `mac`. In future platform would be
+`--platform` (deprecated, use --os instead)
+:	Platform to get task for.
+
+`--os`
+:       Operating system. Currently OS values are hard coded and must
+	be one from `Windows`, `Linux` or `MacOSX`. In future OS would be
 	configurable and can be set on project base.
 
 `--id`
@@ -85,7 +89,11 @@ EXAMPLES
 Get a task for building:
 
 ```
+<<<<<<< HEAD
   $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ get --project foo --platform linux
+=======
+  $ ssh -p @SSH_PORT@ gerrit @PLUGIN@ get --project foo --os Linux
+>>>>>>> 037216b... Replace Platform with Os enum
 ```
 
 SEE ALSO

@@ -16,7 +16,7 @@ import org.libreoffice.ci.gerrit.buildbot.commands.TaskStatus;
 public class TbJobResult {
     BuildbotPlatformJob tbPlatformJob;
     String decoratedId;
-    Platform platform;
+    Os platform;
     TaskStatus status;
     String log;
     long endTime;
@@ -25,7 +25,7 @@ public class TbJobResult {
     private Set<BuildbotPlatformJob> discardedTasks;
 
     public TbJobResult(BuildbotPlatformJob tbPlatformJob, String decoratedId,
-            Platform platform, TaskStatus status, String log, String boxId,
+            Os platform, TaskStatus status, String log, String boxId,
             Set<BuildbotPlatformJob> discardedTasks) {
         this.tbPlatformJob = tbPlatformJob;
         this.decoratedId = decoratedId;
@@ -45,7 +45,7 @@ public class TbJobResult {
         return log;
     }
 
-    public Platform getPlatform() {
+    public Os getPlatform() {
         return platform;
     }
 

@@ -113,15 +113,15 @@ public class GerritJob implements Runnable {
     }
 
     public void poulateTBPlatformQueueMap(
-            Map<Platform, TBBlockingQueue> tbQueueMap) {
-        for (int i = 0; i < Platform.values().length; i++) {
-            Platform platform = Platform.values()[i];
+            Map<Os, TBBlockingQueue> tbQueueMap) {
+        for (int i = 0; i < Os.values().length; i++) {
+            Os platform = Os.values()[i];
             initPlatformJob(tbQueueMap, platform);
         }
     }
 
-    private void initPlatformJob(Map<Platform, TBBlockingQueue> tbQueueMap,
-            Platform platform) {
+    private void initPlatformJob(Map<Os, TBBlockingQueue> tbQueueMap,
+            Os platform) {
         synchronized (tinderBoxThreadList) {
             BuildbotPlatformJob tbJob = new BuildbotPlatformJob(this, platform);
             tinderBoxThreadList.add(tbJob);
@@ -221,7 +221,7 @@ public class GerritJob implements Runnable {
      * any platform that is not started yet is 'discarded' for that patch.
      * IOW the tasks that are not started yet are de-queued by 'Submit'.
      **/
-    public void handleStale(Map<Platform, TBBlockingQueue> tbQueueMap) {
+    public void handleStale(Map<Os, TBBlockingQueue> tbQueueMap) {
         this.setStale(true);
         synchronized (tinderBoxThreadList) {
             for (BuildbotPlatformJob task : tinderBoxThreadList) {
