@@ -1,6 +1,11 @@
 @PLUGIN@ changelog
 ==================
 
+Version 2.0rc4: 2013-07-10
+==============
+
+Implement "Schedule"-UiCommand and place it on the current patch set action panel.
+
 Version 2.0rc3: 2013-07-06
 ==============
 
