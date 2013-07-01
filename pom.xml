@@ -25,7 +25,7 @@ limitations under the License.
 
   <properties>
     <Gerrit-ApiType>plugin</Gerrit-ApiType>
-    <Gerrit-ApiVersion>2.6-SNAPSHOT</Gerrit-ApiVersion>
+    <Gerrit-ApiVersion>2.6</Gerrit-ApiVersion>
     <slf4jVersion>1.6.1</slf4jVersion>
   </properties>
 
