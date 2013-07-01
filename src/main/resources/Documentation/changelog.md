@@ -1,7 +1,19 @@
 @PLUGIN@ changelog
 ==================
 
-Version 2.0: 2013-04-20
+Version 2.0rc2: 2013-06-30
+===========
+
+Add new Gerrit group `buildbotUserGroup` for buildbot users and grant the members of this group the right to call `schedule` and `show` SSH commands. This group can be overriden per project base.
+
+get
+:
+
+* deprecated and replace `--platform` option with `--os` option
+
+merge buildbot-2.5 branch to master
+
+Version 2.0rc1: 2013-04-20
 ===========
 
 merge buildbot-2.5 branch to master

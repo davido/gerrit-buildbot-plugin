@@ -28,6 +28,10 @@ trigger strategy, reviewerGroupName and branch.
 :	Group name for buildbot admin group. Only member of this group can provide
         optionally --id parameter for `put` and `get` commands. Mandatory.
 
+`user.buildbotUserGroupName`
+:	Group name for buildbot user group. The member of this group can call
+        `schedule` and `show` commands. Mandatory.
+
 `user.forgeReviewerIdentity`
 :	Forge reviewer identity. With `put` command Buildbot reports verification
         status with buildbot own identity. If this option is set to `false`
@@ -73,6 +77,9 @@ project appears in the file.
 `project.NAME.reviewerGroupName`
 :       Group name for `positive_review` trigger strategy. For this strategy this 
         option is mandatory. For all other strategies this option is ignored.
+
+`project.NAME.buildbotUserGroupName`
+:       Project specific group name for buildbot user group. If missing, the `user.buildbotUserGroupName` used. Optionaly.
 
 `project.NAME.branch`
 :       Branch name to restrict the build triggering to. Optionally.

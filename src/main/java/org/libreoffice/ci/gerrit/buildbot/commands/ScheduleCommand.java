@@ -22,20 +22,20 @@ import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gerrit.common.data.GlobalCapability;
-import com.google.gerrit.extensions.annotations.RequiresCapability;
+import com.google.common.base.Objects;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.reviewdb.server.ReviewDb;
+import com.google.gerrit.server.CurrentUser;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.sshd.CommandMetaData;
 import com.google.gerrit.sshd.SshCommand;
 import com.google.gwtorm.server.OrmException;
 import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
-@RequiresCapability(GlobalCapability.VIEW_QUEUE)
 @CommandMetaData(name="schedule", descr="Manually trigger a build for specified patch sets")
 public final class ScheduleCommand extends SshCommand {
     static final Logger log = LoggerFactory.getLogger(ScheduleCommand.class);
@@ -48,6 +48,9 @@ public final class ScheduleCommand extends SshCommand {
 
     @Inject
     private ReviewDb db;
+
+    @Inject
+    Provider<CurrentUser> cu;
 
     private final Set<PatchSet.Id> patchSetIds = new HashSet<PatchSet.Id>();
 
@@ -74,6 +77,18 @@ public final class ScheduleCommand extends SshCommand {
             if (!config.isProjectSupported(p)) {
                 String tmp = String.format(
                         "error: project %s is not supported", p);
+                log.warn(tmp);
+                stderr.print(tmp + "\n");
+                return;
+            }
+            if (!cu.get().getEffectiveGroups()
+                    .contains(config.findProject(p).getBuildbotAdminGroupId())
+                    && 
+                    !cu.get().getEffectiveGroups()
+                    .contains(config.findProject(p).getBuildbotUserGroupId())) {
+                String tmp = String.format(
+                        "error: %s has not the ACL to call schedule command",
+                        Objects.firstNonNull(cu.get().getUserName(), "n/a"));
                 log.warn(tmp);
                 stderr.print(tmp + "\n");
                 return;

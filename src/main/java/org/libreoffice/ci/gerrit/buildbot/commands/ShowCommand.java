@@ -14,15 +14,16 @@ import org.libreoffice.ci.gerrit.buildbot.utils.QueueUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gerrit.common.data.GlobalCapability;
-import com.google.gerrit.extensions.annotations.RequiresCapability;
+import com.google.common.base.Objects;
+import com.google.gerrit.server.CurrentUser;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.sshd.CommandMetaData;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
-@RequiresCapability(GlobalCapability.VIEW_QUEUE)
 @CommandMetaData(name="show", descr="Display the buildbot work queue")
 public final class ShowCommand extends BuildbotSshCommand {
-    static final Logger log = LoggerFactory.getLogger(ShowCommand.class);
+    private static final Logger log = LoggerFactory.getLogger(ShowCommand.class);
 
     @Option(name = "--project", aliases = { "-p" }, required = true, metaVar = "PROJECT", usage = "name of the project for which the queue should be shown")
     private ProjectControl projectControl;
@@ -33,12 +34,15 @@ public final class ShowCommand extends BuildbotSshCommand {
     @Option(name = "--dump", aliases = { "-d" }, required = false, metaVar = "DUMP", usage = "dump all platform queues")
     private boolean dump = false;
 
+    @Inject
+    private Provider<CurrentUser> cu;
+
     @Override
     public void doRun() {
         synchronized (control) {
-            log.debug("project: {}", projectControl.getProject().getName());
-
-            if (!config.isProjectSupported(projectControl.getProject().getName())) {
+            final String p = projectControl.getProject().getName();
+            log.debug("project: {}", p);
+            if (!config.isProjectSupported(p)) {
                 String message = String.format(
                         "project <%s> is not enabled for building!", projectControl
                                 .getProject().getName());
@@ -46,7 +50,19 @@ public final class ShowCommand extends BuildbotSshCommand {
                 stderr.write("\n");
                 return;
             }
-            QueueUtils.dumpQueue(stdout, type, control, projectControl.getProject().getName(), dump);
+            if (!cu.get().getEffectiveGroups()
+                    .contains(config.findProject(p).getBuildbotAdminGroupId())
+                    && 
+                    !cu.get().getEffectiveGroups()
+                    .contains(config.findProject(p).getBuildbotUserGroupId())) {
+                String tmp = String.format(
+                        "error: %s has not the ACL to call show command",
+                        Objects.firstNonNull(cu.get().getUserName(), "n/a"));
+                log.warn(tmp);
+                stderr.print(tmp + "\n");
+                return;
+            }
+            QueueUtils.dumpQueue(stdout, type, control, p, dump);
         }
     }
 }

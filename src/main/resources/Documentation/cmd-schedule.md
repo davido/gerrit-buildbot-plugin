@@ -34,11 +34,7 @@ is strongly encouraged.
 
 ACCESS
 ------
-Caller must be a member of the privileged ['Administrators'][1] group,
-or have been granted the ['View Queue' global capability][2].
-
-[1]: ../../../Documentation/access-control.html#administrators
-[2]: ../../../Documentation/access-control.html#capability_viewQueue
+Caller must be a member of the ['buildbotAdminGroup'] or ['buildbotUserGroup'] groups.
 
 SCRIPTING
 ---------

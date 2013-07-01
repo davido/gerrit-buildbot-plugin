@@ -13,6 +13,7 @@ public class BuildbotProject implements Serializable {
     private TriggerStrategy triggerStrategy;
     private AccountGroup.UUID reviewerGroupId;
     private AccountGroup.UUID buildbotAdminGroupId;
+    private AccountGroup.UUID buildbotUserGroupId;
     private List<String> branches = Lists.newArrayList();
 
     public BuildbotProject(String name) {
@@ -53,5 +54,13 @@ public class BuildbotProject implements Serializable {
 
     public void setBuildbotAdminGroupId(AccountGroup.UUID buildbotAdminGroupId) {
         this.buildbotAdminGroupId = buildbotAdminGroupId;
+    }
+
+    public AccountGroup.UUID getBuildbotUserGroupId() {
+        return buildbotUserGroupId;
+    }
+
+    public void setBuildbotUserGroupId(AccountGroup.UUID buildbotUserGroupId) {
+        this.buildbotUserGroupId = buildbotUserGroupId;
     }
 }
