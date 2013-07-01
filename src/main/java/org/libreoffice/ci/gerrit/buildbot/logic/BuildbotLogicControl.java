@@ -148,6 +148,12 @@ public class BuildbotLogicControl {
         }
     }
 
+    public GerritJob findJobByPatchSet(String project, PatchSet patchSet) {
+        synchronized (projectMap) {
+            return projectMap.get(project).findJobByRevision(patchSet.getRevision().get());
+        }
+    }
+
     public GerritJob findJobByChange(String project, String change) {
         synchronized (projectMap) {
             return projectMap.get(project).findJobByChange(change);
