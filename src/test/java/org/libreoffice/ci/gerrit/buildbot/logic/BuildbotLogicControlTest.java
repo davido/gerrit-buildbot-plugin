@@ -30,7 +30,7 @@ public class BuildbotLogicControlTest {
     static final String TB1 = "42";
     static final String TB2 = "43";
     static final String URL = "url";
-    
+
     @Before
     public void setUp() throws Exception {
         config = new BuildbotConfig();
@@ -51,6 +51,13 @@ public class BuildbotLogicControlTest {
         control.stop();
     }
 
+    @Test()
+    public void testFindJobByRevision() {
+        String revId = "abcdefghijklmnopqrstuvwxyz";
+        control.startGerritJob(PROJECT, "4711", "master", "4712", revId);
+        GerritJob gerritJob = control.findJobByRevision(PROJECT, revId);
+        Assert.assertNotNull(gerritJob);
+    }
     @Test()
     public void testCompleteJob() {
         control.startGerritJob(PROJECT, "4711", "master", "4712", "abcdefghijklmnopqrstuvwxyz");
