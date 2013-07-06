@@ -1,6 +1,13 @@
 @PLUGIN@ changelog
 ==================
 
+Version 2.0rc5: 2013-07-15
+==============
+
+Add "Buildbot" menu item to Gerrit top menu. if user is logged in and a
+member of `BuildbotUserGroup` or `BuildbotAdminGroup` then the link to
+Buildbot Queue is added. Otherwise only Documentation link is provided.
+
 Version 2.0rc4: 2013-07-10
 ==============
 

@@ -11,7 +11,10 @@ package org.libreoffice.ci.gerrit.buildbot;
 
 import org.libreoffice.ci.gerrit.buildbot.servlets.LogfileServlet;
 import org.libreoffice.ci.gerrit.buildbot.servlets.QueueServlet;
+import org.libreoffice.ci.gerrit.buildbot.webui.BuildbotTopMenu;
 
+import com.google.gerrit.extensions.registration.DynamicSet;
+import com.google.gerrit.extensions.webui.TopMenuExtension;
 import com.google.gerrit.httpd.plugins.HttpPluginModule;
 
 class HttpBuildbotModule extends HttpPluginModule {
@@ -20,5 +23,7 @@ class HttpBuildbotModule extends HttpPluginModule {
 	  serve("/log").with(LogfileServlet.class);
 	  serve("/queue").with(QueueServlet.class);
 	  serve("/queue/*").with(QueueServlet.class);
+      DynamicSet.bind(binder(), TopMenuExtension.class)
+          .to(BuildbotTopMenu.class);
   }
 }
