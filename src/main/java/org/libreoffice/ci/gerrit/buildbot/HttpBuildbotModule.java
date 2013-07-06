@@ -10,6 +10,7 @@
 package org.libreoffice.ci.gerrit.buildbot;
 
 import org.libreoffice.ci.gerrit.buildbot.servlets.LogfileServlet;
+import org.libreoffice.ci.gerrit.buildbot.servlets.QueueServlet;
 
 import com.google.gerrit.httpd.plugins.HttpPluginModule;
 
@@ -17,5 +18,7 @@ class HttpBuildbotModule extends HttpPluginModule {
   @Override
   protected void configureServlets() {
 	  serve("/log").with(LogfileServlet.class);
+	  serve("/queue").with(QueueServlet.class);
+	  serve("/queue/*").with(QueueServlet.class);
   }
 }

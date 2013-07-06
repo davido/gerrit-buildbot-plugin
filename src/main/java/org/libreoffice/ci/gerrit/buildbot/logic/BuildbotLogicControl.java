@@ -1,5 +1,6 @@
 package org.libreoffice.ci.gerrit.buildbot.logic;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -142,6 +143,12 @@ public class BuildbotLogicControl {
         }
     }
 
+    public GerritJob findJobById(String project, String id) {
+      synchronized (projectMap) {
+          return projectMap.get(project).findJobById(id);
+      }
+   }
+
     public GerritJob findJobByRevision(String project, String revision) {
         synchronized (projectMap) {
             return projectMap.get(project).findJobByRevision(revision);
@@ -158,5 +165,13 @@ public class BuildbotLogicControl {
         synchronized (projectMap) {
             return projectMap.get(project).findJobByChange(change);
         }
+    }
+    
+    public Set<String> getAllProjects() {
+      if (projectMap.isEmpty()) {
+        return Collections.emptySet();
+      } else {
+        return projectMap.keySet();
+      }
     }
 }

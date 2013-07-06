@@ -1,0 +1,50 @@
+{namespace buildbot autoescape="contextual"}
+
+/**
+ * Common header for Buildbot.
+ *
+ * @param title title for this page.
+ * @param? css optional list of CSS URLs to include.
+ * @param? js optional list of Javascript URLs to include.
+ * @param? onLoad optional Javascript to execute in the body's onLoad handler.
+ *     Warning: not autoescaped.
+ */
+{template .header}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <title>
+    {$title}
+    {sp}- {msg desc="name of the application"}{buildbot.SITE_TITLE}{/msg}
+  </title>
+  <link rel="stylesheet" type="text/css" href="//www.google.com/css/go.css" />
+
+  {if $css and length($css)}
+    {foreach $url in $css}
+      <link rel="stylesheet" type="text/css" href="{$url}" />
+    {/foreach}
+  {/if}
+  // Include default CSS after custom CSS so it can override defaults in third-
+  // party stylesheets (e.g. prettify).
+  <link rel="stylesheet" type="text/css" href="{buildbot.CSS_URL}" />
+
+  {if $js and length($js)}
+    {foreach $url in $js}
+      <script src="{$url}" type="text/javascript"></script>
+    {/foreach}
+  {/if}
+</head>
+<body {if $onLoad}onload="{$onLoad|id}"{/if}>
+  {call .customHeader /}
+{/template}
+
+/**
+ * Standard footer.
+ */
+{template .footer}
+  <div class="footer">
+      Powered by <a href="https://gerrit.libreoffice.org/plugins/buildbot/">LibreOffice Buildbot</a>
+  </div>
+</body>
+</html>
+{/template}

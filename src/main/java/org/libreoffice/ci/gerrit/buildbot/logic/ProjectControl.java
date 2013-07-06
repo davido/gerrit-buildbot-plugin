@@ -31,6 +31,7 @@ public interface ProjectControl {
 	void startGerritJob(CommentAddedEvent event);
 	void startGerritJob(Change change, PatchSet patchSet);
 	List<GerritJob> getGerritJobs();
+	GerritJob findJobById(String id);
 	GerritJob findJobByRevision(String revision);
 	GerritJob findJobByTicket(String ticket);
 	GerritJob findJobByChange(String change);

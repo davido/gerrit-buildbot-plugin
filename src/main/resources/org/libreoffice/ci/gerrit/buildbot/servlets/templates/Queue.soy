@@ -1,0 +1,71 @@
+{namespace buildbot autoescape="contextual"}
+
+/**
+ * Index page for a repository.
+ * @param? title name of page
+ * @param jobs name of page
+ * 
+ */
+{template .queue}
+{call .header}
+{param title: $title /}
+{/call}
+
+<br/>
+<div class="repository-mirrored-from">
+    {msg desc="Informational text describing the content of buildbot queue"}
+    contains at the moment:
+    {/msg}
+</div>
+<br/>
+
+<div class="repository-description">
+{if length($jobs)}
+<table id="basic">
+    <thead>
+        <tr>
+            <th>Task-Id</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Ref</th>
+            <th>Bot</th>
+            <th>Branch</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+{foreach $job in $jobs}
+<div class="refs-branches">
+        <tr>
+            <td>{$job.taskid}</td>
+            <td>{$job.start}</td>
+            <td>{$job.end}</td>
+            <td>{$job.ref}</td>
+            <td>{$job.bot}</td>
+            <td>{$job.branch}</td>
+            <td>
+            {if length($job.href)}
+            <a href="{$job.href[0]}">{$job.status}</a>
+            {else}
+            {$job.status}
+            {/if}
+            </td>
+            <td>
+            {foreach $action in $job.actions}
+            <a href="queue?action={$action.action}-{$job.taskid}"><img src="{$action.img}" border="0" alt="{$action.name}" title="{$action.name}"></a>
+            {/foreach}
+            </td>
+        </tr>
+</div>
+{/foreach}
+    <tbody>
+</table>
+  <h5>{length($jobs)} job{if length($jobs) > 1}s{/if}</h5>
+{else}
+  <h5>0 jobs</h5>
+{/if}
+</div>
+
+{call .footer /}
+{/template}

@@ -244,6 +244,18 @@ public class ProjectControlImpl implements ProjectControl {
     }
 
     @Override
+    public GerritJob findJobById(String id) {
+        synchronized (gerritJobList) {
+            for (GerritJob job : gerritJobList) {
+                if (job.getId().equals(id)) {
+                    return job;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
     public GerritJob findJobByChange(String change) {
         synchronized (gerritJobList) {
             for (GerritJob job : gerritJobList) {

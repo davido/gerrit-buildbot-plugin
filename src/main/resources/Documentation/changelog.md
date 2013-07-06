@@ -1,6 +1,11 @@
 @PLUGIN@ changelog
 ==================
 
+Version 2.0rc3: 2013-07-06
+==============
+
+Add Queue Servlet to show buildbot's queue content. Page is rendered with Google closure template framework (soy template).
+
 Version 2.0rc2: 2013-06-30
 ===========
 
