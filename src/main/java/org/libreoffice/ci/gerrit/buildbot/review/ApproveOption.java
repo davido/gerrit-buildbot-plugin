@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.libreoffice.ci.gerrit.buildbot.commands;
+package org.libreoffice.ci.gerrit.buildbot.review;
 
 import java.lang.annotation.Annotation;
 
@@ -27,14 +27,14 @@ import org.kohsuke.args4j.spi.Setter;
 import com.google.gerrit.common.data.LabelType;
 import com.google.gerrit.common.data.LabelValue;
 
-final class ApproveOption implements Option, Setter<Short> {
+public class ApproveOption implements Option, Setter<Short> {
     private final String name;
     private final String usage;
     private final LabelType type;
 
     private Short value;
 
-    ApproveOption(final String name, final String usage, final LabelType type) {
+    public ApproveOption(final String name, final String usage, final LabelType type) {
         this.name = name;
         this.usage = usage;
         this.type = type;
@@ -99,7 +99,7 @@ final class ApproveOption implements Option, Setter<Short> {
         return false;
     }
 
-    String getLabelName() {
+    public String getLabelName() {
         return type.getName();
     }
 

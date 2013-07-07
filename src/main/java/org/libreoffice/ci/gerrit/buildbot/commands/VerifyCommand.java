@@ -18,6 +18,8 @@ import java.util.Set;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
+import org.libreoffice.ci.gerrit.buildbot.review.ApproveOption;
+import org.libreoffice.ci.gerrit.buildbot.review.ReviewPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,7 @@ import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
+import com.google.gerrit.reviewdb.server.ReviewDb;
 import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.config.AllProjectsName;
 import com.google.gerrit.server.project.NoSuchProjectException;
@@ -44,13 +47,19 @@ public final class VerifyCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(VerifyCommand.class);
 
     @Inject
-    IdentifiedUser user;
+    private IdentifiedUser user;
 
     @Inject
     private ProjectControl.Factory projectControlFactory;
 
     @Inject
     private AllProjectsName allProjects;
+
+    @Inject
+    private ReviewPublisher publisher;
+
+    @Inject
+    protected ReviewDb db;
 
 	private final Set<PatchSet.Id> patchSetIds = new HashSet<PatchSet.Id>();
 
@@ -129,7 +138,7 @@ public final class VerifyCommand extends BuildbotSshCommand {
 				.format("Verification status of the Buildbot is manually set to %d by %s",
 						v, user.getUserName());
 		try {
-			approveOne(ps.getId(), changeComment, optionList);
+		  publisher.approveOne(ps.getId(), changeComment, optionList);
 		} catch (Exception e) {
         	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
         	writeError(tmp);
@@ -213,25 +222,6 @@ public final class VerifyCommand extends BuildbotSshCommand {
 	@Override
 	protected void parseCommandLine() throws UnloggedFailure {
 		optionList = new ArrayList<ApproveOption>();
-
-		/*
-		for (ApprovalType type : approvalTypes.getApprovalTypes()) {
-			String usage = "";
-			final ApprovalCategory category = type.getCategory();
-			if (!category.getName().equals("Verified")) {
-				continue;
-			}
-			usage = "score for " + category.getName() + "\n";
-
-			for (ApprovalCategoryValue v : type.getValues()) {
-				usage += v.format() + "\n";
-			}
-
-			final String name = "--"
-					+ category.getName().toLowerCase().replace(' ', '-');
-			optionList.add(new ApproveOption(name, usage, type));
-		}
-		*/
 		
 	    ProjectControl allProjectsControl;
 	    try {

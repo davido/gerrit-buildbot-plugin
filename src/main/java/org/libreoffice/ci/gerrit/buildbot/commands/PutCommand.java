@@ -9,21 +9,18 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.util.List;
-
 import javax.annotation.Nullable;
 
 import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
+import org.libreoffice.ci.gerrit.buildbot.review.ReviewPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
-import com.google.gerrit.reviewdb.client.PatchSet;
-import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.config.CanonicalWebUrl;
 import com.google.gerrit.sshd.CommandMetaData;
@@ -51,9 +48,13 @@ public final class PutCommand extends BuildbotSshCommand {
 	@Inject
 	@CanonicalWebUrl
 	@Nullable
-	Provider<String> urlProvider;
+	private Provider<String> urlProvider;
 
-	@Inject IdentifiedUser user;
+	@Inject
+	private IdentifiedUser user;
+
+	@Inject
+	private ReviewPublisher publisher;
 
 	@Override
 	public void doRun() throws UnloggedFailure, OrmException, Failure {
@@ -112,22 +113,7 @@ public final class PutCommand extends BuildbotSshCommand {
     			log.warn(tmp);
     			return;
     		}
-    
-    		final List<PatchSet> matches = db
-    				.patchSets()
-    				.byRevision(
-    						new RevId(result.getTbPlatformJob()
-    								.getParent().getGerritRevision())).toList();
-    		if (matches.size() != 1) {
-    			String tmp = String.format("Can not match patch set for revision %s",
-    					result.getTbPlatformJob().getParent().getGerritRevision());
-    			stderr.print(tmp);
-    			stderr.write("\n");
-    			log.warn(tmp);
-    			return;
-    		}
-    		notifyGerritBuildbotPlatformJobFinished(result, matches.get(0));
-    
+    		publisher.postResultToReview(result);
     		try {
     			Thread.sleep(1000);
     		} catch(InterruptedException e) {
@@ -136,12 +122,12 @@ public final class PutCommand extends BuildbotSshCommand {
     		}
     
     		if (result.getTbPlatformJob().getParent().allJobsReady()) {
-    			notifyGerritJobFinished(result.getTbPlatformJob().getParent(), matches.get(0));
+    			notifyGerritJobFinished(result.getTbPlatformJob().getParent());
     		}
 	    }
 	}
 
-	public void notifyGerritJobFinished(GerritJob job, final PatchSet ps) {
+	public void notifyGerritJobFinished(GerritJob job) {
 		StringBuilder builder = new StringBuilder(256);
 		builder.append(String.format("Build %s:\n", job.getId()));
 		short combinedStatus = 1;
@@ -170,31 +156,12 @@ public final class PutCommand extends BuildbotSshCommand {
                     Strings.nullToEmpty(tbResult.getLog())));
 		}
 		try {
-			approveOne(ps.getId(), builder.toString(),
-					"Verified", combinedStatus);
+		  publisher.approveOne(job, builder.toString(),
+              "Verified", combinedStatus);
 		} catch (Exception e) {
-        	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
+        	String tmp = String.format("fatal: internal server error while approving\n");
         	writeError(tmp);
         	log.error(tmp, e);
-			die(e);
-		}
-	}
-
-	void notifyGerritBuildbotPlatformJobFinished(TbJobResult tbJobResult, final PatchSet ps) {
-		short status = 0;
-		String msg = String.format("%s %s (%s)\n\nBuild on %s at %s: %s",
-                tbJobResult.getPlatform().name(),
-                tbJobResult.getStatus().name(),
-                tbJobResult.getDecoratedId(),
-                tbJobResult.getTinderboxId(),
-                time(tbJobResult.getEndTime(), 0),
-                Strings.nullToEmpty(tbJobResult.getLog()));
-		try {
-			approveOne(ps.getId(), msg, "Code-Review", status);
-		} catch (Exception e) {
-        	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
-        	writeError(tmp);
-			log.error(tmp, e);
 			die(e);
 		}
 	}

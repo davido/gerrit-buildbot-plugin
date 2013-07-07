@@ -9,7 +9,6 @@
 
 package org.libreoffice.ci.gerrit.buildbot.commands;
 
-import java.util.List;
 import java.util.Set;
 
 import org.kohsuke.args4j.Argument;
@@ -17,14 +16,13 @@ import org.kohsuke.args4j.Option;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
+import org.libreoffice.ci.gerrit.buildbot.review.ReviewPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
-import com.google.gerrit.reviewdb.client.PatchSet;
-import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.project.ProjectControl;
 import com.google.gerrit.sshd.CommandMetaData;
@@ -59,7 +57,11 @@ public final class GetCommand extends BuildbotSshCommand {
     @Option(name = "--test", aliases = { "-t" }, required = false, metaVar = "TEST", usage = "peek a task for test only. Task is not removed from the queue and no reporting a result is possible.")
     boolean test = false;
 
-    @Inject IdentifiedUser user;
+    @Inject
+    private IdentifiedUser user;
+
+    @Inject
+    private ReviewPublisher publisher;
 
     private Set<String> branchSet = Sets.newHashSet();
 
@@ -107,16 +109,7 @@ public final class GetCommand extends BuildbotSshCommand {
                 }
             } else {
                 if (!test) {
-                    // TODO: simplify ps search
-        			final List<PatchSet> matches = db
-        					.patchSets()
-        					.byRevision(
-        							new RevId(jobDescriptor.getBuildbotPlatformJob()
-        									.getParent().getGerritRevision())).toList();
-        			if (matches.size() == 1) {
-        				notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob(),
-        						matches.get(0));
-        			}
+        			notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
                 }
                 reportOutcome(jobDescriptor);
             }
@@ -139,19 +132,18 @@ public final class GetCommand extends BuildbotSshCommand {
 		stdout.print(output);
 	}
 
-    void notifyGerritBuildbotPlatformJobStarted(final BuildbotPlatformJob tbPlatformJob,
-    		final PatchSet ps) {
+    void notifyGerritBuildbotPlatformJobStarted(final BuildbotPlatformJob job) {
         final short status = 0;
         String changeComment = String.format(
-                "%s build started for %s on %s at %s\n\n", tbPlatformJob
-                        .getPlatformString(), tbPlatformJob
-                        .getTicket().getId(), tbPlatformJob
+                "%s build started for %s on %s at %s\n\n", job
+                        .getPlatformString(), job
+                        .getTicket().getId(), job
                         .getTinderboxId(),
-                time(tbPlatformJob.getStartTime(), 0));
+                time(job.getStartTime(), 0));
         try {
-            approveOne(ps.getId(), changeComment, "Code-Review", status);
+            publisher.approveOne(job.getParent(), changeComment, "Code-Review", status);
         } catch (Exception e) {
-        	String tmp = String.format("fatal: internal server error while approving %s\n", ps.getId());
+        	String tmp = String.format("fatal: internal server error while approving\n");
         	writeError(tmp);
         	log.error(tmp, e);
             die(e);

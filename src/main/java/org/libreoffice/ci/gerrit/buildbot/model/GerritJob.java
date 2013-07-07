@@ -240,4 +240,8 @@ public class GerritJob implements Runnable {
     private void setStale(boolean stale) {
         this.stale = stale;
     }
+
+    public String getGerritProject() {
+      return gerritProject;
+  }
 }
