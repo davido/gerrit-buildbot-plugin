@@ -71,7 +71,6 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
 
     @Override
     public BuildbotConfig get() {
-        BuildbotConfig config = new BuildbotConfig();
         File file = new File(site.etc_dir, "buildbot.config");
         FileBasedConfig cfg = new FileBasedConfig(file, FS.DETECTED);
         if (!cfg.getFile().exists()) {
@@ -95,7 +94,7 @@ public class BuildbotConfigProvider implements Provider<BuildbotConfig> {
                     cfg.getFile(), e.getMessage()), e);
         }
 
-        config = new BuildbotConfig();
+        BuildbotConfig config = new BuildbotConfig();
         config.setEmail(cfg.getString(SECTION_USER, null, KEY_MAIL));
         config.setForgeReviewerIdentity(cfg.getBoolean(SECTION_USER, null,
                 KEY_FORGE_REVIEWER_IDENTITY, true));
