@@ -18,10 +18,13 @@ import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControlProvider;
 import org.libreoffice.ci.gerrit.buildbot.publisher.BuildbotLogPublisher;
 import org.libreoffice.ci.gerrit.buildbot.publisher.JenkinsLogPublisher;
-import org.libreoffice.ci.gerrit.buildbot.webui.UiScheduleCommand;
+import org.libreoffice.ci.gerrit.buildbot.webui.BuildbotTopMenu;
+import org.libreoffice.ci.gerrit.buildbot.webui.ScheduleAction;
 
 import com.google.gerrit.extensions.events.LifecycleListener;
+import com.google.gerrit.extensions.registration.DynamicSet;
 import com.google.gerrit.extensions.restapi.RestApiModule;
+import com.google.gerrit.extensions.webui.TopMenu;
 import com.google.gerrit.server.config.AllProjectsName;
 import com.google.gerrit.server.config.AllProjectsNameProvider;
 import com.google.inject.AbstractModule;
@@ -31,20 +34,26 @@ class BuildbotModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(BuildbotConfig.class).toProvider(BuildbotConfigProvider.class).in(
-                SINGLETON);
-        bind(BuildbotLogicControl.class).toProvider(
-                BuildbotLogicControlProvider.class).in(SINGLETON);
-        bind(AllProjectsName.class).toProvider(AllProjectsNameProvider.class);
+        bind(BuildbotConfig.class)
+            .toProvider(BuildbotConfigProvider.class)
+            .in(SINGLETON);
+        bind(BuildbotLogicControl.class)
+            .toProvider(BuildbotLogicControlProvider.class)
+            .in(SINGLETON);
+        bind(AllProjectsName.class)
+            .toProvider(AllProjectsNameProvider.class);
         bind(BuildbotLogPublisher.class).in(SINGLETON);
         bind(JenkinsLogPublisher.class).in(SINGLETON);
         bind(StreamEventPipeline.class).in(SINGLETON);
-        bind(LifecycleListener.class).annotatedWith(UniqueAnnotations.create())
-                .to(StreamEventPipeline.class);
+        bind(LifecycleListener.class)
+            .annotatedWith(UniqueAnnotations.create())
+            .to(StreamEventPipeline.class);
+        DynamicSet.bind(binder(), TopMenu.class)
+            .to(BuildbotTopMenu.class);
         install(new RestApiModule() {
             @Override
             protected void configure() {
-                post(REVISION_KIND, "schedule").to(UiScheduleCommand.class);
+                post(REVISION_KIND, "schedule").to(ScheduleAction.class);
             }
         });
     }

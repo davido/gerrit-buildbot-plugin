@@ -25,7 +25,7 @@ limitations under the License.
 
   <properties>
     <Gerrit-ApiType>plugin</Gerrit-ApiType>
-    <Gerrit-ApiVersion>2.6</Gerrit-ApiVersion>
+    <Gerrit-ApiVersion>2.8-SNAPSHOT</Gerrit-ApiVersion>
     <slf4jVersion>1.6.1</slf4jVersion>
   </properties>
 
@@ -69,6 +69,7 @@ limitations under the License.
               <exclude>com.google.code.gson:gson</exclude>
               <exclude>com.google.guava:guava</exclude>
               <exclude>com.google.inject.extensions:guice-assistedinject</exclude>
+              <exclude>com.google.inject.extensions:guice-multibindings:3.0</exclude>
               <exclude>com.google.inject:guice</exclude>
               <exclude>com.googlecode.javaewah</exclude>
               <exclude>com.jcraft:jsch</exclude>
@@ -82,24 +83,21 @@ limitations under the License.
             <transformer
               implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
               <manifestEntries>
-                <Gerrit-Module>com.googlesource.gerrit.plugins.gitiles.Module</Gerrit-Module>
-                <Gerrit-HttpModule>com.googlesource.gerrit.plugins.gitiles.HttpModule</Gerrit-HttpModule>
-                <Gerrit-InitStep>com.googlesource.gerrit.plugins.gitiles.InitGitiles</Gerrit-InitStep>
                 <Gerrit-HttpStaticPrefix>static</Gerrit-HttpStaticPrefix>
+				<Gerrit-PluginName>buildbot</Gerrit-PluginName>
+                <Gerrit-Module>org.libreoffice.ci.gerrit.buildbot.BuildbotModule</Gerrit-Module>
+                <Gerrit-SshModule>org.libreoffice.ci.gerrit.buildbot.SshBuildbotModule</Gerrit-SshModule>
+                <Gerrit-HttpModule>org.libreoffice.ci.gerrit.buildbot.HttpBuildbotModule</Gerrit-HttpModule>
+                <Gerrit-ReloadMode>reload</Gerrit-ReloadMode>
 
-              <Gerrit-Module>org.libreoffice.ci.gerrit.buildbot.BuildbotModule</Gerrit-Module>
-              <Gerrit-SshModule>org.libreoffice.ci.gerrit.buildbot.SshBuildbotModule</Gerrit-SshModule>
-              <Gerrit-HttpModule>org.libreoffice.ci.gerrit.buildbot.HttpBuildbotModule</Gerrit-HttpModule>
-              <Gerrit-ReloadMode>reload</Gerrit-ReloadMode>
+                <Implementation-Vendor>LibreOffice</Implementation-Vendor>
+                <Implementation-URL>http://libreoffice.org</Implementation-URL>
 
-              <Implementation-Vendor>LibreOffice</Implementation-Vendor>
-              <Implementation-URL>http://libreoffice.org</Implementation-URL>
+                <Implementation-Title>${Gerrit-ApiType} ${project.artifactId}</Implementation-Title>
+                <Implementation-Version>${project.version}</Implementation-Version>
 
-              <Implementation-Title>${Gerrit-ApiType} ${project.artifactId}</Implementation-Title>
-              <Implementation-Version>${project.version}</Implementation-Version>
-
-              <Gerrit-ApiType>${Gerrit-ApiType}</Gerrit-ApiType>
-              <Gerrit-ApiVersion>${Gerrit-ApiVersion}</Gerrit-ApiVersion>
+                <Gerrit-ApiType>${Gerrit-ApiType}</Gerrit-ApiType>
+                <Gerrit-ApiVersion>${Gerrit-ApiVersion}</Gerrit-ApiVersion>
 
               </manifestEntries>
             </transformer>
@@ -156,7 +154,7 @@ limitations under the License.
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.8.2</version>
+      <version>4.11</version>
       <scope>test</scope>
     </dependency>
 
@@ -221,13 +219,19 @@ limitations under the License.
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>14.0</version>
+      <version>15.0</version>
     </dependency>
 
      <dependency>
        <groupId>joda-time</groupId>
        <artifactId>joda-time</artifactId>
        <version>2.1</version>
+     </dependency>
+
+     <dependency>
+	  <groupId>com.google.inject.extensions</groupId>
+	  <artifactId>guice-multibindings</artifactId>
+	  <version>4.0-beta</version>
      </dependency>
   </dependencies>
 

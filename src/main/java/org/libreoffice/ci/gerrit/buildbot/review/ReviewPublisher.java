@@ -9,6 +9,7 @@
 
 package org.libreoffice.ci.gerrit.buildbot.review;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,6 +27,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.gerrit.extensions.restapi.AuthException;
 import com.google.gerrit.extensions.restapi.BadRequestException;
+import com.google.gerrit.extensions.restapi.UnprocessableEntityException;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.client.RevId;
 import com.google.gerrit.reviewdb.server.ReviewDb;
@@ -66,13 +68,15 @@ public class ReviewPublisher {
 
   public void approveOne(GerritJob job, final String changeComment,
       final List<ApproveOption> optionList) throws NoSuchChangeException,
-      OrmException, BadRequestException, AuthException {
+      OrmException, BadRequestException, AuthException,
+      UnprocessableEntityException, IOException{
     approveOne(retrievePatchSet(job).getId(), changeComment, optionList);
   }
   
   public void approveOne(final PatchSet.Id patchSetId,
       final String changeComment, final List<ApproveOption> optionList)
-      throws NoSuchChangeException, OrmException, BadRequestException, AuthException {
+      throws NoSuchChangeException, OrmException, BadRequestException,
+      AuthException, UnprocessableEntityException, IOException {
     PostReview.Input review = createReview(changeComment);
     for (ApproveOption ao : optionList) {
       Short v = ao.value();
@@ -118,21 +122,23 @@ public class ReviewPublisher {
 
   public void approveOne(GerritJob job, final String changeComment,
       final String labelName, final short value) throws NoSuchChangeException,
-      OrmException, BadRequestException, AuthException {
+      OrmException, BadRequestException, AuthException,
+      UnprocessableEntityException, IOException{
     approveOne(retrievePatchSet(job).getId(), changeComment, labelName, value);
   }
 
   private void approveOne(final PatchSet.Id patchSetId,
       final String changeComment, final String labelName, final short value)
       throws NoSuchChangeException, OrmException, BadRequestException,
-      AuthException {
+      AuthException, UnprocessableEntityException, IOException {
     PostReview.Input review = createReview(changeComment);
     review.labels.put(labelName, value);
     applyReview(patchSetId, review);
   }
 
   private void applyReview(final PatchSet.Id patchSetId, PostReview.Input review)
-      throws NoSuchChangeException, OrmException, BadRequestException, AuthException {
+      throws NoSuchChangeException, OrmException, BadRequestException, AuthException,
+      UnprocessableEntityException, IOException {
     ChangeControl ctl =
         changeControlFactory.controlFor(patchSetId.getParentKey());
     if (!review.labels.isEmpty()) {

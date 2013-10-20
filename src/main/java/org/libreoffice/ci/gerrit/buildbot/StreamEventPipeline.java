@@ -26,7 +26,7 @@ import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.account.AccountByEmailCache;
 import com.google.gerrit.server.account.GroupMembership;
 import com.google.gerrit.server.config.SitePaths;
-import com.google.gerrit.server.events.AccountAttribute;
+import com.google.gerrit.server.data.AccountAttribute;
 import com.google.gerrit.server.events.ChangeEvent;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;

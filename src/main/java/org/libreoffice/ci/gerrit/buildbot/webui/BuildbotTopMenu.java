@@ -16,13 +16,13 @@ import java.util.List;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 
 import com.google.gerrit.extensions.annotations.PluginName;
-import com.google.gerrit.extensions.webui.TopMenuExtension;
+import com.google.gerrit.extensions.webui.TopMenu;
 import com.google.gerrit.server.AnonymousUser;
 import com.google.gerrit.server.CurrentUser;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-public class BuildbotTopMenu implements TopMenuExtension {
+public class BuildbotTopMenu implements TopMenu {
   private final List<MenuEntry> fullMenuEntries;
   private final List<MenuEntry> restrictedMenuEntries;
   private final Provider<CurrentUser> userProvider;
