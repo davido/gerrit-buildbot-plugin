@@ -63,7 +63,7 @@ public class ScheduleAction implements UiAction<RevisionResource>,
       return new Description()
           .setVisible(isVisible(rcrs))
           .setEnabled(job == null)
-          .setLabel("Schedule")
+          .setLabel("Schedule...")
           .setTitle(job == null
               ? "Schedule a build"
               : String.format("Build job was already scheduled at %s",
