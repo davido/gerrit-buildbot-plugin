@@ -59,6 +59,13 @@ public class ScheduleAction implements UiAction<RevisionResource>,
   @Override
   public UiAction.Description getDescription(RevisionResource rcrs) {
     synchronized (control) {
+      // check if the project is supported
+      String p =
+          rcrs.getControl().getProjectControl().getProject().getName();
+      if (!config.isProjectSupported(p)) {
+        log.debug(String.format("getDescription: empty, project: %s is not supported", p));
+        return new Description().setVisible(false);
+      }
       GerritJob job = findBuild4Revision(rcrs);
       return new Description()
           .setVisible(isVisible(rcrs))
@@ -85,7 +92,7 @@ public class ScheduleAction implements UiAction<RevisionResource>,
       return false;
     }
     // check if the project is supported
-    final String p =
+    String p =
         rcrs.getControl().getProjectControl().getProject().getName();
     if (!config.isProjectSupported(p)) {
       log.debug(String.format("negative: project %s is not supported", p));
