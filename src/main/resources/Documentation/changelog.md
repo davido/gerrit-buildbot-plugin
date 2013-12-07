@@ -1,6 +1,11 @@
 @PLUGIN@ changelog
 ==================
 
+Version 2.0: 2013-12-12
+===========
+
+Final version built against Gerrit 2.8 GA.
+
 Version 2.0rc5: 2013-07-15
 ==============
 

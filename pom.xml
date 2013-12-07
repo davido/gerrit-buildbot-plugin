@@ -258,11 +258,7 @@ limitations under the License.
     </repository>
     <repository>
       <id>gerrit-api-repository</id>
-      <url>https://gerrit-api.commondatastorage.googleapis.com/snapshot/</url>
-    </repository>
-    <repository>
-      <id>google gerrit repo</id>
-      <url>http://gerrit-maven-repository.googlecode.com/svn/</url>
+      <url>https://gerrit-api.commondatastorage.googleapis.com/release/</url>
     </repository>
   </repositories>
 </project>
