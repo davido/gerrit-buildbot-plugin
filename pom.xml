@@ -25,12 +25,27 @@ limitations under the License.
 
   <properties>
     <Gerrit-ApiType>plugin</Gerrit-ApiType>
-    <Gerrit-ApiVersion>2.8-SNAPSHOT</Gerrit-ApiVersion>
+    <Gerrit-ApiVersion>2.8</Gerrit-ApiVersion>
     <slf4jVersion>1.6.1</slf4jVersion>
   </properties>
 
   <build>
     <plugins>
+
+<plugin>
+  <groupId>org.commonjava.maven.plugins</groupId>
+  <artifactId>unsigner-maven-plugin</artifactId>
+  <version>0.2</version>
+  <executions>
+    <execution>
+      <id>unsign-jar</id>
+      <goals>
+        <goal>unsign</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
