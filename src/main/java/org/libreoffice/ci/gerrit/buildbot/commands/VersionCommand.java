@@ -12,10 +12,11 @@ package org.libreoffice.ci.gerrit.buildbot.commands;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotVersion;
 
 import com.google.gerrit.common.data.GlobalCapability;
+import com.google.gerrit.extensions.annotations.CapabilityScope;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.sshd.CommandMetaData;
 
-@RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@RequiresCapability(value = GlobalCapability.VIEW_QUEUE, scope = CapabilityScope.CORE)
 @CommandMetaData(name="version", descr="Display buildbot version")
 public final class VersionCommand extends BuildbotSshCommand {
 

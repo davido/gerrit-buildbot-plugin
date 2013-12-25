@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.gerrit.common.data.GlobalCapability;
+import com.google.gerrit.extensions.annotations.CapabilityScope;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.config.CanonicalWebUrl;
@@ -28,7 +29,7 @@ import com.google.gwtorm.server.OrmException;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-@RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@RequiresCapability(value = GlobalCapability.VIEW_QUEUE, scope = CapabilityScope.CORE)
 @CommandMetaData(name="put", descr="Acknowledge executed task and report the result")
 public final class PutCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(PutCommand.class);

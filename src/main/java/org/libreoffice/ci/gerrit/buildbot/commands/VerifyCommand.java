@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gerrit.common.data.GlobalCapability;
 import com.google.gerrit.common.data.LabelType;
 import com.google.gerrit.common.data.LabelValue;
+import com.google.gerrit.extensions.annotations.CapabilityScope;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.PatchSet;
@@ -41,7 +42,7 @@ import com.google.gwtorm.server.OrmException;
 import com.google.gwtorm.server.ResultSet;
 import com.google.inject.Inject;
 
-@RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@RequiresCapability(value = GlobalCapability.VIEW_QUEUE, scope = CapabilityScope.CORE)
 @CommandMetaData(name="verify", descr="Manually reset the build outcome")
 public final class VerifyCommand extends BuildbotSshCommand {
 	static final Logger log = LoggerFactory.getLogger(VerifyCommand.class);

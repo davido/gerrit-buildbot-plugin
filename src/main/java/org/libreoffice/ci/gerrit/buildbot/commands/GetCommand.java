@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 import com.google.gerrit.common.data.GlobalCapability;
+import com.google.gerrit.extensions.annotations.CapabilityScope;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
 import com.google.gerrit.server.IdentifiedUser;
 import com.google.gerrit.server.project.ProjectControl;
@@ -29,7 +30,7 @@ import com.google.gerrit.sshd.CommandMetaData;
 import com.google.gwtorm.server.OrmException;
 import com.google.inject.Inject;
 
-@RequiresCapability(GlobalCapability.VIEW_QUEUE)
+@RequiresCapability(value = GlobalCapability.VIEW_QUEUE, scope = CapabilityScope.CORE)
 @CommandMetaData(name="get", descr="Get a task from platform specific queue")
 public final class GetCommand extends BuildbotSshCommand {
     static final Logger log = LoggerFactory.getLogger(GetCommand.class);
