@@ -2,9 +2,6 @@
 Gerrit.install(function(self) {
     function onSchedule(c) {
         var t = c.textarea();
-        var p1 = c.checkbox();
-        var p2 = c.checkbox();
-        var p3 = c.checkbox();
         var b = c.button('Build', {onclick: function() {
           c.call(
             {message: t.value},
@@ -14,17 +11,13 @@ Gerrit.install(function(self) {
             });
         }});
         c.popup(c.div(
-          c.msg('Custom configuration options:'),
+          c.msg('The following platforms are going to be built:'),
           c.br(),
-          t,
+          c.msg('Mac OS X 32 bit'),
           c.br(),
-          c.msg('Optional platforms:'),
+          c.msg('Linux 32/64 bit'),
           c.br(),
-          c.label(p1, 'Mac OS X 64 bit'),
-          c.br(),
-          c.label(p2, 'iOS 7.x'),
-          c.br(),
-          c.label(p3, 'Android 4.x'),
+          c.msg('Windows 32 bit'),
           c.br(),
           b));
         t.focus();
