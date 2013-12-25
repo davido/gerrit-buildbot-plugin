@@ -37,7 +37,7 @@ public final class PutCommand extends BuildbotSshCommand {
 	@Option(metaVar = "TICKET", name = "--ticket", aliases = { "-t" }, required = true, usage = "ticket of the job")
 	private String ticket;
 
-	@Option(name = "--id", aliases = { "-i" }, required = true, metaVar = "TB", usage = "id of the tinderbox")
+	@Option(name = "--id", aliases = { "-i" }, required = false, metaVar = "TB", usage = "id of the tinderbox")
 	private String box;
 
 	@Option(metaVar = "STATUS", name = "--status", aliases = { "-s" }, required = true, usage = "success|failed|canceled")
