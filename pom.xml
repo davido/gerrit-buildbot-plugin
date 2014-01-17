@@ -21,7 +21,7 @@ limitations under the License.
   <groupId>org.libreoffice.ci</groupId>
   <artifactId>buildbot</artifactId>
   <packaging>jar</packaging>
-  <version>2.0</version>
+  <version>2.1</version>
 
   <properties>
     <Gerrit-ApiType>plugin</Gerrit-ApiType>
@@ -99,7 +99,7 @@ limitations under the License.
               implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
               <manifestEntries>
                 <Gerrit-HttpStaticPrefix>static</Gerrit-HttpStaticPrefix>
-				<Gerrit-PluginName>buildbot</Gerrit-PluginName>
+                <Gerrit-PluginName>buildbot</Gerrit-PluginName>
                 <Gerrit-Module>org.libreoffice.ci.gerrit.buildbot.BuildbotModule</Gerrit-Module>
                 <Gerrit-SshModule>org.libreoffice.ci.gerrit.buildbot.SshBuildbotModule</Gerrit-SshModule>
                 <Gerrit-HttpModule>org.libreoffice.ci.gerrit.buildbot.HttpBuildbotModule</Gerrit-HttpModule>

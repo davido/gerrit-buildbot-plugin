@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
+import org.libreoffice.ci.gerrit.buildbot.BuildbotModule;
 import org.libreoffice.ci.gerrit.buildbot.model.BuildbotPlatformJob;
 import org.libreoffice.ci.gerrit.buildbot.model.Os;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobDescriptor;
@@ -69,6 +70,8 @@ public final class GetCommand extends BuildbotSshCommand {
     @Override
     public void doRun() throws UnloggedFailure, OrmException, Failure {
         synchronized (control) {
+            BuildbotModule.tbActivity.info(String.format("GET:%s:%s",
+                user.getUserName(), projectControl.getProject().getName()));
             log.debug("project: {}", projectControl.getProject().getName());
             if (!config.isProjectSupported(projectControl.getProject().getName())) {
                 String message = String.format(
@@ -108,6 +111,8 @@ public final class GetCommand extends BuildbotSshCommand {
                 } else {
                     stdout.print("empty");
                 }
+                BuildbotModule.tbActivity.info(String.format("GET:%s:empty",
+                    user.getUserName()));
             } else {
                 if (!test) {
         			notifyGerritBuildbotPlatformJobStarted(jobDescriptor.getBuildbotPlatformJob());
@@ -117,7 +122,7 @@ public final class GetCommand extends BuildbotSshCommand {
         }
     }
 
-	private void reportOutcome(TbJobDescriptor jobDescriptor) {
+    private void reportOutcome(TbJobDescriptor jobDescriptor) {
 		String output;
 		if (format != null && format == FormatType.BASH) {
 		    output = String.format("GERRIT_TASK_TICKET=%s\nGERRIT_TASK_BRANCH=%s\nGERRIT_TASK_REF=%s\n",
@@ -130,6 +135,11 @@ public final class GetCommand extends BuildbotSshCommand {
 		            jobDescriptor.getBranch(),
 		            jobDescriptor.getRef());
 		}
+        BuildbotModule.tbActivity.info(String.format("GET:%s:engaged:ticket=%s:branch=%s:ref=%s",
+            user.getUserName(),
+            jobDescriptor.getTicket(),
+            jobDescriptor.getBranch(),
+            jobDescriptor.getRef()));
 		stdout.print(output);
 	}
 

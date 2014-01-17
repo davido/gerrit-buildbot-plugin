@@ -12,6 +12,7 @@ package org.libreoffice.ci.gerrit.buildbot.commands;
 import javax.annotation.Nullable;
 
 import org.kohsuke.args4j.Option;
+import org.libreoffice.ci.gerrit.buildbot.BuildbotModule;
 import org.libreoffice.ci.gerrit.buildbot.model.GerritJob;
 import org.libreoffice.ci.gerrit.buildbot.model.TbJobResult;
 import org.libreoffice.ci.gerrit.buildbot.review.ReviewPublisher;
@@ -60,6 +61,8 @@ public final class PutCommand extends BuildbotSshCommand {
 	@Override
 	public void doRun() throws UnloggedFailure, OrmException, Failure {
 	    synchronized (control) {
+	        BuildbotModule.tbActivity.info(String.format("PUT:%s:%s",
+                user.getUserName(), ticket));
     		log.debug("ticket: {}", ticket);
     		if (Strings.isNullOrEmpty(ticket)) {
     			String tmp = "No ticket is provided";

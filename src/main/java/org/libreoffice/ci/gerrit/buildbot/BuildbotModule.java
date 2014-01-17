@@ -20,6 +20,8 @@ import org.libreoffice.ci.gerrit.buildbot.publisher.BuildbotLogPublisher;
 import org.libreoffice.ci.gerrit.buildbot.publisher.JenkinsLogPublisher;
 import org.libreoffice.ci.gerrit.buildbot.webui.BuildbotTopMenu;
 import org.libreoffice.ci.gerrit.buildbot.webui.ScheduleAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gerrit.extensions.events.LifecycleListener;
 import com.google.gerrit.extensions.registration.DynamicSet;
@@ -30,7 +32,11 @@ import com.google.gerrit.server.config.AllProjectsNameProvider;
 import com.google.inject.AbstractModule;
 import com.google.inject.internal.UniqueAnnotations;
 
-class BuildbotModule extends AbstractModule {
+public class BuildbotModule extends AbstractModule {
+  public static final Logger tbActivity = LoggerFactory
+      .getLogger("buildbot.tb_activity_log");
+  public static final Logger admActivity = LoggerFactory
+      .getLogger("buildbot.adm_activity_log");
 
     @Override
     protected void configure() {

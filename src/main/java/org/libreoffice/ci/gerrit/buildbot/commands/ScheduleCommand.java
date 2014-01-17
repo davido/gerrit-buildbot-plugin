@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
+import org.libreoffice.ci.gerrit.buildbot.BuildbotModule;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotConfig;
 import org.libreoffice.ci.gerrit.buildbot.config.BuildbotProject;
 import org.libreoffice.ci.gerrit.buildbot.logic.BuildbotLogicControl;
@@ -72,7 +73,8 @@ public final class ScheduleCommand extends SshCommand {
     public void run() throws UnloggedFailure, Failure, Exception {
         synchronized (control) {
             log.debug("schedule");
-
+            BuildbotModule.admActivity.info(String.format("SCHEDULE:%s:%s",
+                cu.get().getUserName(), projectControl.getProject().getName()));
             final String p = projectControl.getProject().getName();
             if (!config.isProjectSupported(p)) {
                 String tmp = String.format(

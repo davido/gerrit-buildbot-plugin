@@ -1,6 +1,62 @@
 @PLUGIN@ changelog
 ==================
 
+Version 2.1: 2014-02-22
+============
+
+Allow configuration of custom logging categories to produce activity log.
+To configure activity log custom log4j.configuration file must be provided.
+
+It should be done `$gerit_site/etc/gerrit.config` file, under container section:
+
+```
+[container]
+        javaOptions = -Dlog4j.configuration=file:///home/gerrit/site/etc/log4j.properties
+
+```
+
+Example of log4j configuration file log4j.properties:
+
+```
+log4j.rootCategory=ERROR, stderr, file
+log4j.appender.stderr=org.apache.log4j.ConsoleAppender
+log4j.appender.stderr.target=System.err
+log4j.appender.stderr.layout=org.apache.log4j.PatternLayout
+log4j.appender.stderr.layout.ConversionPattern=[%d] %-5p %c %x: %m%n
+
+log4j.appender.file=org.apache.log4j.RollingFileAppender
+log4j.appender.file.File=/home/davido/projects/test_site_master/logs/gerrit.log
+log4j.appender.file.MaxFileSize=10MB
+log4j.appender.file.MaxBackupIndex=10
+log4j.appender.file.layout=org.apache.log4j.PatternLayout
+log4j.appender.file.layout.ConversionPattern=[%d] %-5p %c %x: %m%n
+
+#tb activity
+log4j.appender.tb_activity = org.apache.log4j.DailyRollingFileAppender
+log4j.appender.tb_activity.DatePattern = '.'yyyy-MM-dd
+log4j.appender.tb_activity.File = /home/davido/projects/test_site_master/logs/tb_activity.log
+log4j.appender.tb_activity.layout = org.apache.log4j.EnhancedPatternLayout
+log4j.appender.tb_activity.layout.ConversionPattern = [%d{ISO8601}{UTC}]%5p%6.6r[%t] (%F:%L) - %m%n
+log4j.appender.tb_activity.Threshold=INFO
+
+#adm activity
+log4j.appender.adm_activity = org.apache.log4j.DailyRollingFileAppender
+log4j.appender.adm_activity.DatePattern = '.'yyyy-MM-dd
+log4j.appender.adm_activity.File = /home/davido/projects/test_site_master/logs/adm_activity.log
+log4j.appender.adm_activity.layout = org.apache.log4j.EnhancedPatternLayout
+log4j.appender.adm_activity.layout.ConversionPattern = [%d{ISO8601}{UTC}]%5p%6.6r[%t] (%F:%L) - %m%n
+log4j.appender.adm_activity.Threshold=INFO
+
+# alternative date format:
+#{ISO8601}{GMT+1}
+
+# GET/PUT command
+log4j.logger.buildbot.tb_activity_log=INFO,tb_activity
+# SCHEDULE command
+log4j.logger.buildbot.adm_activity_log=INFO,adm_activity
+
+``` 
+
 Version 2.0: 2013-12-12
 ===========
 
