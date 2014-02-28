@@ -35,12 +35,12 @@ public class JenkinsLogPublisher implements LogPublisher {
     public String publishLog(BuildbotConfig config, String ticket,
             String boxId, TaskStatus status, InputStream in) {
         final String cmd = JENKINS_SSH_COMMAND + " --display " + ticket + "_" + boxId
+                + " --dump-build-number "
                 + " --job " + config.getExternalLogViewerJob() + " --result "
                 + (status.isSuccess() ? "0" : "1") + " --log -";
         OutputStream errStream = newErrorBufferStream();
         OutputStream outStream = newErrorBufferStream();
         URIish jenkins = null;
-        int exitValue = -1;
         try {
             jenkins = new URIish().setHost(config.getExternalLogViewerHost());
             RemoteSession ssh = connect(jenkins);
@@ -49,7 +49,7 @@ public class JenkinsLogPublisher implements LogPublisher {
                     outStream);
             StreamCopyThread err = new StreamCopyThread(proc.getErrorStream(),
                     errStream);
-            StreamCopyThread inp = new StreamCopyThread(in, 
+            StreamCopyThread inp = new StreamCopyThread(in,
                     proc.getOutputStream());
             out.start();
             err.start();
@@ -59,7 +59,7 @@ public class JenkinsLogPublisher implements LogPublisher {
                 err.flush();
                 inp.flush();
                 proc.waitFor();
-                exitValue = proc.exitValue();
+                proc.exitValue();
                 out.halt();
                 err.halt();
                 inp.halt();
@@ -74,8 +74,8 @@ public class JenkinsLogPublisher implements LogPublisher {
                             + "  Output: %s", jenkins, e, cmd, errStream), e);
             return null;
         }
-        String result = String.format("%s/job/%s/%d", config.getExternalLogViewerUrl(),
-                config.getExternalLogViewerJob(), exitValue);
+        String result = String.format("%s/job/%s/%s", config.getExternalLogViewerUrl(),
+                config.getExternalLogViewerJob(), outStream.toString().trim());
         log.debug("log url: {}", result);
         return result;
     }
