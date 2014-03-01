@@ -4,6 +4,9 @@
 Version 2.1: 2014-02-22
 ============
 
+Read build number from stdout instead from return value. Jenkins
+external-monitor plugin must be 1.2.
+
 Allow configuration of custom logging categories to produce activity log.
 To configure activity log custom log4j.configuration file must be provided.
 
